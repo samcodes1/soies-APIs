@@ -1,0 +1,268 @@
+package com.rtechnologies.soies.service;
+
+import com.rtechnologies.soies.model.Lecture;
+import com.rtechnologies.soies.model.dto.LectureListResponse;
+import com.rtechnologies.soies.model.dto.LectureResponse;
+import com.rtechnologies.soies.repository.LectureRepository;
+import com.rtechnologies.soies.utilities.Utility;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class LectureService {
+
+    @Autowired
+    private LectureRepository lectureRepository;
+
+    public LectureResponse addLecture(Lecture lecture) {
+        Utility.printDebugLogs("Lecture creation request: " + lecture.toString());
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lecture
+            if (lecture == null) {
+                Utility.printErrorLogs("Lecture creation request is null");
+                throw new IllegalArgumentException("Corrupt data received");
+            }
+
+            // Save the lecture
+            Lecture createdLecture = lectureRepository.save(lecture);
+            Utility.printDebugLogs("Lecture created successfully: " + createdLecture);
+
+            lectureResponse = LectureResponse.builder()
+                    .lectureId(createdLecture.getLectureId())
+                    .courseId(createdLecture.getCourseId())
+                    .lectureTitle(createdLecture.getLectureTitle())
+                    .description(createdLecture.getDescription())
+                    .videoURL(createdLecture.getVideoURL())
+                    .powerPointURL(createdLecture.getPowerPointURL())
+                    .totalViews(createdLecture.getTotalViews())
+                    .isVisible(createdLecture.isVisible())
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Lecture response: " + lectureResponse);
+            return lectureResponse;
+
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            lectureResponse.setMessageStatus(e.toString());
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
+
+    public LectureResponse updateLecture(Lecture lecture) {
+        Utility.printDebugLogs("Lecture update request: " + lecture.toString());
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lecture
+            if (lecture == null) {
+                Utility.printErrorLogs("Lecture update request is null");
+                throw new IllegalArgumentException("Corrupt data received");
+            }
+
+            // Check if the lecture exists
+            Optional<Lecture> optionalLecture = lectureRepository.findById(lecture.getLectureId());
+            if (!optionalLecture.isPresent()) {
+                Utility.printErrorLogs("No record found for Lecture ID: " + lecture.getLectureId());
+                throw new NotFoundException("No record found for Lecture ID: " + lecture.getLectureId());
+            }
+
+            // Save the updated lecture
+            Lecture updatedLecture = lectureRepository.save(lecture);
+            Utility.printDebugLogs("Lecture updated successfully: " + updatedLecture);
+
+            lectureResponse = LectureResponse.builder()
+                    .lectureId(updatedLecture.getLectureId())
+                    .courseId(updatedLecture.getCourseId())
+                    .lectureTitle(updatedLecture.getLectureTitle())
+                    .description(updatedLecture.getDescription())
+                    .videoURL(updatedLecture.getVideoURL())
+                    .powerPointURL(updatedLecture.getPowerPointURL())
+                    .totalViews(updatedLecture.getTotalViews())
+                    .isVisible(updatedLecture.isVisible())
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Lecture response: " + lectureResponse);
+            return lectureResponse;
+
+        } catch (NotFoundException e) {
+            Utility.printErrorLogs("Error updating lecture: " + e.getMessage());
+            lectureResponse.setMessageStatus(e.getMessage());
+            return lectureResponse;
+
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs("Error updating lecture: " + e.getMessage());
+            lectureResponse.setMessageStatus(e.getMessage());
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Unexpected error updating lecture: " + e.getMessage());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
+
+    public LectureResponse deleteLecture(long lectureId) {
+        Utility.printDebugLogs("Lecture deletion request for ID: " + lectureId);
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lectureId
+            if (lectureId <= 0) {
+                Utility.printErrorLogs("Invalid lectureId for deletion");
+                lectureResponse.setMessageStatus("Failure");
+                return lectureResponse;
+            }
+
+            // Delete the lecture
+            lectureRepository.deleteById(lectureId);
+
+            Utility.printDebugLogs("Lecture deleted successfully. ID: " + lectureId);
+            lectureResponse.setMessageStatus("Success");
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Unexpected error deleting lecture: " + e.getMessage());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
+
+    public LectureListResponse getLecturesByCourseId(long courseId) {
+        Utility.printDebugLogs("Get all lectures by course ID request: " + courseId);
+        LectureListResponse lectureListResponse = new LectureListResponse();
+
+        try {
+            // Validate courseId
+            if (courseId <= 0) {
+                Utility.printErrorLogs("Invalid courseId for fetching lectures");
+                lectureListResponse.setMessageStatus("Failure");
+                return lectureListResponse;
+            }
+
+            // Fetch lectures by courseId
+            List<Lecture> lectureList = lectureRepository.findAllByCourseId(courseId);
+            if(lectureList.size() <=0){
+                Utility.printDebugLogs("No record found for courses");
+                lectureListResponse.setMessageStatus("Success");
+                return lectureListResponse;
+            }
+
+            Utility.printDebugLogs("Fetched " + lectureList.size() + " lectures by course ID: " + courseId);
+            lectureListResponse.setLectureList(lectureList);
+            lectureListResponse.setMessageStatus("Success");
+
+            Utility.printDebugLogs("Lecture List Response: " + lectureListResponse);
+            return lectureListResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error fetching lectures by course ID: " + e.getMessage());
+            lectureListResponse.setMessageStatus("Failure");
+            return lectureListResponse;
+        }
+    }
+
+    public LectureResponse getLectureById(long lectureId) {
+        Utility.printDebugLogs("Get lecture by ID request: " + lectureId);
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lectureId
+            if (lectureId <= 0) {
+                Utility.printErrorLogs("Invalid lectureId for fetching lecture");
+                lectureResponse.setMessageStatus("Failure");
+                return lectureResponse;
+            }
+
+            // Fetch lecture by lectureId
+            Optional<Lecture> optionalLecture = lectureRepository.findById(lectureId);
+            if (optionalLecture.isPresent()) {
+                Lecture fetchedLecture = optionalLecture.get();
+                Utility.printDebugLogs("Lecture found for ID: " + optionalLecture.get().getLectureId());
+                lectureResponse = LectureResponse.builder()
+                        .lectureId(fetchedLecture.getLectureId())
+                        .courseId(fetchedLecture.getCourseId())
+                        .lectureTitle(fetchedLecture.getLectureTitle())
+                        .description(fetchedLecture.getDescription())
+                        .videoURL(fetchedLecture.getVideoURL())
+                        .powerPointURL(fetchedLecture.getPowerPointURL())
+                        .totalViews(fetchedLecture.getTotalViews())
+                        .isVisible(fetchedLecture.isVisible())
+                        .messageStatus("Success")
+                        .build();
+
+            } else {
+                Utility.printErrorLogs("No record found for Lecture ID: " + lectureId);
+                lectureResponse.setMessageStatus("Failure");
+            }
+            Utility.printDebugLogs("Lecture response: " + lectureResponse);
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error fetching lecture by ID: " + e.getMessage());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
+
+    public LectureResponse setVisibility(long lectureId, boolean isVisible) {
+        Utility.printDebugLogs("Set visibility request for lecture ID: " + lectureId);
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lectureId
+            if (lectureId <= 0) {
+                Utility.printErrorLogs("Invalid lectureId for setting visibility");
+                lectureResponse.setMessageStatus("Failure");
+                return lectureResponse;
+            }
+
+            // Fetch lecture by lectureId
+            Optional<Lecture> optionalLecture = lectureRepository.findById(lectureId);
+            if (optionalLecture.isPresent()) {
+                Lecture fetchedLecture = optionalLecture.get();
+
+                // Set visibility
+                fetchedLecture.setVisible(isVisible);
+                lectureRepository.save(fetchedLecture);
+
+                lectureResponse = LectureResponse.builder()
+                        .lectureId(fetchedLecture.getLectureId())
+                        .courseId(fetchedLecture.getCourseId())
+                        .lectureTitle(fetchedLecture.getLectureTitle())
+                        .description(fetchedLecture.getDescription())
+                        .videoURL(fetchedLecture.getVideoURL())
+                        .powerPointURL(fetchedLecture.getPowerPointURL())
+                        .totalViews(fetchedLecture.getTotalViews())
+                        .isVisible(fetchedLecture.isVisible())
+                        .messageStatus("Success")
+                        .build();
+
+                Utility.printDebugLogs("Set visibility for lecture ID: " + lectureId);
+            } else {
+                Utility.printErrorLogs("No record found for Lecture ID: " + lectureId);
+                lectureResponse.setMessageStatus("Failure");
+            }
+
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error setting visibility for lecture: " + e.getMessage());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
+}
+
