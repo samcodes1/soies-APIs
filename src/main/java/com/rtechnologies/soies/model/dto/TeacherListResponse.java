@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
 import java.util.List;
 
-@Entity
 @Data
 @Builder
 @AllArgsConstructor
