@@ -1,22 +1,14 @@
 package com.rtechnologies.soies.config;
 
 import com.rtechnologies.soies.model.security.CustomUserDetails;
-import com.rtechnologies.soies.utilities.Utility;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.SignatureException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
-
-import java.util.Date;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.Key;
 import java.util.Date;
 import java.util.Set;
 
@@ -28,6 +20,14 @@ public class JwtConfig {
 
     @Value("${jwt.expirationMs}")
     private long expirationMs;
+
+    private final Key secretKey;
+
+    public JwtConfig(@Value("${jwt.secret}") String secret) {
+        // Use Keys.secretKeyFor to generate a secure key for HS512
+        this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+        // Other initialization...
+    }
 
     public String generateToken(Authentication authentication) {
         String username = ((CustomUserDetails) authentication.getPrincipal()).getUsername();
@@ -41,7 +41,7 @@ public class JwtConfig {
                 .claim("roles", roles)  // Include roles in the token
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -55,14 +55,14 @@ public class JwtConfig {
 
     private Claims getClaimsFromToken(String token) {
         return Jwts.parser()
-                .setSigningKey(secret)
+                .setSigningKey(secretKey)
                 .parseClaimsJws(token)
                 .getBody();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             // Handle exception, e.g., log or throw a custom exception
@@ -78,7 +78,4 @@ public class JwtConfig {
         }
         return null;
     }
-
 }
-
-

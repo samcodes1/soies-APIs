@@ -21,7 +21,6 @@ public class CorsFilter extends OncePerRequestFilter {
         response.setHeader("Access-Control-Allow-Credentials", "false");
         response.setHeader("Access-Control-Max-Age", "3600");
 
-        System.out.println("Done");
         if ("OPTIONS".equals(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
         } else {

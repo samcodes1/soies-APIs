@@ -9,7 +9,11 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/teachers")
@@ -24,11 +28,20 @@ public class TeacherController {
             @ApiResponse(code = 400, message = "Invalid request data"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @PostMapping
+    @PostMapping(produces = "application/json", path = "/create-teacher")
+    @PreAuthorize("hasAuthority('CREATE_TEACHER')")
     public ResponseEntity<TeacherResponse> createTeacher(@RequestBody Teacher teacher) {
+        System.out.println("Done2");
         TeacherResponse teacherResponse = teacherService.createTeacher(teacher);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 201 : 500)
                 .body(teacherResponse);
+    }
+
+    @PostMapping(produces = "application/json", path = "/hello")
+    @PreAuthorize("hasAuthority('READ_TEACHER')")
+    public Map<String, String> createTeacher() {
+        System.out.println("Done2");
+        return new HashMap<String, String>();
     }
 
     @ApiOperation(value = "Delete a teacher by ID", response = TeacherResponse.class)
@@ -80,6 +93,7 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('READ_TEACHER')")
     public ResponseEntity<TeacherListResponse> getAllTeachers() {
         TeacherListResponse teacherListResponse = teacherService.getAllTeachers();
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)

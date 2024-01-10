@@ -7,6 +7,7 @@ import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.webjars.NotFoundException;
@@ -20,8 +21,9 @@ public class TeacherService {
     @Autowired
     private TeacherRepository teacherRepository;
 
-    public TeacherResponse createTeacher(@Validated Teacher teacher) {
+    public TeacherResponse createTeacher(Teacher teacher) {
         Utility.printDebugLogs("Teacher creation request: "+teacher.toString());
+        System.out.println("Teacher creation request: "+teacher.toString());
         TeacherResponse teacherResponse = null;
         try {
             if (teacher == null) {
@@ -36,9 +38,17 @@ public class TeacherService {
                 throw new IllegalArgumentException("Account already exists");
             }
 
-            Teacher savedTeacher = teacherRepository.save(teacherOptional.get());
+            // Hash the password using BCryptPasswordEncoder
+            String hashedPassword = new BCryptPasswordEncoder().encode(teacher.getPassword());
+
+            // Set the hashed password to the teacher object
+            teacher.setPassword(hashedPassword);
+
+            // Save the teacher with the hashed password
+            Teacher savedTeacher = teacherRepository.save(teacher);
             Utility.printDebugLogs("Saved teacher: "+ savedTeacher.toString());
-            
+            System.out.println("Teacher saved: " + savedTeacher.toString());
+
              teacherResponse = TeacherResponse.builder()
                     .teacherId(savedTeacher.getTeacherId())
                     .campusName(savedTeacher.getCampusName())
@@ -51,6 +61,7 @@ public class TeacherService {
                     .address(savedTeacher.getAddress())
                     .messageStatus("Success").build();
 
+            System.out.println("Teacher respose: " + teacherResponse);
             Utility.printDebugLogs("Teacher Response: "+ teacherResponse.toString());
             return teacherResponse;
 

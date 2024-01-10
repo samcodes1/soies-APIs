@@ -40,16 +40,19 @@ public class AuthenticationController {
             @ApiResponse(code = 401, message = "Invalid credentials"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public JwtAuthenticationResponse authenticateUser(@RequestBody LoginRequest loginRequest) {
+        System.out.println("Login request: " + loginRequest.getUsernameOrEmail() + loginRequest.getPassword());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword()));
 
+        System.out.println("Auth variable: " + authentication);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
+        System.out.println("After");
         String jwt = jwtTokenProvider.generateToken(authentication);
+        System.out.println("jwt: "+jwt);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
+        return new JwtAuthenticationResponse(jwt);
     }
 
     @PostMapping("/logout")
