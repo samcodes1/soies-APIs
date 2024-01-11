@@ -31,6 +31,7 @@ public class CustomUserDetails implements UserDetails {
         this.userType = "TEACHER";
         // Add roles based on your application logic
         this.roles = Set.of("ROLE_TEACHER");
+
     }
 
     // Uncomment this part if you have a Student class

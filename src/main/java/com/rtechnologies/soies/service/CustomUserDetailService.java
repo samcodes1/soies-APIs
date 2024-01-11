@@ -28,13 +28,11 @@ public class CustomUserDetailService implements UserDetailsService {
         if (teacher.isPresent()) {
             return new CustomUserDetails(teacher.get());
         }
-
 //        // Try to load a Student
 //        Student student = studentRepository.findByUsername(username);
 //        if (student != null) {
 //            return new CustomUserDetails(student);
 //        }
-
         throw new UsernameNotFoundException("User not found with username: " + username);
     }
 }
