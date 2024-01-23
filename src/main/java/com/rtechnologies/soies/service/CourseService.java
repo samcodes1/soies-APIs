@@ -1,13 +1,16 @@
 package com.rtechnologies.soies.service;
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.association.TeacherCourse;
 import com.rtechnologies.soies.model.dto.CourseListResponse;
 import com.rtechnologies.soies.model.dto.CourseResponse;
 import com.rtechnologies.soies.repository.CourseRepository;
+import com.rtechnologies.soies.repository.TeacherCourseRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +18,9 @@ import java.util.Optional;
 public class CourseService {
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private TeacherCourseRepository teacherCourseRepository;
 
     public CourseResponse createCourse(Course course) {
         Utility.printDebugLogs("Course creation request: "+course.toString());
@@ -241,4 +247,46 @@ public class CourseService {
             return courseResponse;
         }
     }
+
+    public CourseListResponse getCoursesByTeacherId(Long teacherId) {
+        Utility.printDebugLogs("Get courses by teacher ID request: " + teacherId);
+        CourseListResponse courseListResponse = new CourseListResponse();
+
+        try {
+            // Validate teacherId
+            if (teacherId == null || teacherId <= 0) {
+                Utility.printErrorLogs("Invalid teacherId for fetching courses");
+                courseListResponse.setMessageStatus("Failure");
+                return courseListResponse;
+            }
+
+            // Fetch courses by teacher ID
+            List<TeacherCourse> courses = teacherCourseRepository.findAllByTeacherId(teacherId);
+
+            List<Course> courseList = new ArrayList<>();
+            for(TeacherCourse teacherCourse : courses) {
+                courseList.add(courseRepository.findById(teacherCourse.getCourseId()).get());
+            }
+
+            if (!courses.isEmpty()) {
+                courseListResponse = CourseListResponse.builder()
+                        .courseList(courseList)
+                        .messageStatus("Success")
+                        .build();
+                Utility.printDebugLogs("Fetched courses by teacher ID: " + teacherId);
+            } else {
+                courseListResponse.setMessageStatus("Failure");
+                Utility.printDebugLogs("No courses found for teacher ID: " + teacherId);
+            }
+
+            Utility.printDebugLogs("Response: " + courseListResponse);
+            return courseListResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error fetching courses by teacher ID: " + e.getMessage());
+            courseListResponse.setMessageStatus("Failure");
+            return courseListResponse;
+        }
+    }
+
 }
