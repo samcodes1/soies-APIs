@@ -45,14 +45,18 @@ public class AuthenticationController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(), loginRequest.getPassword()));
 
-        System.out.println("Auth variable: " + authentication);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        System.out.println("Auth variable: " + authentication.getAuthorities());
+//        SecurityContextHolder.getContext().setAuthentication(authentication);
         System.out.println("After");
         String jwt = jwtTokenProvider.generateToken(authentication);
         System.out.println("jwt: "+jwt);
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsernameOrEmail());
 
-        return new JwtAuthenticationResponse(jwt);
+        if(userDetails != null) {
+            return new JwtAuthenticationResponse(jwt);
+        }
+        return null;
     }
 
     @PostMapping("/logout")

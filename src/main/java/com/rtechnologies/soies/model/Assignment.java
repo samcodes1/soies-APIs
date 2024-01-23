@@ -20,7 +20,7 @@ public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long assignmentId;
-    private String course;
+    private Long courseId;
     private Long teacherId; // ID of the Teacher associated with the assignment
     private String assignmentTitle;
     private String description;
@@ -28,6 +28,5 @@ public class Assignment {
     private Date dueDate;
     private int totalMarks;
     private boolean visibility;
-
 }
 

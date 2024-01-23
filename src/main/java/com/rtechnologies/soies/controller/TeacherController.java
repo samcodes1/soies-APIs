@@ -93,7 +93,7 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping
-    @PreAuthorize("hasAuthority('READ_TEACHER')")
+    @PreAuthorize("hasRole('ROLE_TEACHER')")
     public ResponseEntity<TeacherListResponse> getAllTeachers() {
         TeacherListResponse teacherListResponse = teacherService.getAllTeachers();
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)
