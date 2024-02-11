@@ -26,4 +26,5 @@ public class Event {
     private String description;
     private Long courseId;
     private Long teacherId;
+    private String time;
 }
