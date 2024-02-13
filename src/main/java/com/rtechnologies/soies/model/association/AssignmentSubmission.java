@@ -17,7 +17,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AssignmentSubmission {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long submissionId;

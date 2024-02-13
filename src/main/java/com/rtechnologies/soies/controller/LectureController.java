@@ -2,6 +2,7 @@ package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Lecture;
 import com.rtechnologies.soies.model.dto.LectureListResponse;
+import com.rtechnologies.soies.model.dto.LectureReportListResponse;
 import com.rtechnologies.soies.model.dto.LectureResponse;
 import com.rtechnologies.soies.service.LectureService;
 import io.swagger.annotations.ApiOperation;
@@ -98,5 +99,18 @@ public class LectureController {
         LectureResponse lectureResponse = lectureService.setVisibility(lectureId, isVisible);
         return ResponseEntity.status(lectureResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(lectureResponse);
+    }
+
+    @ApiOperation(value = "Get lecture report table data by lecture ID", response = LectureReportListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Lecture report data retrieved successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/{lectureId}/report-table-data")
+    public ResponseEntity<LectureReportListResponse> getLectureReportTableData(@PathVariable long lectureId) {
+        LectureReportListResponse response = lectureService.getLectureReportTableData(lectureId);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
     }
 }
