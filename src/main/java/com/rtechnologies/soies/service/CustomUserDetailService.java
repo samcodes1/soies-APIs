@@ -3,6 +3,7 @@ package com.rtechnologies.soies.service;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.security.CustomUserDetails;
+import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,8 +19,8 @@ public class CustomUserDetailService implements UserDetailsService {
     @Autowired
     private TeacherRepository teacherRepository;
 
-//    @Autowired
-//    private StudentRepository studentRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -28,11 +29,11 @@ public class CustomUserDetailService implements UserDetailsService {
         if (teacher.isPresent()) {
             return new CustomUserDetails(teacher.get());
         }
-//        // Try to load a Student
-//        Student student = studentRepository.findByUsername(username);
-//        if (student != null) {
-//            return new CustomUserDetails(student);
-//        }
+        // Try to load a Student
+        Optional<Student> student = studentRepository.findByRollNumber(username);
+        if (student.isPresent()) {
+            return new CustomUserDetails(student.get());
+        }
         throw new UsernameNotFoundException("User not found with username: " + username);
     }
 }

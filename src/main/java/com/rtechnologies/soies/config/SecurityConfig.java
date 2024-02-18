@@ -52,6 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         // Disable CSRF
         httpSecurity.csrf().disable()
+                .cors().and()
                 // Allow these endpoints to be accessed without authentication
                 .authorizeRequests()
                 .antMatchers("/api/auth/login", "/v1/teachers/create-teacher").permitAll()
@@ -70,6 +71,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 // Add a filter to validate the tokens with every request
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
+
     }
 
 //    @Override

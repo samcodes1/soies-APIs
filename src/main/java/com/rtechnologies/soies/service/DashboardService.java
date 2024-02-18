@@ -115,5 +115,8 @@ public class DashboardService {
     }
 
     //Get punctuality
-    //Term punctuality
+    //Term completion
+
+    //Dashboard code for Student Dashboard
+
 }

@@ -1,22 +1,37 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Lecture;
+import com.rtechnologies.soies.model.Student;
+import com.rtechnologies.soies.model.association.LectureReport;
 import com.rtechnologies.soies.model.dto.LectureListResponse;
+import com.rtechnologies.soies.model.dto.LectureReportListResponse;
+import com.rtechnologies.soies.model.dto.LectureReportResponse;
 import com.rtechnologies.soies.model.dto.LectureResponse;
+import com.rtechnologies.soies.repository.LectureReportRepository;
 import com.rtechnologies.soies.repository.LectureRepository;
+import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.utilities.Utility;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
 public class LectureService {
-
     @Autowired
     private LectureRepository lectureRepository;
+    @Autowired
+    private LectureReportRepository lectureReportRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
     public LectureResponse addLecture(Lecture lecture) {
         Utility.printDebugLogs("Lecture creation request: " + lecture.toString());
@@ -207,6 +222,7 @@ public class LectureService {
                 Utility.printErrorLogs("No record found for Lecture ID: " + lectureId);
                 lectureResponse.setMessageStatus("Failure");
             }
+
             Utility.printDebugLogs("Lecture response: " + lectureResponse);
             return lectureResponse;
 
@@ -217,6 +233,53 @@ public class LectureService {
         }
     }
 
+    public LectureResponse getLectureById(long lectureId, String studentRollNumber) {
+        Utility.printDebugLogs("Get lecture by ID request: " + lectureId);
+        LectureResponse lectureResponse = new LectureResponse();
+
+        try {
+            // Validate lectureId
+            if (lectureId <= 0) {
+                Utility.printErrorLogs("Invalid lectureId for fetching lecture");
+                lectureResponse.setMessageStatus("Failure");
+                return lectureResponse;
+            }
+
+            // Fetch lecture by lectureId
+            Optional<Lecture> optionalLecture = lectureRepository.findById(lectureId);
+            if (optionalLecture.isPresent()) {
+                Lecture fetchedLecture = optionalLecture.get();
+                Utility.printDebugLogs("Lecture found for ID: " + optionalLecture.get().getLectureId());
+                lectureResponse = LectureResponse.builder()
+                        .lectureId(fetchedLecture.getLectureId())
+                        .courseId(fetchedLecture.getCourseId())
+                        .lectureTitle(fetchedLecture.getLectureTitle())
+                        .description(fetchedLecture.getDescription())
+                        .videoURL(fetchedLecture.getVideoURL())
+                        .powerPointURL(fetchedLecture.getPowerPointURL())
+                        .totalViews(fetchedLecture.getTotalViews())
+                        .isVisible(fetchedLecture.isVisible())
+                        .messageStatus("Success")
+                        .build();
+
+            } else {
+                Utility.printErrorLogs("No record found for Lecture ID: " + lectureId);
+                lectureResponse.setMessageStatus("Failure");
+            }
+
+            CompletableFuture.runAsync(() -> {
+                processLectureReport(lectureId, studentRollNumber);
+            });
+
+            Utility.printDebugLogs("Lecture response: " + lectureResponse);
+            return lectureResponse;
+
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error fetching lecture by ID: " + e.getMessage());
+            lectureResponse.setMessageStatus("Failure");
+            return lectureResponse;
+        }
+    }
     public LectureResponse setVisibility(long lectureId, boolean isVisible) {
         Utility.printDebugLogs("Set visibility request for lecture ID: " + lectureId);
         LectureResponse lectureResponse = new LectureResponse();
@@ -263,6 +326,75 @@ public class LectureService {
             lectureResponse.setMessageStatus("Failure");
             return lectureResponse;
         }
+    }
+
+    private void processLectureReport(long lectureId, String studentRollNumber) {
+        try {
+            Optional<LectureReport> lectureReport =
+                    lectureReportRepository.findByStudentRollNumberAndLectureId(studentRollNumber, lectureId);
+
+            LocalDate currentDate = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            String currentDateAsString = currentDate.format(formatter);
+
+            if (!lectureReport.isPresent()) {
+                LectureReport lectureReportAddition = LectureReport.builder()
+                        .attempts(1)
+                        .startDate(currentDateAsString)
+                        .lastAccessedDate(currentDateAsString)
+                        .lectureId(lectureId)
+                        .studentRollNumber(studentRollNumber).build();
+
+                lectureReportRepository.save(lectureReportAddition);
+            } else {
+                long attempts = lectureReport.get().getAttempts();
+                lectureReport.get().setAttempts(++attempts);
+                lectureReport.get().setLastAccessedDate(currentDateAsString);
+                lectureReportRepository.save(lectureReport.get());
+            }
+        } catch (Exception e) {
+            Utility.printErrorLogs("Error processing lecture report: " + e.getMessage());
+        }
+    }
+
+    public LectureReportListResponse getLectureReportTableData(long lectureId) {
+        LectureReportListResponse response = new LectureReportListResponse();
+
+        try {
+            // Fetch lecture reports by lectureId
+            List<LectureReport> lectureReports = lectureReportRepository.findAllByLectureId(lectureId);
+
+            // Convert to DTOs
+            List<LectureReportResponse> reportResponses = lectureReports.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+
+
+            response.setLectureReportResponseList(reportResponses);
+            response.setMessageStatus("Success");
+
+        } catch (Exception e) {
+            response.setMessageStatus("Failure");
+        }
+
+        return response;
+    }
+
+    private LectureReportResponse convertToResponse(LectureReport lectureReport) {
+        Optional<Student> student = studentRepository.findByRollNumber(lectureReport.getStudentRollNumber());
+
+        if(student.isPresent()){
+            return LectureReportResponse.builder()
+                    .id(lectureReport.getId())
+                    .studentName(student.get().getStudentName()) // Assuming there's a method like getStudentName in your entity
+                    .studentRollNumber(lectureReport.getStudentRollNumber())
+                    .attempts(lectureReport.getAttempts())
+                    .startDate(lectureReport.getStartDate())
+                    .lastAccessedDate(lectureReport.getLastAccessedDate())
+                    .build();
+        }
+
+       return null;
     }
 }
 

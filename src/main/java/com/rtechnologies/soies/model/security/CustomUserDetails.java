@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.model.security;
 
+import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,6 +32,17 @@ public class CustomUserDetails implements UserDetails {
         this.userType = "TEACHER";
         // Add roles based on your application logic
         this.roles = Set.of("ROLE_TEACHER");
+
+    }
+
+    public CustomUserDetails(Student student) {
+        this.username = student.getRollNumber();
+        this.password = student.getPassword();
+        this.authorities = Collections.singletonList(() -> "ROLE_STUDENT");
+        this.userId = student.getStudentId();
+        this.userType = "STUDENT";
+        // Add roles based on your application logic
+        this.roles = Set.of("ROLE_STUDENT");
 
     }
 
