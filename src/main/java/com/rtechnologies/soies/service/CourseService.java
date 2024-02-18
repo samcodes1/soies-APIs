@@ -1,10 +1,12 @@
 package com.rtechnologies.soies.service;
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.TeacherCourse;
 import com.rtechnologies.soies.model.dto.CourseListResponse;
 import com.rtechnologies.soies.model.dto.CourseResponse;
 import com.rtechnologies.soies.repository.CourseRepository;
 import com.rtechnologies.soies.repository.TeacherCourseRepository;
+import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ public class CourseService {
 
     @Autowired
     private TeacherCourseRepository teacherCourseRepository;
+
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     public CourseResponse createCourse(Course course) {
         Utility.printDebugLogs("Course creation request: "+course.toString());
@@ -248,20 +253,20 @@ public class CourseService {
         }
     }
 
-    public CourseListResponse getCoursesByTeacherId(Long teacherId) {
-        Utility.printDebugLogs("Get courses by teacher ID request: " + teacherId);
+    public CourseListResponse getCoursesByTeacherEmail(String teacherEmail) {
+        Utility.printDebugLogs("Get courses by teacher ID request: " + teacherEmail);
         CourseListResponse courseListResponse = new CourseListResponse();
-
+        Optional<Teacher> teacher = teacherRepository.findByEmail(teacherEmail);
         try {
-            // Validate teacherId
-            if (teacherId == null || teacherId <= 0) {
+            // Validate teacherEmail
+            if (teacherEmail == null || teacherEmail.isEmpty()) {
                 Utility.printErrorLogs("Invalid teacherId for fetching courses");
                 courseListResponse.setMessageStatus("Failure");
                 return courseListResponse;
             }
 
             // Fetch courses by teacher ID
-            List<TeacherCourse> courses = teacherCourseRepository.findAllByTeacherId(teacherId);
+            List<TeacherCourse> courses = teacherCourseRepository.findAllByTeacherId(teacher.get().getTeacherId());
 
             List<Course> courseList = new ArrayList<>();
             for(TeacherCourse teacherCourse : courses) {
@@ -273,10 +278,10 @@ public class CourseService {
                         .courseList(courseList)
                         .messageStatus("Success")
                         .build();
-                Utility.printDebugLogs("Fetched courses by teacher ID: " + teacherId);
+                Utility.printDebugLogs("Fetched courses by teacher ID: " + teacher.get().getTeacherId());
             } else {
                 courseListResponse.setMessageStatus("Failure");
-                Utility.printDebugLogs("No courses found for teacher ID: " + teacherId);
+                Utility.printDebugLogs("No courses found for teacher ID: " + teacher.get().getTeacherId());
             }
 
             Utility.printDebugLogs("Response: " + courseListResponse);

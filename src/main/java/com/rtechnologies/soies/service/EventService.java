@@ -170,19 +170,19 @@ public class EventService {
         }
     }
 
-    public EventListResponse getEventsByTeacherId(Long teacherId) {
-        Utility.printDebugLogs("Get all events by teacher ID: " + teacherId);
+    public EventListResponse getEventsByTeacherEmail(String teacherEmail) {
+        Utility.printDebugLogs("Get all events by teacher Email: " + teacherEmail);
         EventListResponse eventListResponse;
 
         try {
-            Optional<Teacher> teacher = teacherRepository.findById(teacherId);
+            Optional<Teacher> teacher = teacherRepository.findByEmail(teacherEmail);
 
             if (teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + teacherId);
-                throw new IllegalArgumentException("No teacher found with ID: " + teacherId);
+                Utility.printDebugLogs("No teacher found with Email: " + teacherEmail);
+                throw new IllegalArgumentException("No teacher found with ID: " + teacherEmail);
             }
 
-            List<Event> events = eventRepository.findByTeacherId(teacherId);
+            List<Event> events = eventRepository.findByTeacherId(teacher.get().getTeacherId());
 
             eventListResponse = EventListResponse.builder()
                     .eventList(events)
