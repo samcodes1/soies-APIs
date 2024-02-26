@@ -55,7 +55,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .cors().and()
                 // Allow these endpoints to be accessed without authentication
                 .authorizeRequests()
-                .antMatchers("/api/auth/login", "/v1/teachers/create-teacher").permitAll()
+                .antMatchers("/api/auth/login", "/v1/teachers/create-teacher", "/api/students/create-student").permitAll()
                 // Allow Swagger UI to be accessed without authentication
                 .antMatchers("/v2/api-docs", "/configuration/ui", "/swagger-resources/**", "/configuration/security", "/swagger-ui.html", "/webjars/**", "/swagger-ui/**").permitAll()
                 // Allow access to static resources

@@ -8,6 +8,7 @@ import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -34,6 +35,8 @@ public class StudentService {
                 throw new IllegalArgumentException("Student with Roll Number " + student.getRollNumber() + " already exists");
             }
 
+            String hashedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
+            student.setPassword(hashedPassword);
             Student createdStudent = studentRepository.save(student);
             Utility.printDebugLogs("Student created successfully: " + createdStudent);
 
