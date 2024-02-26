@@ -2,6 +2,7 @@ package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Assignment;
 import com.rtechnologies.soies.model.dto.AssignmentListResponse;
+import com.rtechnologies.soies.model.dto.AssignmentRequest;
 import com.rtechnologies.soies.model.dto.AssignmentResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
 import com.rtechnologies.soies.service.AssignmentService;
@@ -26,7 +27,7 @@ public class AssignmentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping("/create")
-    public ResponseEntity<AssignmentResponse> createAssignment(@RequestBody Assignment assignment) {
+    public ResponseEntity<AssignmentResponse> createAssignment(@RequestBody AssignmentRequest assignment) {
         AssignmentResponse response = assignmentService.createAssignment(assignment);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
@@ -40,7 +41,7 @@ public class AssignmentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PutMapping("/update")
-    public ResponseEntity<AssignmentResponse> updateAssignment(@RequestBody Assignment assignment) {
+    public ResponseEntity<AssignmentResponse> updateAssignment(@RequestBody AssignmentRequest assignment) {
         AssignmentResponse response = assignmentService.updateAssignment(assignment);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);

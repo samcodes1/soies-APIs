@@ -1,9 +1,12 @@
 package com.rtechnologies.soies.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.rtechnologies.soies.model.Assignment;
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.dto.AssignmentListResponse;
+import com.rtechnologies.soies.model.dto.AssignmentRequest;
 import com.rtechnologies.soies.model.dto.AssignmentResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
 import com.rtechnologies.soies.repository.AssignmentRepository;
@@ -12,8 +15,14 @@ import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+import org.webjars.NotFoundException;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -28,7 +37,10 @@ public class AssignmentService {
     @Autowired
     private CourseRepository courseRepository;
 
-    public AssignmentResponse createAssignment(Assignment assignment) {
+    @Autowired
+    private Cloudinary cloudinary;
+
+    public AssignmentResponse createAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment creation request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
 
@@ -52,7 +64,29 @@ public class AssignmentService {
                 throw new IllegalArgumentException("No course found with ID: " + assignment.getCourseId());
             }
 
-            Assignment createdAssignment = assignmentRepository.save(assignment);
+            String fileName = "";
+            fileName = assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId();
+            Assignment createdAssignment = new Assignment();
+            try {
+                String folder = "uploaded-assignments";
+                String publicId = folder + "/" + fileName;
+                Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String url =  data.get("url").toString();
+
+                Assignment finalAssignment = new Assignment();
+                finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
+                finalAssignment.setFile(url);
+                finalAssignment.setDescription(assignment.getDescription());
+                finalAssignment.setDueDate(assignment.getDueDate());
+                finalAssignment.setVisibility(true);
+                finalAssignment.setCourseId(assignment.getCourseId());
+                finalAssignment.setTeacherId(assignment.getTeacherId());
+                finalAssignment.setTotalMarks(assignment.getTotalMarks());
+                createdAssignment = assignmentRepository.save(finalAssignment);
+            } catch (IOException ioException) {
+                throw new RuntimeException("File uploading failed");
+            }
+
             Utility.printDebugLogs("Assignment created successfully: " + createdAssignment);
 
             assignmentResponse = AssignmentResponse.builder()
@@ -83,7 +117,7 @@ public class AssignmentService {
         }
     }
 
-    public AssignmentResponse updateAssignment(Assignment assignment) {
+    public AssignmentResponse updateAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment update request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
 
@@ -110,7 +144,31 @@ public class AssignmentService {
                 throw new IllegalArgumentException("No course found with ID: " + assignment.getCourseId());
             }
 
-            Assignment updatedAssignment = assignmentRepository.save(assignment);
+
+            String fileName = "";
+            fileName = assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId();
+            Assignment updatedAssignment = new Assignment();
+            try {
+                String folder = "uploaded-assignments";
+                String publicId = folder + "/" + fileName;
+                Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String url =  data.get("url").toString();
+
+                Assignment finalAssignment = new Assignment();
+                finalAssignment.setAssignmentId(assignment.getAssignmentId());
+                finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
+                finalAssignment.setFile(url);
+                finalAssignment.setDescription(assignment.getDescription());
+                finalAssignment.setDueDate(assignment.getDueDate());
+                finalAssignment.setVisibility(true);
+                finalAssignment.setCourseId(assignment.getCourseId());
+                finalAssignment.setTeacherId(assignment.getTeacherId());
+                finalAssignment.setTotalMarks(assignment.getTotalMarks());
+                updatedAssignment = assignmentRepository.save(finalAssignment);
+            } catch (IOException ioException) {
+                throw new RuntimeException("File uploading failed");
+            }
+
             Utility.printDebugLogs("Assignment updated successfully: " + updatedAssignment);
 
             assignmentResponse = AssignmentResponse.builder()

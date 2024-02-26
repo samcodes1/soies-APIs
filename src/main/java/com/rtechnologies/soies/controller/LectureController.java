@@ -2,6 +2,7 @@ package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Lecture;
 import com.rtechnologies.soies.model.dto.LectureListResponse;
+import com.rtechnologies.soies.model.dto.LectureReportGraphResponse;
 import com.rtechnologies.soies.model.dto.LectureReportListResponse;
 import com.rtechnologies.soies.model.dto.LectureResponse;
 import com.rtechnologies.soies.service.LectureService;
@@ -110,6 +111,13 @@ public class LectureController {
     @GetMapping("/{lectureId}/report-table-data")
     public ResponseEntity<LectureReportListResponse> getLectureReportTableData(@PathVariable long lectureId) {
         LectureReportListResponse response = lectureService.getLectureReportTableData(lectureId);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+
+    @GetMapping("/{lectureId}/graph-data")
+    public ResponseEntity<LectureReportGraphResponse> getLectureReportGraphData(@PathVariable long lectureId) {
+        LectureReportGraphResponse response = lectureService.getLectureReportGraphData(lectureId);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

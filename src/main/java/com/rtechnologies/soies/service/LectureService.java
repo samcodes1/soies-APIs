@@ -3,10 +3,7 @@ package com.rtechnologies.soies.service;
 import com.rtechnologies.soies.model.Lecture;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.LectureReport;
-import com.rtechnologies.soies.model.dto.LectureListResponse;
-import com.rtechnologies.soies.model.dto.LectureReportListResponse;
-import com.rtechnologies.soies.model.dto.LectureReportResponse;
-import com.rtechnologies.soies.model.dto.LectureResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.LectureReportRepository;
 import com.rtechnologies.soies.repository.LectureRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
@@ -20,8 +17,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -395,6 +394,47 @@ public class LectureService {
         }
 
        return null;
+    }
+
+    public LectureReportGraphResponse getLectureReportGraphData(long lectureId) {
+        LectureReportGraphResponse response = new LectureReportGraphResponse();
+
+        try {
+            // Fetch lecture reports by lectureId
+            List<LectureReport> lectureReports = lectureReportRepository.findAllByLectureId(lectureId);
+
+            // Generate a map with the count of students who attempted the lecture
+            Map<String, Long> studentsAttemptedMap = lectureReports.stream()
+                    .map(LectureReport::getStudentRollNumber)
+                    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+            // Create ranges and categorize counts into those ranges
+            Map<String, Long> categorizedCounts = studentsAttemptedMap.entrySet().stream()
+                    .collect(Collectors.groupingBy(entry -> getRange(entry.getKey()), Collectors.summingLong(Map.Entry::getValue)));
+
+            // Convert the counts to String (if needed) for your graphData map
+            Map<String, String> graphData = categorizedCounts.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> String.valueOf(entry.getValue())));
+
+            response.setGraphData(graphData);
+            response.setMessageStatus("Success");
+
+        } catch (Exception e) {
+            response.setMessageStatus("Failure");
+        }
+
+        return response;
+    }
+
+    // Helper method to get the range for categorization
+    private String getRange(String value) {
+        // Assuming your student roll numbers are numeric and you want to categorize them in ranges
+        int rangeSize = 10; // You can adjust this based on your desired range size
+        int intValue = Integer.parseInt(value.replaceAll("[^\\d.]", ""));
+        int startRange = (intValue / rangeSize) * rangeSize;
+        int endRange = startRange + rangeSize - 1;
+
+        return startRange + "-" + endRange;
     }
 }
 
