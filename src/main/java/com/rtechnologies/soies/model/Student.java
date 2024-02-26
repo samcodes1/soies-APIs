@@ -25,7 +25,7 @@ public class Student {
     private String studentName;
     private String gender;
     private String campusName;
-    private String className;
+    private String grade;
     private String sectionName;
     private String dateOfBirth;
     private String guardianName;
