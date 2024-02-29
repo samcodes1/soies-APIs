@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
-    List<Quiz> findByTeacherId(Long teacherId);
     List<Quiz> findByCourseId(Long courseId);
 }
