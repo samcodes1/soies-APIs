@@ -9,22 +9,21 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.Date;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Exam {
+public class ExamQuestion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private Long examId;
-    private Long courseId;
-    private String examTitle;
-    private String description;
-    private Date dueDate;
-    private String time;
-    private int totalMarks;
-    private boolean visibility;
+    private String question;
+    private String optionOne;
+    private String optionTwo;
+    private String optionThree;
+    private String optionFour;
+    private String answer;
 }

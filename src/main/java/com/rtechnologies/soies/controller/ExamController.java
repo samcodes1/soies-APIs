@@ -1,7 +1,9 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Exam;
+import com.rtechnologies.soies.model.dto.CreateExamRequest;
 import com.rtechnologies.soies.model.dto.ExamListResponse;
+import com.rtechnologies.soies.model.dto.ExamRequest;
 import com.rtechnologies.soies.model.dto.ExamResponse;
 import com.rtechnologies.soies.service.ExamService;
 import com.rtechnologies.soies.utilities.Utility;
@@ -27,7 +29,7 @@ public class ExamController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping
-    public ResponseEntity<ExamResponse> createExam(@RequestBody Exam exam) {
+    public ResponseEntity<ExamResponse> createExam(@RequestBody CreateExamRequest exam) {
         Utility.printDebugLogs("Received create exam request: " + exam.toString());
         ExamResponse examResponse = examService.createExam(exam);
         return ResponseEntity.status(HttpStatus.CREATED).body(examResponse);
@@ -39,9 +41,9 @@ public class ExamController {
             @ApiResponse(code = 400, message = "Invalid request data"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @PutMapping("/{examId}")
-    public ResponseEntity<ExamResponse> updateExam(@PathVariable Long examId, @RequestBody Exam exam) {
-        Utility.printDebugLogs("Received update exam request for ID " + examId + ": " + exam.toString());
+    @PutMapping("/update-exam")
+    public ResponseEntity<ExamResponse> updateExam( @RequestBody ExamRequest exam) {
+        Utility.printDebugLogs("Received update exam request for ID " + exam.getExamId() + ": " + exam.toString());
         ExamResponse examResponse = examService.updateExam(exam);
         return ResponseEntity.ok(examResponse);
     }

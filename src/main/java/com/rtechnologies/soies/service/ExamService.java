@@ -1,11 +1,9 @@
 package com.rtechnologies.soies.service;
 
-import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.Exam;
-import com.rtechnologies.soies.model.Teacher;
-import com.rtechnologies.soies.model.dto.ExamListResponse;
-import com.rtechnologies.soies.model.dto.ExamResponse;
+import com.rtechnologies.soies.model.*;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.CourseRepository;
+import com.rtechnologies.soies.repository.ExamQuestionRepository;
 import com.rtechnologies.soies.repository.ExamRepository;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
@@ -27,7 +25,10 @@ public class ExamService {
     @Autowired
     private CourseRepository courseRepository;
 
-    public ExamResponse createExam(Exam exam) {
+    @Autowired
+    private ExamQuestionRepository examQuestionRepository;
+
+    public ExamResponse createExam(CreateExamRequest exam) {
         Utility.printDebugLogs("Exam creation request: " + exam.toString());
         ExamResponse examResponse;
 
@@ -37,35 +38,29 @@ public class ExamService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            // Check for exam
-            Optional<Exam> existingExam = examRepository.findById(exam.getAssignmentId());
-            if (existingExam.isPresent()) {
-                throw new IllegalArgumentException("Exam with ID " + exam.getAssignmentId() + " already exists");
-            }
-
-            // Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(exam.getTeacherId());
-            if (teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + exam.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + exam.getTeacherId());
-            }
-
-            // Check for course
+            //Check for course
             Optional<Course> course = courseRepository.findById(exam.getCourseId());
-            if (course.isEmpty()) {
+            if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + exam.getCourseId());
                 throw new IllegalArgumentException("No course found with ID: " + exam.getCourseId());
             }
 
-            Exam createdExam = examRepository.save(exam);
-            Utility.printDebugLogs("Exam created successfully: " + createdExam);
+            Exam createExam = mapToQuiz(exam);
+            Utility.printDebugLogs("Exam created successfully: " + createExam);
+
+            for(int i=0; i<exam.getExamQuestions().size(); i++){
+                exam.getExamQuestions().get(i).setExamId(createExam.getExamId());
+            }
+
+            examQuestionRepository.saveAll(exam.getExamQuestions());
 
             examResponse = ExamResponse.builder()
-                    .assignmentId(createdExam.getAssignmentId())
-                    .examTitle(createdExam.getAssignmentTitle())
-                    .description(createdExam.getDescription())
-                    .totalMarks(createdExam.getTotalMarks())
-                    .visibility(createdExam.isVisibility())
+                    .examId(createExam.getExamId())
+                    .examTitle(createExam.getExamTitle())
+                    .description(createExam.getDescription())
+                    .totalMarks(createExam.getTotalMarks())
+                    .visibility(createExam.isVisibility())
+                    .examQuestions(exam.getExamQuestions())
                     .messageStatus("Success")
                     .build();
 
@@ -84,7 +79,30 @@ public class ExamService {
         }
     }
 
-    public ExamResponse updateExam(Exam exam) {
+    public Exam mapToQuiz(CreateExamRequest createExamRequest) {
+        return examRepository.save(Exam.builder()
+                .courseId(createExamRequest.getCourseId())
+                .examTitle(createExamRequest.getExamTitle())
+                .description(createExamRequest.getDescription())
+                .dueDate(createExamRequest.getDueDate())
+                .time(createExamRequest.getTime())
+                .totalMarks(createExamRequest.getTotalMarks())
+                .visibility(createExamRequest.isVisibility())
+                .build());
+    }
+
+    public Exam mapToQuiz(ExamRequest createExamRequest) {
+        return examRepository.save(Exam.builder()
+                .courseId(createExamRequest.getCourseId())
+                .examTitle(createExamRequest.getExamTitle())
+                .description(createExamRequest.getDescription())
+                .dueDate(createExamRequest.getDueDate())
+                .time(createExamRequest.getTime())
+                .totalMarks(createExamRequest.getTotalMarks())
+                .visibility(createExamRequest.isVisibility())
+                .build());
+    }
+    public ExamResponse updateExam(ExamRequest exam) {
         Utility.printDebugLogs("Exam update request: " + exam.toString());
         ExamResponse examResponse;
 
@@ -94,17 +112,11 @@ public class ExamService {
             }
 
             // Check for exam
-            Optional<Exam> existingExam = examRepository.findById(exam.getAssignmentId());
+            Optional<Exam> existingExam = examRepository.findById(exam.getExamId());
             if (existingExam.isEmpty()) {
-                throw new IllegalArgumentException("No Exam found with ID: " + exam.getAssignmentId());
+                throw new IllegalArgumentException("No Exam found with ID: " + exam.getExamId());
             }
 
-            // Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(exam.getTeacherId());
-            if (teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + exam.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + exam.getTeacherId());
-            }
 
             // Check for course
             Optional<Course> course = courseRepository.findById(exam.getCourseId());
@@ -113,16 +125,23 @@ public class ExamService {
                 throw new IllegalArgumentException("No course found with ID: " + exam.getCourseId());
             }
 
-            Exam updatedExam = examRepository.save(exam);
+            Exam updatedExam = mapToQuiz(exam);
+
+            for(int i=0; i<exam.getExamQuestions().size(); i++){
+                exam.getExamQuestions().get(i).setExamId(updatedExam.getExamId());
+            }
+
+            examQuestionRepository.saveAll(exam.getExamQuestions());
             Utility.printDebugLogs("Exam updated successfully: " + updatedExam);
 
             examResponse = ExamResponse.builder()
-                    .assignmentId(updatedExam.getAssignmentId())
-                    .examTitle(updatedExam.getAssignmentTitle())
+                    .examId(updatedExam.getExamId())
+                    .examTitle(updatedExam.getExamTitle())
                     .description(updatedExam.getDescription())
                     .totalMarks(updatedExam.getTotalMarks())
                     .visibility(updatedExam.isVisibility())
                     .course(course.get())
+                    .examQuestions(exam.getExamQuestions())
                     .messageStatus("Success")
                     .build();
 
@@ -156,7 +175,7 @@ public class ExamService {
             Utility.printDebugLogs("Exam deleted successfully: " + existingExam.get());
 
             examResponse = ExamResponse.builder()
-                    .assignmentId(existingExam.get().getAssignmentId())
+                    .examId(existingExam.get().getExamId())
                     .messageStatus("Success")
                     .build();
 
@@ -219,13 +238,6 @@ public class ExamService {
                 throw new IllegalArgumentException("No exam found with ID: " + examId);
             }
 
-            // Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(optionalExam.get().getTeacherId());
-            if (teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + optionalExam.get().getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + optionalExam.get().getTeacherId());
-            }
-
             // Check for course
             Optional<Course> course = courseRepository.findById(optionalExam.get().getCourseId());
             if (course.isEmpty()) {
@@ -234,14 +246,15 @@ public class ExamService {
             }
 
             Exam exam = optionalExam.get();
-
+            List<ExamQuestion> examQuestions = examQuestionRepository.findByExamId(examId);
             examResponse = ExamResponse.builder()
-                    .assignmentId(exam.getAssignmentId())
-                    .examTitle(exam.getAssignmentTitle())
+                    .examId(exam.getExamId())
+                    .examTitle(exam.getExamTitle())
                     .description(exam.getDescription())
                     .totalMarks(exam.getTotalMarks())
                     .visibility(exam.isVisibility())
                     .course(course.get())
+                    .examQuestions(examQuestions)
                     .messageStatus("Success")
                     .build();
 

@@ -1,9 +1,7 @@
 package com.rtechnologies.soies.model.dto;
 
-import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.ExamQuestion;
 import com.rtechnologies.soies.model.QuizQuestion;
-import com.rtechnologies.soies.model.Teacher;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,15 +14,14 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExamResponse {
+public class ExamRequest {
     private Long examId;
-    private Course course;
+    private Long courseId;
     private String examTitle;
     private String description;
-    private List<ExamQuestion> examQuestions;
     private Date dueDate;
-    private int totalMarks;
     private String time;
+    private int totalMarks;
+    private List<ExamQuestion> examQuestions;
     private boolean visibility;
-    private String messageStatus;
 }
