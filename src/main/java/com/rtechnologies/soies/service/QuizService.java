@@ -2,10 +2,14 @@ package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Quiz;
+import com.rtechnologies.soies.model.QuizQuestion;
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.dto.CreateQuizRequest;
 import com.rtechnologies.soies.model.dto.QuizListResponse;
+import com.rtechnologies.soies.model.dto.QuizRequest;
 import com.rtechnologies.soies.model.dto.QuizResponse;
 import com.rtechnologies.soies.repository.CourseRepository;
+import com.rtechnologies.soies.repository.QuizQuestionRepository;
 import com.rtechnologies.soies.repository.QuizRepository;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
@@ -27,7 +31,10 @@ public class QuizService {
     @Autowired
     private CourseRepository courseRepository;
 
-    public QuizResponse createQuiz(Quiz quiz) {
+    @Autowired
+    private QuizQuestionRepository quizQuestionRepository;
+
+    public QuizResponse createQuiz(CreateQuizRequest quiz) {
         Utility.printDebugLogs("Quiz creation request: " + quiz.toString());
         QuizResponse quizResponse;
 
@@ -37,19 +44,6 @@ public class QuizService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            // Check for quiz
-            Optional<Quiz> existingQuiz = quizRepository.findById(quiz.getAssignmentId());
-            if (existingQuiz.isPresent()) {
-                throw new IllegalArgumentException("Quiz with ID " + quiz.getAssignmentId() + " already exists");
-            }
-
-            //Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(quiz.getTeacherId());
-            if(teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + quiz.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + quiz.getTeacherId());
-            }
-
             //Check for course
             Optional<Course> course = courseRepository.findById(quiz.getCourseId());
             if(course.isEmpty()) {
@@ -57,15 +51,22 @@ public class QuizService {
                 throw new IllegalArgumentException("No course found with ID: " + quiz.getCourseId());
             }
 
-            Quiz createdQuiz = quizRepository.save(quiz);
+            Quiz createdQuiz = mapToQuiz(quiz);
             Utility.printDebugLogs("Quiz created successfully: " + createdQuiz);
 
+            for(int i=0; i<quiz.getQuizQuestions().size(); i++){
+                quiz.getQuizQuestions().get(i).setQuizId(createdQuiz.getQuizId());
+            }
+
+            quizQuestionRepository.saveAll(quiz.getQuizQuestions());
+
             quizResponse = QuizResponse.builder()
-                    .quizId(createdQuiz.getAssignmentId())
-                    .quizTitle(createdQuiz.getAssignmentTitle())
+                    .quizId(createdQuiz.getQuizId())
+                    .quizTitle(createdQuiz.getQuizTitle())
                     .description(createdQuiz.getDescription())
                     .totalMarks(createdQuiz.getTotalMarks())
                     .visibility(createdQuiz.isVisibility())
+                    .quizQuestions(quiz.getQuizQuestions())
                     .messageStatus("Success")
                     .build();
 
@@ -84,7 +85,31 @@ public class QuizService {
         }
     }
 
-    public QuizResponse updateQuiz(Quiz quiz) {
+    public Quiz mapToQuiz(CreateQuizRequest createQuizRequest) {
+        return quizRepository.save(Quiz.builder()
+                .courseId(createQuizRequest.getCourseId())
+                .quizTitle(createQuizRequest.getQuizTitle())
+                .description(createQuizRequest.getDescription())
+                .dueDate(createQuizRequest.getDueDate())
+                .time(createQuizRequest.getTime())
+                .totalMarks(createQuizRequest.getTotalMarks())
+                .visibility(createQuizRequest.isVisibility())
+                .build());
+    }
+
+    public Quiz mapToQuiz(QuizRequest createQuizRequest) {
+        return quizRepository.save(Quiz.builder()
+                .courseId(createQuizRequest.getCourseId())
+                .quizTitle(createQuizRequest.getQuizTitle())
+                .description(createQuizRequest.getDescription())
+                .dueDate(createQuizRequest.getDueDate())
+                .time(createQuizRequest.getTime())
+                .totalMarks(createQuizRequest.getTotalMarks())
+                .visibility(createQuizRequest.isVisibility())
+                .build());
+    }
+
+    public QuizResponse updateQuiz(QuizRequest quiz) {
         Utility.printDebugLogs("Quiz update request: " + quiz.toString());
         QuizResponse quizResponse;
 
@@ -94,16 +119,9 @@ public class QuizService {
             }
 
             // Check for quiz
-            Optional<Quiz> existingQuiz = quizRepository.findById(quiz.getAssignmentId());
+            Optional<Quiz> existingQuiz = quizRepository.findById(quiz.getQuizId());
             if (existingQuiz.isEmpty()) {
-                throw new IllegalArgumentException("No Quiz found with ID: " + quiz.getAssignmentId());
-            }
-
-            //Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(quiz.getTeacherId());
-            if(teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + quiz.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + quiz.getTeacherId());
+                throw new IllegalArgumentException("No Quiz found with ID: " + quiz.getQuizId());
             }
 
             //Check for course
@@ -113,21 +131,26 @@ public class QuizService {
                 throw new IllegalArgumentException("No course found with ID: " + quiz.getCourseId());
             }
 
-            Quiz updatedQuiz = quizRepository.save(quiz);
-            Utility.printDebugLogs("Quiz updated successfully: " + updatedQuiz);
+            Quiz createdQuiz = mapToQuiz(quiz);
+            Utility.printDebugLogs("Quiz created successfully: " + createdQuiz);
+
+            for(int i=0; i<quiz.getQuizQuestions().size(); i++){
+                quiz.getQuizQuestions().get(i).setQuizId(createdQuiz.getQuizId());
+            }
+
+            quizQuestionRepository.saveAll(quiz.getQuizQuestions());
 
             quizResponse = QuizResponse.builder()
-                    .quizId(updatedQuiz.getAssignmentId())
-                    .quizTitle(updatedQuiz.getAssignmentTitle())
-                    .description(updatedQuiz.getDescription())
-                    .totalMarks(updatedQuiz.getTotalMarks())
-                    .visibility(updatedQuiz.isVisibility())
-                    .course(course.get())
-                    .teacher(teacher.get())
+                    .quizId(createdQuiz.getQuizId())
+                    .quizTitle(createdQuiz.getQuizTitle())
+                    .description(createdQuiz.getDescription())
+                    .totalMarks(createdQuiz.getTotalMarks())
+                    .visibility(createdQuiz.isVisibility())
+                    .quizQuestions(quiz.getQuizQuestions())
                     .messageStatus("Success")
                     .build();
 
-            Utility.printDebugLogs("Quiz response: " + quizResponse);
+            Utility.printDebugLogs("Quiz update response: " + quizResponse);
             return quizResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
@@ -157,7 +180,7 @@ public class QuizService {
             Utility.printDebugLogs("Quiz deleted successfully: " + existingQuiz.get());
 
             quizResponse = QuizResponse.builder()
-                    .quizId(existingQuiz.get().getAssignmentId())
+                    .quizId(existingQuiz.get().getQuizId())
                     .messageStatus("Success")
                     .build();
 
@@ -222,13 +245,6 @@ public class QuizService {
                 throw new IllegalArgumentException("No quiz found with ID: " + quizId);
             }
 
-            //Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(optionalQuiz.get().getTeacherId());
-            if(teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + optionalQuiz.get().getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + optionalQuiz.get().getTeacherId());
-            }
-
             //Check for course
             Optional<Course> course = courseRepository.findById(optionalQuiz.get().getCourseId());
             if(course.isEmpty()) {
@@ -237,16 +253,18 @@ public class QuizService {
             }
 
             Quiz quiz = optionalQuiz.get();
+            List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizId);
 
             quizResponse = QuizResponse.builder()
-                    .quizId(quiz.getAssignmentId())
-                    .quizTitle(quiz.getAssignmentTitle())
+                    .quizId(quiz.getQuizId())
+                    .quizTitle(quiz.getQuizTitle())
                     .description(quiz.getDescription())
                     .totalMarks(quiz.getTotalMarks())
                     .visibility(quiz.isVisibility())
+                    .quizQuestions(quizQuestions)
+                    .time(quiz.getTime())
                     .messageStatus("Success")
                     .course(course.get())
-                    .teacher(teacher.get())
                     .build();
 
             Utility.printDebugLogs("Quiz response: " + quizResponse);

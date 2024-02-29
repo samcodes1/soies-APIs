@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Api(tags = "Event Management")
 @RestController
 @RequestMapping("/v1/events")
@@ -79,8 +81,8 @@ public class EventController {
             @ApiResponse(code = 404, message = "Course not found"),
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<EventListResponse> getEventsByCourseId(@PathVariable Long courseId) {
+    @GetMapping("/course")
+    public ResponseEntity<EventListResponse> getEventsByCourseId(@RequestBody List<Long> courseId) {
         EventListResponse response = eventService.getEventsByCourseId(courseId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

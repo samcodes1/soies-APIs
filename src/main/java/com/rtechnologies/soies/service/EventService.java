@@ -12,8 +12,7 @@ import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class EventService {
@@ -204,36 +203,45 @@ public class EventService {
         }
     }
 
-    public EventListResponse getEventsByCourseId(Long courseId) {
-        Utility.printDebugLogs("Get events by course ID: " + courseId);
-        EventListResponse eventListResponse;
+    public EventListResponse getEventsByCourseId(List<Long> courseIds) {
+        Utility.printDebugLogs("Get events by course IDs: " + courseIds.toString());
+        EventListResponse eventListResponse = new EventListResponse();
+        List<Event> mainEventList = new ArrayList<>();
+        for(int i=0; i<courseIds.size(); i++){
+            try {
+                List<Event> eventList = eventRepository.findByCourseId(courseIds.get(i));
 
-        try {
-            List<Event> eventList = eventRepository.findByCourseId(courseId);
+                if (eventList.isEmpty()) {
+                    Utility.printDebugLogs("No events found for course ID: " + courseIds.get(i));
+//                    throw new IllegalArgumentException("No events found for course ID: " + courseIds.get(i));
+                }
 
-            if (eventList.isEmpty()) {
-                Utility.printDebugLogs("No events found for course ID: " + courseId);
-                throw new IllegalArgumentException("No events found for course ID: " + courseId);
+                mainEventList.addAll(eventList);
+            } catch (IllegalArgumentException e) {
+                Utility.printErrorLogs(e.toString());
+                return EventListResponse.builder()
+                        .messageStatus(e.toString())
+                        .build();
+            } catch (Exception e) {
+                Utility.printErrorLogs(e.toString());
+                return EventListResponse.builder()
+                        .messageStatus("Failure: "+ e.toString())
+                        .build();
             }
-
-            eventListResponse = EventListResponse.builder()
-                    .eventList(eventList)
-                    .messageStatus("Success")
-                    .build();
-
-            Utility.printDebugLogs("Event list response: " + eventListResponse);
-            return eventListResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return EventListResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return EventListResponse.builder()
-                    .messageStatus("Failure")
-                    .build();
         }
+        sortEvents(mainEventList);
+
+        eventListResponse = EventListResponse.builder()
+                .eventList(mainEventList)
+                .messageStatus("Success")
+                .build();
+
+        Utility.printDebugLogs("Event list response: " + eventListResponse);
+        return eventListResponse;
     }
 
+    public static void sortEvents(List<Event> events) {
+        Collections.sort(events, Comparator.comparing(Event::getEventDate)
+                .thenComparing(Event::getTime));
+    }
 }

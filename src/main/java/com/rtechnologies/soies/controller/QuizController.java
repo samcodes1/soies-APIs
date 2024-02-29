@@ -1,7 +1,9 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Quiz;
+import com.rtechnologies.soies.model.dto.CreateQuizRequest;
 import com.rtechnologies.soies.model.dto.QuizListResponse;
+import com.rtechnologies.soies.model.dto.QuizRequest;
 import com.rtechnologies.soies.model.dto.QuizResponse;
 import com.rtechnologies.soies.service.QuizService;
 import io.swagger.annotations.ApiOperation;
@@ -25,7 +27,7 @@ public class QuizController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping("/create")
-    public ResponseEntity<QuizResponse> createQuiz(@RequestBody Quiz quiz) {
+    public ResponseEntity<QuizResponse> createQuiz(@RequestBody CreateQuizRequest quiz) {
         QuizResponse response = quizService.createQuiz(quiz);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
@@ -39,7 +41,7 @@ public class QuizController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PutMapping("/update")
-    public ResponseEntity<QuizResponse> updateQuiz(@RequestBody Quiz quiz) {
+    public ResponseEntity<QuizResponse> updateQuiz(@RequestBody QuizRequest quiz) {
         QuizResponse response = quizService.updateQuiz(quiz);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
