@@ -1,6 +1,5 @@
 package com.rtechnologies.soies.model.association;
 
-import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.QuizQuestion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +10,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -19,14 +17,12 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuizSubmission {
+public class QuizStudentAnswer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long quizId;
-    private Long courseId;
-    private Long studentRollNumber;
-    private int totalMarks;
-    private int gainedMarks;
-    private double percentage;
+    private Long quizSubmissionId;
+    private Long questionId;
+    private String answer;
+    private boolean isCorrect;
 }

@@ -4,14 +4,10 @@ import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Quiz;
 import com.rtechnologies.soies.model.QuizQuestion;
 import com.rtechnologies.soies.model.Teacher;
-import com.rtechnologies.soies.model.dto.CreateQuizRequest;
-import com.rtechnologies.soies.model.dto.QuizListResponse;
-import com.rtechnologies.soies.model.dto.QuizRequest;
-import com.rtechnologies.soies.model.dto.QuizResponse;
-import com.rtechnologies.soies.repository.CourseRepository;
-import com.rtechnologies.soies.repository.QuizQuestionRepository;
-import com.rtechnologies.soies.repository.QuizRepository;
-import com.rtechnologies.soies.repository.TeacherRepository;
+import com.rtechnologies.soies.model.association.QuizStudentAnswer;
+import com.rtechnologies.soies.model.association.QuizSubmission;
+import com.rtechnologies.soies.model.dto.*;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,6 +30,11 @@ public class QuizService {
     @Autowired
     private QuizQuestionRepository quizQuestionRepository;
 
+    @Autowired
+    private QuizSubmissionRepository quizSubmissionRepository;
+
+    @Autowired
+    private QuizStudentAnswerRepository quizStudentAnswerRepository;
     public QuizResponse createQuiz(CreateQuizRequest quiz) {
         Utility.printDebugLogs("Quiz creation request: " + quiz.toString());
         QuizResponse quizResponse;
@@ -312,5 +313,78 @@ public class QuizService {
                     .messageStatus("Failure")
                     .build();
         }
+    }
+
+
+    //Quiz submission APIs
+    public String submitQuiz(QuizSubmissionRequest quizSubmissionRequest){
+        QuizSubmission quizSubmission = new QuizSubmission();
+        List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizSubmissionRequest.getQuizId());
+
+        if(quizQuestions.isEmpty()) {
+            throw new IllegalArgumentException("No quiz found with ID: " + quizSubmissionRequest.getCourseId());
+        }
+        quizSubmission = mapToQuizSubmission(quizSubmissionRequest);
+        quizSubmissionRepository.save(quizSubmission);
+
+
+        int totalMarks = quizSubmission.getTotalMarks();
+        int perQuestionMark = totalMarks/quizQuestions.size();
+        int gainedMarks = 0;
+
+        //Save answers to the DB
+        for(int i=0; i<quizSubmissionRequest.getQuizQuestionList().size(); i++){
+            boolean isCorrect = false;
+
+            if(quizSubmissionRequest.getQuizQuestionList().
+                    get(i).getAnswer().equals(quizQuestions.get(i).getAnswer())) {
+                gainedMarks+=perQuestionMark;
+                isCorrect=true;
+            }
+
+            quizStudentAnswerRepository.save(QuizStudentAnswer.builder().
+                    quizSubmissionId(quizSubmission.getQuizId())
+                    .questionId(quizQuestions.get(i).getId())
+                    .answer(quizSubmissionRequest.getQuizQuestionList().
+                            get(i).getAnswer())
+                    .isCorrect(isCorrect)
+                    . build());
+        }
+
+        double percentage = (double) gainedMarks/totalMarks * 100;
+        quizSubmission.setGainedMarks(gainedMarks);
+        quizSubmission.setPercentage(percentage);
+
+        quizSubmissionRepository.save(quizSubmission);
+
+        return "Quiz submitted successfully";
+    }
+
+    public QuizSubmissionListResponse getAllQuizSubmission(Long quizId){
+        List<QuizSubmission> submittedQuizzes = quizSubmissionRepository.findByQuizId(quizId);
+        QuizSubmissionListResponse quizSubmissionResponse = new QuizSubmissionListResponse();
+        if(submittedQuizzes.isEmpty()) {
+            throw new IllegalArgumentException("No quiz found with ID: " + quizId);
+        }
+
+        quizSubmissionResponse.setQuizSubmissionList(submittedQuizzes);
+        quizSubmissionResponse.setMessageStatus("Success");
+
+        return quizSubmissionResponse;
+    }
+
+    //To be implemented during admin side
+//    public QuizSubmissionResponse getQuizSubmissionByStudentId(){
+//
+//    }
+
+    public static QuizSubmission mapToQuizSubmission(QuizSubmissionRequest submissionRequest) {
+        return QuizSubmission.builder()
+                .quizId(submissionRequest.getQuizId())
+                .courseId(submissionRequest.getCourseId())
+                .studentRollNumber(submissionRequest.getStudentRollNumber())
+                .totalMarks(submissionRequest.getTotalMarks())
+                .gainedMarks(0)
+                .build();
     }
 }

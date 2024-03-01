@@ -82,7 +82,7 @@ public class EventController {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     @GetMapping("/course")
-    public ResponseEntity<EventListResponse> getEventsByCourseId(@RequestBody List<Long> courseId) {
+    public ResponseEntity<EventListResponse> getEventsByCourseId(@RequestParam List<Long> courseId) {
         EventListResponse response = eventService.getEventsByCourseId(courseId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
