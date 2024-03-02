@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Api(tags = "Event Management")
@@ -81,9 +82,24 @@ public class EventController {
             @ApiResponse(code = 404, message = "Course not found"),
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    @GetMapping("/course")
-    public ResponseEntity<EventListResponse> getEventsByCourseId(@RequestParam List<Long> courseId) {
-        EventListResponse response = eventService.getEventsByCourseId(courseId);
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<EventListResponse> getEventsByCourseId(@PathVariable String courseId) {
+        List<Long> longList = new ArrayList<>();
+
+        if (courseId != null && !courseId.isEmpty()) {
+            String[] stringArray = courseId.split(",");
+
+            for (String str : stringArray) {
+                try {
+                    long value = Long.parseLong(str.trim());
+                    longList.add(value);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Error while parsing course ids");
+                    // Handle the exception based on your requirements
+                }
+            }
+        }
+        EventListResponse response = eventService.getEventsByCourseId(longList);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
