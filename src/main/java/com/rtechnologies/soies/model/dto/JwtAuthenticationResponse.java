@@ -3,7 +3,6 @@ package com.rtechnologies.soies.model.dto;
 public class JwtAuthenticationResponse {
     private String accessToken;
     private String tokenType = "Bearer";
-
     // Constructors, getters, and setters
 
     public JwtAuthenticationResponse(String accessToken) {

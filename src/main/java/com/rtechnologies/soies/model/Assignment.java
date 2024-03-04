@@ -23,7 +23,6 @@ public class Assignment {
     private String assignmentTitle;
     private String description;
     private String file; // You might want to use a data type suitable for storing file paths
-
     private String dueDate;
     private int totalMarks;
     private boolean visibility;

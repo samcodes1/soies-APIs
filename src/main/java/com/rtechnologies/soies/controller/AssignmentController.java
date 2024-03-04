@@ -63,14 +63,12 @@ public class AssignmentController {
     public ResponseEntity<AssignmentSubmissionResponse> submitAssignment(
             @RequestParam("assignmentId") Long assignmentId,
             @RequestParam("studentId") Long studentId,
-            @RequestParam("submissionDate") String submissionDate,
             @RequestParam("submittedFile") MultipartFile submittedFile,
             @RequestParam("comments") String comments) {
 
         AssignmentSubmissionRequest submissionRequest = AssignmentSubmissionRequest.builder()
                 .assignmentId(assignmentId)
                 .studentId(studentId)
-                .submissionDate(submissionDate)
                 .submittedFile(submittedFile)
                 .comments(comments)
                 .obtainedMarks(0)
