@@ -19,7 +19,6 @@ public class AssignmentRequest {
     private String assignmentTitle;
     private String description;
     private MultipartFile file;
-    private Date dueDate;
     private int totalMarks;
     private boolean visibility;
 }

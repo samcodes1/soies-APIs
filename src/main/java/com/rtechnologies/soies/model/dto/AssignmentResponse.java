@@ -20,7 +20,7 @@ public class AssignmentResponse {
     private String assignmentTitle;
     private String description;
     private String file;
-    private Date dueDate;
+    private String dueDate;
     private int totalMarks;
     private boolean visibility;
     private String messageStatus;

@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 @RestController
 @RequestMapping("/api/assignments")
 public class AssignmentController {
@@ -28,10 +31,27 @@ public class AssignmentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping("/create")
-    public ResponseEntity<AssignmentResponse> createAssignment(@RequestBody AssignmentRequest assignment,
-                                                               @RequestParam("assignmentFile") MultipartFile assignmentFile) {
-        assignment.setFile(assignmentFile);
-        AssignmentResponse response = assignmentService.createAssignment(assignment);
+    public ResponseEntity<AssignmentResponse> createAssignment(
+                                                                @RequestParam("file") MultipartFile file,
+                                                                @RequestParam("courseId") Long courseId,
+                                                                @RequestParam("teacherId") Long teacherId,
+                                                                @RequestParam("assignmentTitle") String assignmentTitle,
+                                                                @RequestParam("description") String description,
+                                                                @RequestParam("totalMarks") int totalMarks,
+                                                                @RequestParam("visibility") boolean visibility) {
+
+        AssignmentRequest assignmentRequest = AssignmentRequest.builder()
+                .courseId(courseId)
+                .teacherId(teacherId)
+                .assignmentTitle(assignmentTitle)
+                .file(file)
+                .description(description)
+                .totalMarks(totalMarks)
+                .visibility(visibility)
+                .build();
+
+        System.out.println("In the request: " );
+        AssignmentResponse response = assignmentService.createAssignment(assignmentRequest);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

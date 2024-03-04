@@ -29,7 +29,6 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping(produces = "application/json", path = "/create-teacher")
-    @PreAuthorize("hasAuthority('CREATE_TEACHER')")
     public ResponseEntity<TeacherResponse> createTeacher(@RequestBody Teacher teacher) {
         System.out.println("Done2");
         TeacherResponse teacherResponse = teacherService.createTeacher(teacher);

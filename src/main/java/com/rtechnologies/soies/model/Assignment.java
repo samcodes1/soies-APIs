@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -25,7 +23,8 @@ public class Assignment {
     private String assignmentTitle;
     private String description;
     private String file; // You might want to use a data type suitable for storing file paths
-    private Date dueDate;
+
+    private String dueDate;
     private int totalMarks;
     private boolean visibility;
 }

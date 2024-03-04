@@ -73,11 +73,11 @@ public class AssignmentService {
                 Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
                 String url =  data.get("url").toString();
 
+                System.out.println("URL is: " + url);
                 Assignment finalAssignment = new Assignment();
                 finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
                 finalAssignment.setFile(url);
                 finalAssignment.setDescription(assignment.getDescription());
-                finalAssignment.setDueDate(assignment.getDueDate());
                 finalAssignment.setVisibility(true);
                 finalAssignment.setCourseId(assignment.getCourseId());
                 finalAssignment.setTeacherId(assignment.getTeacherId());
@@ -96,7 +96,6 @@ public class AssignmentService {
                     .assignmentTitle(createdAssignment.getAssignmentTitle())
                     .description(createdAssignment.getDescription())
                     .file(createdAssignment.getFile())
-                    .dueDate(createdAssignment.getDueDate())
                     .totalMarks(createdAssignment.getTotalMarks())
                     .visibility(createdAssignment.isVisibility())
                     .messageStatus("Success")
@@ -159,7 +158,6 @@ public class AssignmentService {
                 finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
                 finalAssignment.setFile(url);
                 finalAssignment.setDescription(assignment.getDescription());
-                finalAssignment.setDueDate(assignment.getDueDate());
                 finalAssignment.setVisibility(true);
                 finalAssignment.setCourseId(assignment.getCourseId());
                 finalAssignment.setTeacherId(assignment.getTeacherId());
@@ -178,7 +176,6 @@ public class AssignmentService {
                     .assignmentTitle(updatedAssignment.getAssignmentTitle())
                     .description(updatedAssignment.getDescription())
                     .file(updatedAssignment.getFile())
-                    .dueDate(updatedAssignment.getDueDate())
                     .totalMarks(updatedAssignment.getTotalMarks())
                     .visibility(updatedAssignment.isVisibility())
                     .messageStatus("Success")
@@ -286,7 +283,6 @@ public class AssignmentService {
                     .assignmentTitle(assignment.getAssignmentTitle())
                     .description(assignment.getDescription())
                     .file(assignment.getFile())
-                    .dueDate(assignment.getDueDate())
                     .totalMarks(assignment.getTotalMarks())
                     .visibility(assignment.isVisibility())
                     .messageStatus("Success")
