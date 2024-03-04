@@ -111,6 +111,22 @@ public class AssignmentController {
                 .body(studentListResponse);
     }
 
+    @ApiOperation(value = "Get student assignment submission with student Id", response = AssignmentSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Submission retrieved successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-assignment-submission/{assignmentId}/{studentId}")
+    public ResponseEntity<AssignmentSubmissionResponse> getAssignmentSubmissions(
+            @PathVariable Long assignmentId,
+            @PathVariable Long studentId
+            ) {
+        AssignmentSubmissionResponse studentListResponse = assignmentService.getAssignmentSubmissionById(assignmentId, studentId);
+        return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(studentListResponse);
+    }
+
     @ApiOperation(value = "Mark submitted assignment", response = AssignmentSubmissionResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Assignment marked successfully"),

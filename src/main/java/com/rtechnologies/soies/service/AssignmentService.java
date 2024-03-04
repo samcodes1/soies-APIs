@@ -440,6 +440,43 @@ public class AssignmentService {
         }
     }
 
+    public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, Long studentRollNumber) {
+        AssignmentSubmissionResponse assignmentSubmissionListResponse;
+
+        try {
+            Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentRollNumber);
+
+            if(!assignmentSubmissionsPage.isEmpty()){
+                throw new IllegalArgumentException("No submission found");
+            }
+            assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
+                    .submissionId(assignmentSubmissionsPage.get().getSubmissionId())
+                    .assignmentId(assignmentSubmissionsPage.get().getAssignmentId())
+                    .studentId(assignmentSubmissionsPage.get().getStudentId())
+                    .submittedFileURL(assignmentSubmissionsPage.get().getSubmittedFileURL())
+                    .comments(assignmentSubmissionsPage.get().getComments())
+                    .obtainedMarks(assignmentSubmissionsPage.get().getObtainedMarks())
+                    .grade(assignmentSubmissionsPage.get().getObtainedGrade())
+                    .submissionDate(assignmentSubmissionsPage.get().getSubmissionDate())
+                    .studentName(assignmentSubmissionsPage.get().getStudentName())
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
+            return assignmentSubmissionListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
+
     private static final Map<String, String> GRADE_MAPPING;
 
     static {

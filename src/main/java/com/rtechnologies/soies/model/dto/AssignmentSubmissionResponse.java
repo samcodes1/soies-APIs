@@ -18,6 +18,7 @@ public class AssignmentSubmissionResponse {
     private Long studentId; // ID of the Student submitting the assignment
     private String submissionDate;
     private String submittedFileURL;
+    private String studentName;
     private String comments;
     private double obtainedMarks;
     private String grade;
