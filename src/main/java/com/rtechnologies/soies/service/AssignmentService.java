@@ -11,16 +11,15 @@ import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.webjars.NotFoundException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AssignmentService {
@@ -375,8 +374,10 @@ public class AssignmentService {
                 finalAssignment.setStudentId(assignment.getStudentId());
                 finalAssignment.setSubmissionDate(assignment.getSubmissionDate());
                 finalAssignment.setSubmittedFileURL(url);
-                finalAssignment.setComments("Comments pending");
-                finalAssignment.setObtainedMarks(0);
+                finalAssignment.setStudentName(studentOptional.get().getStudentName());
+                finalAssignment.setComments("pending");
+                finalAssignment.setObtainedMarks(-1);
+                finalAssignment.setObtainedGrade("pending");
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
@@ -385,13 +386,14 @@ public class AssignmentService {
             Utility.printDebugLogs("Assignment created successfully: " + finalAssignment);
 
             assignmentResponse = AssignmentSubmissionResponse.builder()
-                    .submissionId(finalAssignment.getAssignmentId())
+                    .submissionId(finalAssignment.getSubmissionId())
                     .assignmentId(finalAssignment.getAssignmentId())
                     .studentId(finalAssignment.getStudentId())
                     .submissionDate(finalAssignment.getSubmissionDate())
                     .submittedFileURL(finalAssignment.getSubmittedFileURL())
                     .comments("pending")
-                    .obtainedMarks(0)
+                    .obtainedMarks(-1)
+                    .grade("pending")
                     .messageStatus("Success")
                     .build();
 
@@ -409,4 +411,102 @@ public class AssignmentService {
                     .build();
         }
     }
+
+    public AssignmentSubmissionListResponse getAssignmentSubmissions(Long assignmentId, int page, int size) {
+        Utility.printDebugLogs("Get assignment submissions by assignment ID: " + assignmentId);
+        AssignmentSubmissionListResponse assignmentSubmissionListResponse;
+
+        try {
+            Page<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentId(assignmentId, PageRequest.of(page, size));
+            List<AssignmentSubmission> assignmentList = assignmentSubmissionsPage.getContent();
+
+            assignmentSubmissionListResponse = AssignmentSubmissionListResponse.builder()
+                    .assignmentSubmissionResponseList(assignmentList)
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
+            return assignmentSubmissionListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionListResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
+
+    private static final Map<String, String> GRADE_MAPPING;
+
+    static {
+        GRADE_MAPPING = new HashMap<>();
+        GRADE_MAPPING.put("A", "90-100");
+        GRADE_MAPPING.put("B", "80-89");
+        GRADE_MAPPING.put("C", "70-79");
+        GRADE_MAPPING.put("D", "60-69");
+        GRADE_MAPPING.put("F", "0-59");
+    }
+
+    public AssignmentSubmissionResponse markAssignment(MarkAssignmentRequest markAssignmentRequest){
+        Utility.printDebugLogs("Mark Assignment request " + markAssignmentRequest);
+        AssignmentSubmissionResponse assignmentResponse;
+
+        try {
+            if (markAssignmentRequest == null) {
+                throw new IllegalArgumentException("Corrupt data received");
+            }
+
+            //Check for assignment ID
+            Optional<AssignmentSubmission> assignmentOptional = assignmentSubmissionRepository.findById(markAssignmentRequest.getSubmissionId());
+
+            if(assignmentOptional.isEmpty()) {
+                throw new IllegalArgumentException("No assignment submission with ID: " + markAssignmentRequest.getSubmissionId());
+            }
+
+            assignmentOptional.get().setComments(markAssignmentRequest.getFeedback());
+            assignmentOptional.get().setObtainedMarks(markAssignmentRequest.getMarks());
+            for (Map.Entry<String, String> entry : GRADE_MAPPING.entrySet()) {
+                String[] range = entry.getValue().split("-");
+                int lowerBound = Integer.parseInt(range[0]);
+                int upperBound = Integer.parseInt(range[1]);
+
+                if (markAssignmentRequest.getMarks() >= lowerBound && markAssignmentRequest.getMarks() <= upperBound) {
+                    assignmentOptional.get().setObtainedGrade(entry.getKey());
+                }
+            }
+
+            AssignmentSubmission finalAssignment = assignmentSubmissionRepository.save(assignmentOptional.get());
+            Utility.printDebugLogs("Assignment created successfully: " + finalAssignment);
+
+            assignmentResponse = AssignmentSubmissionResponse.builder()
+                    .submissionId(finalAssignment.getSubmissionId())
+                    .assignmentId(finalAssignment.getAssignmentId())
+                    .studentId(finalAssignment.getStudentId())
+                    .submissionDate(finalAssignment.getSubmissionDate())
+                    .submittedFileURL(finalAssignment.getSubmittedFileURL())
+                    .comments(finalAssignment.getComments())
+                    .obtainedMarks(finalAssignment.getObtainedMarks())
+                    .grade(finalAssignment.getObtainedGrade())
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Assignment submission response: " + assignmentResponse);
+            return assignmentResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        }
+    }
+
 }

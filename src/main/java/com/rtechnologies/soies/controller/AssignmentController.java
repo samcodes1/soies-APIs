@@ -96,6 +96,36 @@ public class AssignmentController {
                 .body(response);
     }
 
+    @ApiOperation(value = "Get all students assignment submissions with pagination", response = AssignmentSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Submissions retrieved successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-all-assignment-submissions/{assignmentId}")
+    public ResponseEntity<AssignmentSubmissionListResponse> getAllAssignmentSubmissions(
+            @PathVariable Long assignmentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        AssignmentSubmissionListResponse studentListResponse = assignmentService.getAssignmentSubmissions(assignmentId, page, size);
+        return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(studentListResponse);
+    }
+
+    @ApiOperation(value = "Mark submitted assignment", response = AssignmentSubmissionResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Assignment marked successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 404, message = "Assignment not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @PutMapping("/mark-assignment")
+    public ResponseEntity<AssignmentSubmissionResponse> markAssignment(@RequestBody MarkAssignmentRequest assignment) {
+        AssignmentSubmissionResponse response = assignmentService.markAssignment(assignment);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
     @ApiOperation(value = "Delete an assignment", response = AssignmentResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Assignment deleted successfully"),

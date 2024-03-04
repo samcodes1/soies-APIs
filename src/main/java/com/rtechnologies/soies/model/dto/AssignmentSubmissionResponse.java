@@ -19,6 +19,7 @@ public class AssignmentSubmissionResponse {
     private String submissionDate;
     private String submittedFileURL;
     private String comments;
-    private int obtainedMarks;
+    private double obtainedMarks;
+    private String grade;
     private String messageStatus;
 }
