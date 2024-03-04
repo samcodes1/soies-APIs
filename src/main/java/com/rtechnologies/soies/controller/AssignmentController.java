@@ -1,10 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Assignment;
-import com.rtechnologies.soies.model.dto.AssignmentListResponse;
-import com.rtechnologies.soies.model.dto.AssignmentRequest;
-import com.rtechnologies.soies.model.dto.AssignmentResponse;
-import com.rtechnologies.soies.model.dto.TeacherResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.AssignmentService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -52,6 +49,35 @@ public class AssignmentController {
 
         System.out.println("In the request: " );
         AssignmentResponse response = assignmentService.createAssignment(assignmentRequest);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+
+    @ApiOperation(value = "Submit an assignment", response = AssignmentSubmissionResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Assignment created successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @PostMapping("/submit")
+    public ResponseEntity<AssignmentSubmissionResponse> submitAssignment(
+            @RequestParam("assignmentId") Long assignmentId,
+            @RequestParam("studentId") Long studentId,
+            @RequestParam("submissionDate") String submissionDate,
+            @RequestParam("submittedFile") MultipartFile submittedFile,
+            @RequestParam("comments") String comments) {
+
+        AssignmentSubmissionRequest submissionRequest = AssignmentSubmissionRequest.builder()
+                .assignmentId(assignmentId)
+                .studentId(studentId)
+                .submissionDate(submissionDate)
+                .submittedFile(submittedFile)
+                .comments(comments)
+                .obtainedMarks(0)
+                .build();
+
+        System.out.println("In the request: " );
+        AssignmentSubmissionResponse response = assignmentService.submitAssignment(submissionRequest);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

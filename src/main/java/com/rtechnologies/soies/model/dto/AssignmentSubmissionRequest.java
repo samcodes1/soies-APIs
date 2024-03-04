@@ -17,7 +17,7 @@ public class AssignmentSubmissionRequest {
     private Long submissionId;
     private Long assignmentId; // ID of the Assignment associated with the submission
     private Long studentId; // ID of the Student submitting the assignment
-    private Date submissionDate;
+    private String submissionDate;
     private MultipartFile submittedFile;
     private String comments;
     private int obtainedMarks;

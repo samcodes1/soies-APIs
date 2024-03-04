@@ -4,14 +4,11 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.rtechnologies.soies.model.Assignment;
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
-import com.rtechnologies.soies.model.dto.AssignmentListResponse;
-import com.rtechnologies.soies.model.dto.AssignmentRequest;
-import com.rtechnologies.soies.model.dto.AssignmentResponse;
-import com.rtechnologies.soies.model.dto.TeacherResponse;
-import com.rtechnologies.soies.repository.AssignmentRepository;
-import com.rtechnologies.soies.repository.CourseRepository;
-import com.rtechnologies.soies.repository.TeacherRepository;
+import com.rtechnologies.soies.model.association.AssignmentSubmission;
+import com.rtechnologies.soies.model.dto.*;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +37,11 @@ public class AssignmentService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private AssignmentSubmissionRepository assignmentSubmissionRepository;
     public AssignmentResponse createAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment creation request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
@@ -331,6 +333,79 @@ public class AssignmentService {
             Utility.printErrorLogs(e.toString());
             return AssignmentListResponse.builder()
                     .messageStatus("Failure")
+                    .build();
+        }
+    }
+
+    public AssignmentSubmissionResponse submitAssignment(AssignmentSubmissionRequest assignment){
+        Utility.printDebugLogs("Assignment submission request: " + assignment.toString());
+        AssignmentSubmissionResponse assignmentResponse;
+
+        try {
+            if (assignment == null) {
+                Utility.printDebugLogs("Assignment submission request is null");
+                throw new IllegalArgumentException("Corrupt data received");
+            }
+
+            //Check for assignment ID
+            Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
+            if(assignmentOptional.isEmpty()) {
+                Utility.printDebugLogs("No assignment found with ID: " + assignment.getAssignmentId());
+                throw new IllegalArgumentException("No assignment found with ID: " + assignment.getAssignmentId());
+            }
+
+            //Check for student
+            Optional<Student> studentOptional = studentRepository.findById(assignment.getStudentId());
+            if(studentOptional.isEmpty()) {
+                Utility.printDebugLogs("No student found with ID: " + assignment.getStudentId());
+                throw new IllegalArgumentException("No student found with ID: " + assignment.getStudentId());
+            }
+
+            String fileName = "";
+            fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
+            AssignmentSubmission finalAssignment = new AssignmentSubmission();
+            try {
+                String folder = "submitted-assignments";
+                String publicId = folder + "/" + fileName;
+                Map data = cloudinary.uploader().upload(assignment.getSubmittedFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String url =  data.get("url").toString();
+
+                System.out.println("URL is: " + url);
+                finalAssignment.setAssignmentId(assignment.getAssignmentId());
+                finalAssignment.setStudentId(assignment.getStudentId());
+                finalAssignment.setSubmissionDate(assignment.getSubmissionDate());
+                finalAssignment.setSubmittedFileURL(url);
+                finalAssignment.setComments("Comments pending");
+                finalAssignment.setObtainedMarks(0);
+                finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
+            } catch (IOException ioException) {
+                throw new RuntimeException("File uploading failed");
+            }
+
+            Utility.printDebugLogs("Assignment created successfully: " + finalAssignment);
+
+            assignmentResponse = AssignmentSubmissionResponse.builder()
+                    .submissionId(finalAssignment.getAssignmentId())
+                    .assignmentId(finalAssignment.getAssignmentId())
+                    .studentId(finalAssignment.getStudentId())
+                    .submissionDate(finalAssignment.getSubmissionDate())
+                    .submittedFileURL(finalAssignment.getSubmittedFileURL())
+                    .comments("pending")
+                    .obtainedMarks(0)
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Assignment submission response: " + assignmentResponse);
+            return assignmentResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentSubmissionResponse.builder()
+                    .messageStatus(e.toString())
                     .build();
         }
     }
