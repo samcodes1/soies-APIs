@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/assignments")
@@ -27,7 +28,9 @@ public class AssignmentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping("/create")
-    public ResponseEntity<AssignmentResponse> createAssignment(@RequestBody AssignmentRequest assignment) {
+    public ResponseEntity<AssignmentResponse> createAssignment(@RequestBody AssignmentRequest assignment,
+                                                               @RequestParam("assignmentFile") MultipartFile assignmentFile) {
+        assignment.setFile(assignmentFile);
         AssignmentResponse response = assignmentService.createAssignment(assignment);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
