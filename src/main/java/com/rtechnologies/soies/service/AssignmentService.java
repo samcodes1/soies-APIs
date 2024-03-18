@@ -371,7 +371,7 @@ public class AssignmentService {
 
                 System.out.println("URL is: " + url);
                 finalAssignment.setAssignmentId(assignment.getAssignmentId());
-                finalAssignment.setStudentId(assignment.getStudentId());
+                finalAssignment.setStudentRollNumber(Long.toString(assignment.getStudentId()));
                 finalAssignment.setSubmissionDate(assignment.getSubmissionDate());
                 finalAssignment.setSubmittedFileURL(url);
                 finalAssignment.setStudentName(studentOptional.get().getStudentName());
@@ -388,7 +388,7 @@ public class AssignmentService {
             assignmentResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(finalAssignment.getSubmissionId())
                     .assignmentId(finalAssignment.getAssignmentId())
-                    .studentId(finalAssignment.getStudentId())
+                    .studentId(finalAssignment.getStudentRollNumber())
                     .submissionDate(finalAssignment.getSubmissionDate())
                     .submittedFileURL(finalAssignment.getSubmittedFileURL())
                     .comments("pending")
@@ -440,11 +440,11 @@ public class AssignmentService {
         }
     }
 
-    public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, Long studentRollNumber) {
+    public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
         AssignmentSubmissionResponse assignmentSubmissionListResponse;
 
         try {
-            Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentRollNumber);
+            Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
 
             if(!assignmentSubmissionsPage.isEmpty()){
                 throw new IllegalArgumentException("No submission found");
@@ -452,7 +452,7 @@ public class AssignmentService {
             assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(assignmentSubmissionsPage.get().getSubmissionId())
                     .assignmentId(assignmentSubmissionsPage.get().getAssignmentId())
-                    .studentId(assignmentSubmissionsPage.get().getStudentId())
+                    .studentId(assignmentSubmissionsPage.get().getStudentRollNumber())
                     .submittedFileURL(assignmentSubmissionsPage.get().getSubmittedFileURL())
                     .comments(assignmentSubmissionsPage.get().getComments())
                     .obtainedMarks(assignmentSubmissionsPage.get().getObtainedMarks())
@@ -522,7 +522,7 @@ public class AssignmentService {
             assignmentResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(finalAssignment.getSubmissionId())
                     .assignmentId(finalAssignment.getAssignmentId())
-                    .studentId(finalAssignment.getStudentId())
+                    .studentId(finalAssignment.getStudentRollNumber())
                     .submissionDate(finalAssignment.getSubmissionDate())
                     .submittedFileURL(finalAssignment.getSubmittedFileURL())
                     .comments(finalAssignment.getComments())

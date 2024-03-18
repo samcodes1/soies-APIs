@@ -21,7 +21,7 @@ public class AssignmentSubmission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long submissionId;
     private Long assignmentId; // ID of the Assignment associated with the submission
-    private Long studentId; // ID of the Student submitting the assignment
+    private String studentRollNumber;
     private Long courseId;
     private String studentName;
     private String submissionDate;

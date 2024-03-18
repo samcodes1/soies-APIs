@@ -117,12 +117,12 @@ public class AssignmentController {
             @ApiResponse(code = 400, message = "Invalid request data"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @GetMapping("/get-assignment-submission/{assignmentId}/{studentId}")
+    @GetMapping("/get-assignment-submission/{assignmentId}/{studentRollNumber}")
     public ResponseEntity<AssignmentSubmissionResponse> getAssignmentSubmissions(
             @PathVariable Long assignmentId,
-            @PathVariable Long studentId
+            @PathVariable String studentRollNumber
             ) {
-        AssignmentSubmissionResponse studentListResponse = assignmentService.getAssignmentSubmissionById(assignmentId, studentId);
+        AssignmentSubmissionResponse studentListResponse = assignmentService.getAssignmentSubmissionById(assignmentId, studentRollNumber);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }

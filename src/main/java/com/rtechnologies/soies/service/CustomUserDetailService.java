@@ -22,6 +22,8 @@ public class CustomUserDetailService implements UserDetailsService {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private StudentAttendanceService studentAttendanceService;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Try to load a Teacher
@@ -32,6 +34,7 @@ public class CustomUserDetailService implements UserDetailsService {
         // Try to load a Student
         Optional<Student> student = studentRepository.findByRollNumber(username);
         if (student.isPresent()) {
+            studentAttendanceService.markAttendanceOnLogin(student.get().getRollNumber());
             return new CustomUserDetails(student.get());
         }
         throw new UsernameNotFoundException("User not found with username: " + username);
