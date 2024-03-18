@@ -27,4 +27,5 @@ public class Exam {
     private String time;
     private int totalMarks;
     private boolean visibility;
+    private String term;
 }

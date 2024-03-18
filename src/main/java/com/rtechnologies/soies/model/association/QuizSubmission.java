@@ -29,4 +29,6 @@ public class QuizSubmission {
     private int totalMarks;
     private int gainedMarks;
     private double percentage;
+    private String date;
+    private String term;
 }

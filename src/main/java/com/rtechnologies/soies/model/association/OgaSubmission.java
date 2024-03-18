@@ -1,4 +1,4 @@
-package com.rtechnologies.soies.model;
+package com.rtechnologies.soies.model.association;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,24 +9,22 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import java.util.Date;
-import java.util.List;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Quiz {
+public class OgaSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long quizId;
+    private Long id;
+    private Long ogaId;
     private Long courseId;
-    private String quizTitle;
-    private String description;
-    private Date dueDate;
-    private String time;
+    private Long studentRollNumber;
     private int totalMarks;
-    private boolean visibility;
+    private int gainedMarks;
+    private double percentage;
+    private String date;
     private String term;
 }

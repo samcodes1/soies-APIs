@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.util.Date;
 
 @Entity
@@ -14,18 +16,16 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Assignment {
+public class Oga {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long assignmentId;
+    private Long ogaId;
     private Long courseId;
-    private Long teacherId; // ID of the Teacher associated with the assignment
-    private String assignmentTitle;
+    private String examTitle;
     private String description;
-    private String file; // You might want to use a data type suitable for storing file paths
-    private String dueDate;
+    private Date dueDate;
+    private String time;
     private int totalMarks;
     private boolean visibility;
     private String term;
 }
-
