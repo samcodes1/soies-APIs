@@ -346,6 +346,7 @@ public class AssignmentService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
+
             //Check for assignment ID
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
             if(assignmentOptional.isEmpty()) {
@@ -360,6 +361,14 @@ public class AssignmentService {
                 throw new IllegalArgumentException("No student found with ID: " + assignment.getStudentId());
             }
 
+            Optional<AssignmentSubmission> assignmentSubmission = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(
+                    assignment.getAssignmentId(), studentOptional.get().getRollNumber());
+
+            long submissionId = 0;
+            if(assignmentSubmission.isPresent()) {
+                submissionId = assignmentSubmission.get().getSubmissionId();
+            }
+
             String fileName = "";
             fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
             AssignmentSubmission finalAssignment = new AssignmentSubmission();
@@ -370,6 +379,10 @@ public class AssignmentService {
                 String url =  data.get("url").toString();
 
                 System.out.println("URL is: " + url);
+                if(submissionId != 0){
+                    finalAssignment.setSubmissionId(submissionId);
+                }
+
                 finalAssignment.setAssignmentId(assignment.getAssignmentId());
                 finalAssignment.setStudentRollNumber(Long.toString(assignment.getStudentId()));
                 finalAssignment.setSubmissionDate(assignment.getSubmissionDate());

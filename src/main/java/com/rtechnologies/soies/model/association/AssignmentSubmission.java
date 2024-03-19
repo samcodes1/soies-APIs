@@ -20,12 +20,12 @@ public class AssignmentSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long submissionId;
-    private Long assignmentId; // ID of the Assignment associated with the submission
+    private Long assignmentId;
     private String studentRollNumber;
     private Long courseId;
     private String studentName;
     private String submissionDate;
-    private String submittedFileURL; // You might want to use a data type suitable for storing file URLs
+    private String submittedFileURL;
     private String comments;
     private double obtainedMarks;
     private String obtainedGrade;

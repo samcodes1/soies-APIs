@@ -74,7 +74,6 @@ public class AssignmentController {
                 .obtainedMarks(0)
                 .build();
 
-        System.out.println("In the request: " );
         AssignmentSubmissionResponse response = assignmentService.submitAssignment(submissionRequest);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
