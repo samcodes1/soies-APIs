@@ -310,7 +310,7 @@ public class AssignmentService {
         AssignmentListResponse assignmentListResponse;
 
         try {
-            List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSectionId(courseId);
+            List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSection(courseId, section);
             List<Assignment> finalList = new ArrayList<>();
             if (assignmentList.isEmpty()) {
                 Utility.printDebugLogs("No assignments found for course ID: " + courseId);
