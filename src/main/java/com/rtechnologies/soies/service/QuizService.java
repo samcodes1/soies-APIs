@@ -11,6 +11,7 @@ import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,14 +43,14 @@ public class QuizService {
         try {
             if (quiz == null) {
                 Utility.printDebugLogs("Quiz creation request is null");
-                throw new IllegalArgumentException("Corrupt data received");
+                throw new NotFoundException("Corrupt data received");
             }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(quiz.getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + quiz.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + quiz.getCourseId());
+                throw new NotFoundException("No course found with ID: " + quiz.getCourseId());
             }
 
             Quiz createdQuiz = mapToQuiz(quiz);
@@ -122,14 +123,14 @@ public class QuizService {
             // Check for quiz
             Optional<Quiz> existingQuiz = quizRepository.findById(quiz.getQuizId());
             if (existingQuiz.isEmpty()) {
-                throw new IllegalArgumentException("No Quiz found with ID: " + quiz.getQuizId());
+                throw new NotFoundException("No Quiz found with ID: " + quiz.getQuizId());
             }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(quiz.getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + quiz.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + quiz.getCourseId());
+                throw new NotFoundException("No course found with ID: " + quiz.getCourseId());
             }
 
             Quiz createdQuiz = mapToQuiz(quiz);
@@ -174,7 +175,7 @@ public class QuizService {
             Optional<Quiz> existingQuiz = quizRepository.findById(quizId);
 
             if (existingQuiz.isEmpty()) {
-                throw new IllegalArgumentException("No quiz found with ID: " + quizId);
+                throw new NotFoundException("No quiz found with ID: " + quizId);
             }
 
             quizRepository.deleteById(quizId);
@@ -210,7 +211,7 @@ public class QuizService {
 //            Optional<Teacher> teacher = teacherRepository.findById(teacherId);
 //            if(teacher.isEmpty()) {
 //                Utility.printDebugLogs("No teacher found with ID: " + teacherId);
-//                throw new IllegalArgumentException("No teacher found with ID: " + teacherId);
+//                throw new NotFoundException("No teacher found with ID: " + teacherId);
 //            }
 //
 //            List<Quiz> quizzes = quizRepository.findByTeacherId(teacherId);
@@ -243,14 +244,14 @@ public class QuizService {
 
             if (optionalQuiz.isEmpty()) {
                 Utility.printDebugLogs("No quiz found with ID: " + quizId);
-                throw new IllegalArgumentException("No quiz found with ID: " + quizId);
+                throw new NotFoundException("No quiz found with ID: " + quizId);
             }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(optionalQuiz.get().getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + optionalQuiz.get().getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + optionalQuiz.get().getCourseId());
+                throw new NotFoundException("No course found with ID: " + optionalQuiz.get().getCourseId());
             }
 
             Quiz quiz = optionalQuiz.get();
@@ -292,7 +293,7 @@ public class QuizService {
 
             if (quizList.isEmpty()) {
                 Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-                throw new IllegalArgumentException("No quizzes found for course ID: " + courseId);
+                throw new NotFoundException("No quizzes found for course ID: " + courseId);
             }
 
             quizListResponse = QuizListResponse.builder()
@@ -322,7 +323,7 @@ public class QuizService {
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizSubmissionRequest.getQuizId());
 
         if(quizQuestions.isEmpty()) {
-            throw new IllegalArgumentException("No quiz found with ID: " + quizSubmissionRequest.getCourseId());
+            throw new NotFoundException("No quiz found with ID: " + quizSubmissionRequest.getCourseId());
         }
         quizSubmission = mapToQuizSubmission(quizSubmissionRequest);
         quizSubmissionRepository.save(quizSubmission);
@@ -364,7 +365,7 @@ public class QuizService {
         List<QuizSubmission> submittedQuizzes = quizSubmissionRepository.findByQuizId(quizId);
         QuizSubmissionListResponse quizSubmissionResponse = new QuizSubmissionListResponse();
         if(submittedQuizzes.isEmpty()) {
-            throw new IllegalArgumentException("No quiz found with ID: " + quizId);
+            throw new NotFoundException("No quiz found with ID: " + quizId);
         }
 
         quizSubmissionResponse.setQuizSubmissionList(submittedQuizzes);

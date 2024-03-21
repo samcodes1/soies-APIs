@@ -70,8 +70,9 @@ public class EventController {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     @GetMapping("/teacher")
-    public ResponseEntity<EventListResponse> getEventsByTeacherEmail(@RequestParam("teacherEmail") String teacherEmail) {
-        EventListResponse response = eventService.getEventsByTeacherEmail(teacherEmail);
+    public ResponseEntity<EventListResponse> getEventsByTeacherEmail(@RequestParam("teacherEmail") String teacherEmail,
+                                                                     @RequestParam("section") String section) {
+        EventListResponse response = eventService.getEventsByTeacherEmailAndSection(teacherEmail,section);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -82,10 +83,11 @@ public class EventController {
             @ApiResponse(code = 404, message = "Course not found"),
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<EventListResponse> getEventsByCourseId(@PathVariable String courseId) {
+    @GetMapping("/course/{courseId}/{section}")
+    public ResponseEntity<EventListResponse> getEventsByCourseId(@PathVariable String courseId,
+                                                                 @PathVariable String section) {
         List<Long> longList = new ArrayList<>();
-
+        List<String> sections = new ArrayList<>();
         if (courseId != null && !courseId.isEmpty()) {
             String[] stringArray = courseId.split(",");
 
@@ -99,7 +101,21 @@ public class EventController {
                 }
             }
         }
-        EventListResponse response = eventService.getEventsByCourseId(longList);
+
+        if (section != null && !section.isEmpty()) {
+            String[] stringArray = section.split(",");
+
+            for (String str : stringArray) {
+                try {
+                    String value = str.trim();
+                    sections.add(value);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Error while parsing course ids");
+                    // Handle the exception based on your requirements
+                }
+            }
+        }
+        EventListResponse response = eventService.getEventsByCourseId(longList, sections);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

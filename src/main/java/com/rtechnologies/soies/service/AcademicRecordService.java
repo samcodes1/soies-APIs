@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.AssignmentSubmission;
 import com.rtechnologies.soies.model.association.ExamSubmission;
@@ -33,6 +34,10 @@ public class AcademicRecordService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
     public AcademicRecordResponse getAcademicRecord(String studentRollNumber, String term, String academicCategory, int page, int size) {
         AcademicRecordResponse academicRecordResponse = new AcademicRecordResponse();
         Optional<Student> student = studentRepository.findByRollNumber(studentRollNumber);
@@ -109,6 +114,12 @@ public class AcademicRecordService {
 
     public AcademicRecordResponse getClassAcademicRecord(Long courseId, String term, String academicCategory, int page, int size) {
         AcademicRecordResponse academicRecordResponse = new AcademicRecordResponse();
+
+        Optional<Course> course = courseRepository.findById(courseId);
+        if (course.isEmpty()) {
+            academicRecordResponse.setMessageStatus("Failure");
+            throw new NotFoundException("Course not found with courseId: " + courseId);
+        }
 
         try {
             PageRequest pageable = PageRequest.of(page, size);

@@ -9,6 +9,7 @@ import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class ExamService {
             Optional<Course> course = courseRepository.findById(exam.getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + exam.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + exam.getCourseId());
+                throw new NotFoundException("No course found with ID: " + exam.getCourseId());
             }
 
             Exam createExam = mapToQuiz(exam);
@@ -114,7 +115,7 @@ public class ExamService {
             // Check for exam
             Optional<Exam> existingExam = examRepository.findById(exam.getExamId());
             if (existingExam.isEmpty()) {
-                throw new IllegalArgumentException("No Exam found with ID: " + exam.getExamId());
+                throw new NotFoundException("No Exam found with ID: " + exam.getExamId());
             }
 
 
@@ -122,7 +123,7 @@ public class ExamService {
             Optional<Course> course = courseRepository.findById(exam.getCourseId());
             if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + exam.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + exam.getCourseId());
+                throw new NotFoundException("No course found with ID: " + exam.getCourseId());
             }
 
             Exam updatedExam = mapToQuiz(exam);
@@ -168,7 +169,7 @@ public class ExamService {
             Optional<Exam> existingExam = examRepository.findById(examId);
 
             if (existingExam.isEmpty()) {
-                throw new IllegalArgumentException("No exam found with ID: " + examId);
+                throw new NotFoundException("No exam found with ID: " + examId);
             }
 
             examRepository.deleteById(examId);
@@ -203,7 +204,7 @@ public class ExamService {
 
             if (examList.isEmpty()) {
                 Utility.printDebugLogs("No exams found for course ID: " + courseId);
-                throw new IllegalArgumentException("No exams found for course ID: " + courseId);
+                throw new NotFoundException("No exams found for course ID: " + courseId);
             }
 
             examListResponse = ExamListResponse.builder()
@@ -235,14 +236,14 @@ public class ExamService {
 
             if (optionalExam.isEmpty()) {
                 Utility.printDebugLogs("No exam found with ID: " + examId);
-                throw new IllegalArgumentException("No exam found with ID: " + examId);
+                throw new NotFoundException("No exam found with ID: " + examId);
             }
 
             // Check for course
             Optional<Course> course = courseRepository.findById(optionalExam.get().getCourseId());
             if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + optionalExam.get().getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + optionalExam.get().getCourseId());
+                throw new NotFoundException("No course found with ID: " + optionalExam.get().getCourseId());
             }
 
             Exam exam = optionalExam.get();

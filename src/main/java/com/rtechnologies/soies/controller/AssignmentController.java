@@ -184,9 +184,11 @@ public class AssignmentController {
             @ApiResponse(code = 404, message = "No assignments found for the given course ID"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @GetMapping("/getByCourse/{courseId}")
-    public ResponseEntity<AssignmentListResponse> getAssignmentsByCourseId(@PathVariable Long courseId) {
-        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId);
+    @GetMapping("/getByCourse/{courseId}/{section}/{studentRollNum}")
+    public ResponseEntity<AssignmentListResponse> getAssignmentsByCourseId(@PathVariable Long courseId,
+                                                                           @PathVariable String section,
+                                                                           @PathVariable String studentRollNum) {
+        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId,section, studentRollNum);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

@@ -1,9 +1,12 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.association.TeacherSection;
+import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
 import com.rtechnologies.soies.model.dto.TeacherListResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
 import com.rtechnologies.soies.repository.TeacherRepository;
+import com.rtechnologies.soies.repository.TeacherSectionRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +24,10 @@ public class TeacherService {
     @Autowired
     private TeacherRepository teacherRepository;
 
-    public TeacherResponse createTeacher(Teacher teacher) {
+    @Autowired
+    private TeacherSectionRepository teacherSectionRepository;
+
+    public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
         Utility.printDebugLogs("Teacher creation request: "+teacher.toString());
         System.out.println("Teacher creation request: "+teacher.toString());
         TeacherResponse teacherResponse = null;
@@ -44,10 +50,17 @@ public class TeacherService {
             // Set the hashed password to the teacher object
             teacher.setPassword(hashedPassword);
 
+            Teacher savingTeacher = mapToTeacher(teacher);
             // Save the teacher with the hashed password
-            Teacher savedTeacher = teacherRepository.save(teacher);
+            Teacher savedTeacher = teacherRepository.save(savingTeacher);
             Utility.printDebugLogs("Saved teacher: "+ savedTeacher.toString());
-            System.out.println("Teacher saved: " + savedTeacher.toString());
+
+
+            for(TeacherSection teacherSection : teacher.getTeacherSectionList()) {
+                teacherSection.setTeacherId(savedTeacher.getTeacherId());
+            }
+
+            teacherSectionRepository.saveAll(teacher.getTeacherSectionList());
 
              teacherResponse = TeacherResponse.builder()
                     .teacherId(savedTeacher.getTeacherId())
@@ -61,7 +74,6 @@ public class TeacherService {
                     .address(savedTeacher.getAddress())
                     .messageStatus("Success").build();
 
-            System.out.println("Teacher respose: " + teacherResponse);
             Utility.printDebugLogs("Teacher Response: "+ teacherResponse.toString());
             return teacherResponse;
 
@@ -74,6 +86,20 @@ public class TeacherService {
         }
     }
 
+    public static Teacher mapToTeacher(CreateTeacherDTO createTeacherDTO) {
+        return Teacher.builder()
+                .campusName(createTeacherDTO.getCampusName())
+                .employeeName(createTeacherDTO.getEmployeeName())
+                .email(createTeacherDTO.getEmail())
+                .password(createTeacherDTO.getPassword())
+                .dateOfBirth(createTeacherDTO.getDateOfBirth())
+                .gender(createTeacherDTO.getGender())
+                .joiningDate(createTeacherDTO.getJoiningDate())
+                .phoneNumber(createTeacherDTO.getPhoneNumber())
+                .address(createTeacherDTO.getAddress())
+                // You may need to handle teacherSectionList mapping here if required
+                .build();
+    }
     public TeacherResponse deleteTeacher(Long teacherId) {
         Utility.printDebugLogs("Teacher deletion request ID: " + teacherId);
         TeacherResponse teacherResponse;

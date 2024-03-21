@@ -169,7 +169,7 @@ public class EventService {
         }
     }
 
-    public EventListResponse getEventsByTeacherEmail(String teacherEmail) {
+    public EventListResponse getEventsByTeacherEmailAndSection(String teacherEmail, String section) {
         Utility.printDebugLogs("Get all events by teacher Email: " + teacherEmail);
         EventListResponse eventListResponse;
 
@@ -181,7 +181,7 @@ public class EventService {
                 throw new IllegalArgumentException("No teacher found with ID: " + teacherEmail);
             }
 
-            List<Event> events = eventRepository.findByTeacherId(teacher.get().getTeacherId());
+            List<Event> events = eventRepository.findByTeacherIdAndSection(teacher.get().getTeacherId(), section);
 
             eventListResponse = EventListResponse.builder()
                     .eventList(events)
@@ -203,13 +203,13 @@ public class EventService {
         }
     }
 
-    public EventListResponse getEventsByCourseId(List<Long> courseIds) {
+    public EventListResponse getEventsByCourseId(List<Long> courseIds, List<String> sections) {
         Utility.printDebugLogs("Get events by course IDs: " + courseIds.toString());
         EventListResponse eventListResponse = new EventListResponse();
         List<Event> mainEventList = new ArrayList<>();
         for(int i=0; i<courseIds.size(); i++){
             try {
-                List<Event> eventList = eventRepository.findByCourseId(courseIds.get(i));
+                List<Event> eventList = eventRepository.findByCourseIdAndSection(courseIds.get(i), sections.get(i));
 
                 if (eventList.isEmpty()) {
                     Utility.printDebugLogs("No events found for course ID: " + courseIds.get(i));

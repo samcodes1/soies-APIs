@@ -41,6 +41,7 @@ public class AssignmentService {
 
     @Autowired
     private AssignmentSubmissionRepository assignmentSubmissionRepository;
+
     public AssignmentResponse createAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment creation request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
@@ -48,21 +49,21 @@ public class AssignmentService {
         try {
             if (assignment == null) {
                 Utility.printDebugLogs("Assignment creation request is null");
-                throw new IllegalArgumentException("Corrupt data received");
+                throw new NotFoundException("Corrupt data received");
             }
 
             //Check for teacher
             Optional<Teacher> teacher = teacherRepository.findById(assignment.getTeacherId());
             if(teacher.isEmpty()) {
                 Utility.printDebugLogs("No teacher found with ID: " + assignment.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + assignment.getTeacherId());
+                throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
             }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(assignment.getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + assignment.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + assignment.getCourseId());
+                throw new NotFoundException("No course found with ID: " + assignment.getCourseId());
             }
 
             String fileName = "";
@@ -129,19 +130,19 @@ public class AssignmentService {
             //Check for assignment
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
             if(assignmentOptional.isEmpty()){
-                throw new IllegalArgumentException("No Assignment found with ID: " + assignment.getAssignmentId());
+                throw new NotFoundException("No Assignment found with ID: " + assignment.getAssignmentId());
             }
 
             // Check for teacher
             Optional<Teacher> teacher = teacherRepository.findById(assignment.getTeacherId());
             if (teacher.isEmpty()) {
-                throw new IllegalArgumentException("No teacher found with ID: " + assignment.getTeacherId());
+                throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
             }
 
             // Check for course
             Optional<Course> course = courseRepository.findById(assignment.getCourseId());
             if (course.isEmpty()) {
-                throw new IllegalArgumentException("No course found with ID: " + assignment.getCourseId());
+                throw new NotFoundException("No course found with ID: " + assignment.getCourseId());
             }
 
 
@@ -205,7 +206,7 @@ public class AssignmentService {
             Optional<Assignment> existingAssignment = assignmentRepository.findById(assignmentId);
 
             if (existingAssignment.isEmpty()) {
-                throw new IllegalArgumentException("No assignment found with ID: " + assignmentId);
+                throw new NotFoundException("No assignment found with ID: " + assignmentId);
             }
 
             assignmentRepository.deleteById(assignmentId);
@@ -240,7 +241,7 @@ public class AssignmentService {
 
             if (teacher.isEmpty()) {
                 Utility.printDebugLogs("No teacher found with ID: " + teacherId);
-                throw new IllegalArgumentException("No teacher found with ID: " + teacherId);
+                throw new NotFoundException("No teacher found with ID: " + teacherId);
             }
 
             List<Assignment> assignments = assignmentRepository.findByTeacherId(teacherId);
@@ -274,7 +275,7 @@ public class AssignmentService {
 
             if (optionalAssignment.isEmpty()) {
                 Utility.printDebugLogs("No assignment found with ID: " + assignmentId);
-                throw new IllegalArgumentException("No assignment found with ID: " + assignmentId);
+                throw new NotFoundException("No assignment found with ID: " + assignmentId);
             }
 
             Assignment assignment = optionalAssignment.get();
@@ -304,20 +305,29 @@ public class AssignmentService {
         }
     }
 
-    public AssignmentListResponse getAssignmentsByCourseId(Long courseId) {
+    public AssignmentListResponse getAssignmentsByCourseId(Long courseId, String section, String studentRollNum) {
         Utility.printDebugLogs("Get assignments by course ID: " + courseId);
         AssignmentListResponse assignmentListResponse;
 
         try {
-            List<Assignment> assignmentList = assignmentRepository.findByCourseId(courseId);
-
+            List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSectionId(courseId);
+            List<Assignment> finalList = new ArrayList<>();
             if (assignmentList.isEmpty()) {
                 Utility.printDebugLogs("No assignments found for course ID: " + courseId);
-                throw new IllegalArgumentException("No assignments found for course ID: " + courseId);
+                throw new NotFoundException("No assignments found for course ID: " + courseId);
+            }
+
+            List<AssignmentSubmission> assignmentSubmissionList =
+                    assignmentSubmissionRepository.findByStudentRollNumber(studentRollNum);
+
+            for(int i =0; i<assignmentSubmissionList.size(); i++){
+                if(!Objects.equals(assignmentList.get(i).getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
+                    finalList.add(assignmentList.get(i));
+                }
             }
 
             assignmentListResponse = AssignmentListResponse.builder()
-                    .assignmentList(assignmentList)
+                    .assignmentList(finalList)
                     .messageStatus("Success")
                     .build();
 
@@ -351,14 +361,14 @@ public class AssignmentService {
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
             if(assignmentOptional.isEmpty()) {
                 Utility.printDebugLogs("No assignment found with ID: " + assignment.getAssignmentId());
-                throw new IllegalArgumentException("No assignment found with ID: " + assignment.getAssignmentId());
+                throw new NotFoundException("No assignment found with ID: " + assignment.getAssignmentId());
             }
 
             //Check for student
             Optional<Student> studentOptional = studentRepository.findById(assignment.getStudentId());
             if(studentOptional.isEmpty()) {
                 Utility.printDebugLogs("No student found with ID: " + assignment.getStudentId());
-                throw new IllegalArgumentException("No student found with ID: " + assignment.getStudentId());
+                throw new NotFoundException("No student found with ID: " + assignment.getStudentId());
             }
 
             Optional<AssignmentSubmission> assignmentSubmission = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(
@@ -460,7 +470,7 @@ public class AssignmentService {
             Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
 
             if(!assignmentSubmissionsPage.isEmpty()){
-                throw new IllegalArgumentException("No submission found");
+                throw new NotFoundException("No submission found");
             }
             assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(assignmentSubmissionsPage.get().getSubmissionId())
@@ -514,7 +524,7 @@ public class AssignmentService {
             Optional<AssignmentSubmission> assignmentOptional = assignmentSubmissionRepository.findById(markAssignmentRequest.getSubmissionId());
 
             if(assignmentOptional.isEmpty()) {
-                throw new IllegalArgumentException("No assignment submission with ID: " + markAssignmentRequest.getSubmissionId());
+                throw new NotFoundException("No assignment submission with ID: " + markAssignmentRequest.getSubmissionId());
             }
 
             assignmentOptional.get().setComments(markAssignmentRequest.getFeedback());

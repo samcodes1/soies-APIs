@@ -17,6 +17,7 @@ import com.rtechnologies.soies.repository.OgaSubmissionRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,14 +47,14 @@ public class OgaService {
         try {
             if (ogaRequest == null) {
                 Utility.printDebugLogs("OGA creation request is null");
-                throw new IllegalArgumentException("Corrupt data received");
+                throw new IllegalArgumentException("Corrupt -data received");
             }
 
             // Check for course
             Optional<Course> course = courseRepository.findById(ogaRequest.getCourseId());
             if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + ogaRequest.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + ogaRequest.getCourseId());
+                throw new NotFoundException("No course found with ID: " + ogaRequest.getCourseId());
             }
 
             Oga createdOga = mapToOga(ogaRequest);
@@ -114,14 +115,14 @@ public class OgaService {
             // Check for OGA
             Optional<Oga> existingOga = ogaRepository.findById(ogaRequest.getOgaId());
             if (existingOga.isEmpty()) {
-                throw new IllegalArgumentException("No OGA found with ID: " + ogaRequest.getOgaId());
+                throw new NotFoundException("No OGA found with ID: " + ogaRequest.getOgaId());
             }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(ogaRequest.getCourseId());
             if(course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + ogaRequest.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + ogaRequest.getCourseId());
+                throw new NotFoundException("No course found with ID: " + ogaRequest.getCourseId());
             }
 
             Oga updatedOga = mapToOga(ogaRequest);
@@ -173,7 +174,7 @@ public class OgaService {
             Optional<Oga> existingOga = ogaRepository.findById(ogaId);
 
             if (existingOga.isEmpty()) {
-                throw new IllegalArgumentException("No OGA found with ID: " + ogaId);
+                throw new NotFoundException("No OGA found with ID: " + ogaId);
             }
 
             ogaRepository.deleteById(ogaId);
@@ -208,13 +209,13 @@ public class OgaService {
 
             if (optionalOga.isEmpty()) {
                 Utility.printDebugLogs("No OGA found with ID: " + ogaId);
-                throw new IllegalArgumentException("No OGA found with ID: " + ogaId);
+                throw new NotFoundException("No OGA found with ID: " + ogaId);
             }
 
             Optional<Course> optionalCourse = courseRepository.findById(optionalOga.get().getCourseId());
             if (optionalCourse.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + optionalOga.get().getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + optionalOga.get().getCourseId());
+                throw new NotFoundException("No course found with ID: " + optionalOga.get().getCourseId());
             }
 
             Oga oga = optionalOga.get();
@@ -257,7 +258,7 @@ public class OgaService {
 
             if (ogaList.isEmpty()) {
                 Utility.printDebugLogs("No OGAs found for course ID: " + courseId);
-                throw new IllegalArgumentException("No OGAs found for course ID: " + courseId);
+                throw new NotFoundException("No OGAs found for course ID: " + courseId);
             }
 
             ogaListResponse = OgaListResponse.builder()

@@ -1,6 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
 import com.rtechnologies.soies.model.dto.TeacherListResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
 import com.rtechnologies.soies.service.TeacherService;
@@ -29,7 +30,7 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping(produces = "application/json", path = "/create-teacher")
-    public ResponseEntity<TeacherResponse> createTeacher(@RequestBody Teacher teacher) {
+    public ResponseEntity<TeacherResponse> createTeacher(@RequestBody CreateTeacherDTO teacher) {
         System.out.println("Done2");
         TeacherResponse teacherResponse = teacherService.createTeacher(teacher);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 201 : 500)
