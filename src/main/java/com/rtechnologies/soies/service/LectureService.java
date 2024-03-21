@@ -1,5 +1,8 @@
 package com.rtechnologies.soies.service;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.rtechnologies.soies.model.Assignment;
 import com.rtechnologies.soies.model.Lecture;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.LectureReport;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -31,8 +35,10 @@ public class LectureService {
     private LectureReportRepository lectureReportRepository;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private Cloudinary cloudinary;
 
-    public LectureResponse addLecture(Lecture lecture) {
+    public LectureResponse addLecture(CreateLectureRequest lecture) {
         Utility.printDebugLogs("Lecture creation request: " + lecture.toString());
         LectureResponse lectureResponse = new LectureResponse();
 
@@ -43,8 +49,42 @@ public class LectureService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            // Save the lecture
-            Lecture createdLecture = lectureRepository.save(lecture);
+            System.out.println("Done 1");
+            String fileName = "";
+            fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId();
+            Lecture createdLecture = new Lecture();
+            try {
+                //For file
+                String folder = "uploaded-lecture";
+                String publicId = folder + "/" + fileName;
+                Map data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String url =  data.get("url").toString();
+
+                System.out.println("Done 2");
+                String videoUrl = "";
+                //For video
+                if(lecture.getVideoURL() != null) {
+                    fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId()+ "-"+ "video";
+                    publicId = folder + "/" + fileName;
+                    data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                    videoUrl =  data.get("url").toString();
+                }
+                System.out.println("Done 3");
+                Lecture lecture1 = new Lecture();
+
+                lecture1.setLectureTitle(lecture.getLectureTitle());
+                lecture1.setPowerPointURL(url);
+                lecture1.setDescription(lecture.getDescription());
+                lecture1.setVisible(true);
+                lecture1.setCourseId(lecture.getCourseId());
+                lecture1.setTotalViews(0);
+                lecture1.setVideoURL(videoUrl);
+                createdLecture = lectureRepository.save(lecture1);
+
+            } catch (IOException ioException) {
+                throw new RuntimeException("File uploading failed");
+            }
+
             Utility.printDebugLogs("Lecture created successfully: " + createdLecture);
 
             lectureResponse = LectureResponse.builder()

@@ -4,7 +4,6 @@ import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.StudentCourse;
 import com.rtechnologies.soies.model.association.TeacherCourse;
-import com.rtechnologies.soies.model.dto.CourseListResponse;
 import com.rtechnologies.soies.model.dto.DashboardGraphStats;
 import com.rtechnologies.soies.model.dto.DashboardResponse;
 import com.rtechnologies.soies.repository.*;

@@ -1,10 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Lecture;
-import com.rtechnologies.soies.model.dto.LectureListResponse;
-import com.rtechnologies.soies.model.dto.LectureReportGraphResponse;
-import com.rtechnologies.soies.model.dto.LectureReportListResponse;
-import com.rtechnologies.soies.model.dto.LectureResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.LectureService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -27,8 +24,8 @@ public class LectureController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping
-    public ResponseEntity<LectureResponse> addLecture(@RequestBody Lecture lecture) {
-        LectureResponse lectureResponse = lectureService.addLecture(lecture);
+    public ResponseEntity<LectureResponse> addLecture(@ModelAttribute CreateLectureRequest request) {
+        LectureResponse lectureResponse = lectureService.addLecture(request);
         return ResponseEntity.status(lectureResponse.getMessageStatus().equals("Success") ? 201 : 500)
                 .body(lectureResponse);
     }
