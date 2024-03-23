@@ -1,9 +1,6 @@
 package com.rtechnologies.soies.controller;
 
-import com.rtechnologies.soies.model.dto.CreateOgaRequest;
-import com.rtechnologies.soies.model.dto.OgaListResponse;
-import com.rtechnologies.soies.model.dto.OgaRequest;
-import com.rtechnologies.soies.model.dto.OgaResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.OgaService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -83,5 +80,29 @@ public class OgaController {
         OgaListResponse response = ogaService.getOgasByCourseId(courseId);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
+    }
+
+    @ApiOperation(value = "Submit an OGA", response = String.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OGA submitted successfully"),
+            @ApiResponse(code = 404, message = "No OGA found with the provided ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @PostMapping("/submit")
+    public ResponseEntity<String> submitOga(@RequestBody OgaSubmissionRequest ogaSubmissionRequest) {
+            String response = ogaService.submitOga(ogaSubmissionRequest);
+            return ResponseEntity.ok(response);
+    }
+
+    @ApiOperation(value = "Get all submissions for a specific OGA", response = OgaSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OGA submissions retrieved successfully"),
+            @ApiResponse(code = 404, message = "No OGA found with the provided ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/submissions/{ogaId}")
+    public ResponseEntity<OgaSubmissionListResponse> getAllOgaSubmission(@PathVariable Long ogaId) {
+            OgaSubmissionListResponse response = ogaService.getAllOgaSubmission(ogaId);
+            return ResponseEntity.ok(response);
     }
 }

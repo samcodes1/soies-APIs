@@ -3,10 +3,10 @@ package com.rtechnologies.soies.service;
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Oga;
 import com.rtechnologies.soies.model.OgaQuestion;
-import com.rtechnologies.soies.model.dto.CreateOgaRequest;
-import com.rtechnologies.soies.model.dto.OgaListResponse;
-import com.rtechnologies.soies.model.dto.OgaRequest;
-import com.rtechnologies.soies.model.dto.OgaResponse;
+import com.rtechnologies.soies.model.QuizQuestion;
+import com.rtechnologies.soies.model.association.QuizStudentAnswer;
+import com.rtechnologies.soies.model.association.QuizSubmission;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.association.OgaStudentAnswer;
 import com.rtechnologies.soies.repository.CourseRepository;
@@ -281,4 +281,68 @@ public class OgaService {
         }
     }
 
+    public String submitOga(OgaSubmissionRequest ogaSubmissionRequest){
+        OgaSubmission ogaSubmission = new OgaSubmission();
+        List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaSubmissionRequest.getOgaId());
+
+        if(ogaQuestions.isEmpty()) {
+            throw new NotFoundException("No OGA found with ID: " + ogaSubmissionRequest.getOgaId());
+        }
+        ogaSubmission = mapToOgaSubmission(ogaSubmissionRequest);
+        ogaSubmissionRepository.save(ogaSubmission);
+
+
+        int totalMarks = ogaSubmission.getTotalMarks();
+        int perQuestionMark = totalMarks/ogaQuestions.size();
+        int gainedMarks = 0;
+
+        //Save answers to the DB
+        for(int i=0; i<ogaSubmissionRequest.getOgaQuestionList().size(); i++){
+            boolean isCorrect = false;
+
+            if(ogaSubmissionRequest.getOgaQuestionList().
+                    get(i).getAnswer().equals(ogaQuestions.get(i).getAnswer())) {
+                gainedMarks+=perQuestionMark;
+                isCorrect=true;
+            }
+
+            ogaStudentAnswerRepository.save(OgaStudentAnswer.builder().
+                    ogaSubmissionId(ogaSubmission.getOgaId())
+                    .questionId(ogaSubmission.getId())
+                    .answer(ogaSubmissionRequest.getOgaQuestionList().
+                            get(i).getAnswer())
+                    .isCorrect(isCorrect)
+                    . build());
+        }
+
+        double percentage = (double) gainedMarks/totalMarks * 100;
+        ogaSubmission.setGainedMarks(gainedMarks);
+        ogaSubmission.setPercentage(percentage);
+
+        ogaSubmissionRepository.save(ogaSubmission);
+
+        return "OGA submitted successfully";
+    }
+
+    public OgaSubmissionListResponse getAllOgaSubmission(Long ogaId){
+        List<OgaSubmission> submittedOgas = ogaSubmissionRepository.findByOgaId(ogaId);
+        OgaSubmissionListResponse ogaSubmissionListResponse = new OgaSubmissionListResponse();
+        if(submittedOgas.isEmpty()) {
+            throw new NotFoundException("No Oga found with ID: " + ogaId);
+        }
+
+        ogaSubmissionListResponse.setOgaSubmissionList(submittedOgas);
+        ogaSubmissionListResponse.setMessageStatus("Success");
+
+        return ogaSubmissionListResponse;
+    }
+    public static OgaSubmission mapToOgaSubmission(OgaSubmissionRequest submissionRequest) {
+        return OgaSubmission.builder()
+                .ogaId(submissionRequest.getOgaId())
+                .courseId(submissionRequest.getCourseId())
+                .studentRollNumber(submissionRequest.getStudentRollNumber())
+                .totalMarks(submissionRequest.getTotalMarks())
+                .gainedMarks(0)
+                .build();
+    }
 }

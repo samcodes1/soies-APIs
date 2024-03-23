@@ -52,47 +52,47 @@ public class AcademicRecordService {
             if ("all".equalsIgnoreCase(academicCategory)) {
                 // Fetch assignment submissions for the specified term
                 Page<AssignmentSubmission> assignmentSubmissions = assignmentSubmissionRepository
-                        .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                        .findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                 academicRecordResponse.setAssignmentSubmissions(assignmentSubmissions.getContent());
 
                 // Fetch exam results for the specified term
-                Page<ExamSubmission> examResults = examResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                Page<ExamSubmission> examResults = examResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                 academicRecordResponse.setExamSubmissions(examResults.getContent());
 
                 // Fetch quiz submissions for the specified term
-                Page<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                Page<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                 academicRecordResponse.setQuizSubmissions(quizSubmissions.getContent());
 
                 // Fetch OGA results for the specified term
-                Page<OgaSubmission> ogaResults = ogaResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                Page<OgaSubmission> ogaResults = ogaResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                 academicRecordResponse.setOgaSubmissions(ogaResults.getContent());
             } else {
                 switch (academicCategory.toLowerCase()) {
                     case "assignment":
                         // Fetch assignment submissions for the specified term
                         Page<AssignmentSubmission> assignmentSubmissions = assignmentSubmissionRepository
-                                .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                                .findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                         academicRecordResponse.setAssignmentSubmissions(assignmentSubmissions.getContent());
                         break;
 
                     case "exam":
                         // Fetch exam results for the specified term
                         Page<ExamSubmission> examResults = examResultRepository
-                                .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                                .findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                         academicRecordResponse.setExamSubmissions(examResults.getContent());
                         break;
 
                     case "quiz":
                         // Fetch quiz submissions for the specified term
                         Page<QuizSubmission> quizSubmissions = quizSubmissionRepository
-                                .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                                .findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                         academicRecordResponse.setQuizSubmissions(quizSubmissions.getContent());
                         break;
 
                     case "oga":
                         // Fetch OGA results for the specified term
                         Page<OgaSubmission> ogaResults = ogaResultRepository
-                                .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                                .findByStudentRollNumberAndTerm(studentRollNumber, term.toLowerCase(), pageable);
                         academicRecordResponse.setOgaSubmissions(ogaResults.getContent());
                         break;
 
