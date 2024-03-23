@@ -1,11 +1,11 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.*;
+import com.rtechnologies.soies.model.association.ExamStudentAnswer;
+import com.rtechnologies.soies.model.association.ExamSubmission;
+import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.dto.*;
-import com.rtechnologies.soies.repository.CourseRepository;
-import com.rtechnologies.soies.repository.ExamQuestionRepository;
-import com.rtechnologies.soies.repository.ExamRepository;
-import com.rtechnologies.soies.repository.TeacherRepository;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,12 @@ public class ExamService {
 
     @Autowired
     private ExamQuestionRepository examQuestionRepository;
+
+    @Autowired
+    private ExamSubmissionRepository examSubmissionRepository;
+
+    @Autowired
+    private ExamStudentAnswerRepository examStudentAnswerRepository;
 
     public ExamResponse createExam(CreateExamRequest exam) {
         Utility.printDebugLogs("Exam creation request: " + exam.toString());
@@ -272,5 +278,71 @@ public class ExamService {
                     .messageStatus("Failure")
                     .build();
         }
+    }
+
+    public String submitExam(ExamSubmissionRequest examSubmissionRequest) {
+        ExamSubmission examSubmission = new ExamSubmission();
+        List<ExamQuestion> examQuestions = examQuestionRepository.findByExamId(examSubmissionRequest.getExamId());
+
+        if(examQuestions.isEmpty()) {
+            throw new NotFoundException("No Exam found with ID: " + examSubmissionRequest.getExamId());
+        }
+
+        examSubmission = mapToExamSubmission(examSubmissionRequest);
+        examSubmissionRepository.save(examSubmission);
+
+        int totalMarks = examSubmission.getTotalMarks();
+        int perQuestionMark = totalMarks / examQuestions.size();
+        int gainedMarks = 0;
+
+        // Save answers to the DB
+        for(int i = 0; i < examSubmissionRequest.getExamQuestionList().size(); i++) {
+            boolean isCorrect = false;
+
+            if(examSubmissionRequest.getExamQuestionList()
+                    .get(i).getAnswer().equals(examQuestions.get(i).getAnswer())) {
+                gainedMarks += perQuestionMark;
+                isCorrect = true;
+            }
+
+            examStudentAnswerRepository.save(ExamStudentAnswer.builder()
+                    .examSubmissionId(examSubmission.getExamId())
+                    .questionId(examSubmission.getId())
+                    .answer(examSubmissionRequest.getExamQuestionList()
+                            .get(i).getAnswer())
+                    .isCorrect(isCorrect)
+                    .build());
+        }
+
+        double percentage = (double) gainedMarks / totalMarks * 100;
+        examSubmission.setGainedMarks(gainedMarks);
+        examSubmission.setPercentage(percentage);
+
+        examSubmissionRepository.save(examSubmission);
+
+        return "Exam submitted successfully";
+    }
+
+    public ExamSubmissionListResponse getAllExamSubmission(Long examId) {
+        List<ExamSubmission> submittedExams = examSubmissionRepository.findByExamId(examId);
+        ExamSubmissionListResponse examSubmissionListResponse = new ExamSubmissionListResponse();
+        if(submittedExams.isEmpty()) {
+            throw new NotFoundException("No Exam found with ID: " + examId);
+        }
+
+        examSubmissionListResponse.setExamSubmissionList(submittedExams);
+        examSubmissionListResponse.setMessageStatus("Success");
+
+        return examSubmissionListResponse;
+    }
+
+    public static ExamSubmission mapToExamSubmission(ExamSubmissionRequest submissionRequest) {
+        return ExamSubmission.builder()
+                .examId(submissionRequest.getExamId())
+                .courseId(submissionRequest.getCourseId())
+                .studentRollNumber(submissionRequest.getStudentRollNumber())
+                .totalMarks(submissionRequest.getTotalMarks())
+                .gainedMarks(0)
+                .build();
     }
 }

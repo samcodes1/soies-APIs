@@ -1,10 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Exam;
-import com.rtechnologies.soies.model.dto.CreateExamRequest;
-import com.rtechnologies.soies.model.dto.ExamListResponse;
-import com.rtechnologies.soies.model.dto.ExamRequest;
-import com.rtechnologies.soies.model.dto.ExamResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.ExamService;
 import com.rtechnologies.soies.utilities.Utility;
 import io.swagger.annotations.ApiOperation;
@@ -87,5 +84,29 @@ public class ExamController {
         Utility.printDebugLogs("Received get exam by ID request: " + examId);
         ExamResponse examResponse = examService.getExamById(examId);
         return ResponseEntity.ok(examResponse);
+    }
+
+    @ApiOperation(value = "Submit an exam", response = String.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Exam submitted successfully"),
+            @ApiResponse(code = 404, message = "Exam not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @PostMapping("/submit")
+    public ResponseEntity<String> submitExam(@RequestBody ExamSubmissionRequest examSubmissionRequest) {
+        String response = examService.submitExam(examSubmissionRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @ApiOperation(value = "Get all exam submissions by exam ID", response = ExamSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Exam submissions retrieved successfully"),
+            @ApiResponse(code = 404, message = "Exam not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/submissions/{examId}")
+    public ResponseEntity<ExamSubmissionListResponse> getAllExamSubmissions(@PathVariable Long examId) {
+        ExamSubmissionListResponse response = examService.getAllExamSubmission(examId);
+        return ResponseEntity.ok(response);
     }
 }

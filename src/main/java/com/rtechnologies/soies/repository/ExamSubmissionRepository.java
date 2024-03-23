@@ -16,4 +16,6 @@ public interface ExamSubmissionRepository extends JpaRepository<ExamSubmission, 
     Page<ExamSubmission> findByStudentRollNumberAndTerm(String studentRollNumber, String term, Pageable pageable);
 
     Page<ExamSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
+
+    List<ExamSubmission> findByExamId(Long examId);
 }
