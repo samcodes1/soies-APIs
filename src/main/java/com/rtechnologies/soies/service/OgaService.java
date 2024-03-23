@@ -1,9 +1,6 @@
 package com.rtechnologies.soies.service;
 
-import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.Oga;
-import com.rtechnologies.soies.model.OgaQuestion;
-import com.rtechnologies.soies.model.QuizQuestion;
+import com.rtechnologies.soies.model.*;
 import com.rtechnologies.soies.model.association.QuizStudentAnswer;
 import com.rtechnologies.soies.model.association.QuizSubmission;
 import com.rtechnologies.soies.model.dto.*;
@@ -19,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -249,7 +248,7 @@ public class OgaService {
         }
     }
 
-    public OgaListResponse getOgasByCourseId(Long courseId) {
+    public OgaListResponse getOgasByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get OGAs by course ID: " + courseId);
         OgaListResponse ogaListResponse;
 
@@ -261,8 +260,18 @@ public class OgaService {
                 throw new NotFoundException("No OGAs found for course ID: " + courseId);
             }
 
+            List<Oga> finalList = new ArrayList<>();
+
+            List<OgaSubmission> quizSubmissions = ogaSubmissionRepository.findByStudentRollNumber(studentRollNum);
+
+            for(int i =0; i<quizSubmissions.size(); i++){
+                if(!Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
+                    finalList.add(ogaList.get(i));
+                }
+            }
+
             ogaListResponse = OgaListResponse.builder()
-                    .ogaList(ogaList)
+                    .ogaList(finalList)
                     .messageStatus("Success")
                     .build();
 

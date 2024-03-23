@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -201,7 +203,7 @@ public class ExamService {
         }
     }
 
-    public ExamListResponse getExamsByCourseId(Long courseId) {
+    public ExamListResponse getExamsByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get exams by course ID: " + courseId);
         ExamListResponse examListResponse;
 
@@ -213,8 +215,17 @@ public class ExamService {
                 throw new NotFoundException("No exams found for course ID: " + courseId);
             }
 
+            List<Exam> finalList = new ArrayList<>();
+            List<ExamSubmission> quizSubmissions = examSubmissionRepository.findByStudentRollNumber(studentRollNum);
+
+            for(int i =0; i<quizSubmissions.size(); i++){
+                if(!Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
+                    finalList.add(examList.get(i));
+                }
+            }
+
             examListResponse = ExamListResponse.builder()
-                    .examList(examList)
+                    .examList(finalList)
                     .messageStatus("Success")
                     .build();
 

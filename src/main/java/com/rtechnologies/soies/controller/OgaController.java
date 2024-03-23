@@ -75,9 +75,10 @@ public class OgaController {
             @ApiResponse(code = 404, message = "No OGAs found for the given course ID"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @GetMapping("/get-by-course/{courseId}")
-    public ResponseEntity<OgaListResponse> getOgasByCourseId(@PathVariable Long courseId) {
-        OgaListResponse response = ogaService.getOgasByCourseId(courseId);
+    @GetMapping("/get-by-course/{courseId}/{studentRollNumber}")
+    public ResponseEntity<OgaListResponse> getOgasByCourseId(@PathVariable Long courseId,
+                                                             @PathVariable String studentRollNumber) {
+        OgaListResponse response = ogaService.getOgasByCourseId(courseId,studentRollNumber);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

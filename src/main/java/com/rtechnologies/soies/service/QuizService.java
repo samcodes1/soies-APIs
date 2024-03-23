@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -284,7 +286,7 @@ public class QuizService {
         }
     }
 
-    public QuizListResponse getQuizzesByCourseId(Long courseId) {
+    public QuizListResponse getQuizzesByCourseId(Long courseId,String studentRollNum) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         QuizListResponse quizListResponse;
 
@@ -296,8 +298,17 @@ public class QuizService {
                 throw new NotFoundException("No quizzes found for course ID: " + courseId);
             }
 
+            List<Quiz> finalList = new ArrayList<>();
+
+            List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
+
+            for(int i =0; i<quizSubmissions.size(); i++){
+                if(!Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
+                    finalList.add(quizList.get(i));
+                }
+            }
             quizListResponse = QuizListResponse.builder()
-                    .quizList(quizList)
+                    .quizList(finalList)
                     .messageStatus("Success")
                     .build();
 

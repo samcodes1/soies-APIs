@@ -65,10 +65,11 @@ public class ExamController {
             @ApiResponse(code = 404, message = "No exams found for the given course ID"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<ExamListResponse> getExamsByCourseId(@PathVariable Long courseId) {
+    @GetMapping("/course/{courseId}/{studentRollNumber}")
+    public ResponseEntity<ExamListResponse> getExamsByCourseId(@PathVariable Long courseId,
+                                                               @PathVariable String studentRollNumber) {
         Utility.printDebugLogs("Received get exams by course ID request: " + courseId);
-        ExamListResponse examListResponse = examService.getExamsByCourseId(courseId);
+        ExamListResponse examListResponse = examService.getExamsByCourseId(courseId,studentRollNumber);
         return ResponseEntity.ok(examListResponse);
     }
 
