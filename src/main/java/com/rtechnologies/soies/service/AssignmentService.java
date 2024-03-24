@@ -327,11 +327,11 @@ public class AssignmentService {
 
             List<AssignmentSubmission> assignmentSubmissionList =
                     assignmentSubmissionRepository.findByStudentRollNumber(studentRollNum);
-
+           finalList = assignmentList;
             if(!assignmentSubmissionList.isEmpty()) {
                 for(int i =0; i<assignmentSubmissionList.size(); i++){
-                    if(!Objects.equals(assignmentList.get(i).getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
-                        finalList.add(assignmentList.get(i));
+                    if(Objects.equals(assignmentList.get(i).getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
+                        finalList.remove(i);
                     }
                 }
 
