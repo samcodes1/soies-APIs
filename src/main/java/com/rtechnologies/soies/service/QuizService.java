@@ -303,11 +303,11 @@ public class QuizService {
             List<Quiz> finalList = new ArrayList<>();
 
             List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
-
+            finalList = quizList;
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(!Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
-                        finalList.add(quizList.get(i));
+                    if(quizList.get(i).getQuizId() == quizSubmissions.get(i).getQuizId()) {
+                        finalList.remove(i);
                     }
                 }
                 quizListResponse = QuizListResponse.builder()

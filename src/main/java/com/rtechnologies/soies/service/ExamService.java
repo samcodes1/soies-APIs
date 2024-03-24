@@ -219,11 +219,11 @@ public class ExamService {
 
             List<Exam> finalList = new ArrayList<>();
             List<ExamSubmission> quizSubmissions = examSubmissionRepository.findByStudentRollNumber(studentRollNum);
-
+            finalList = examList;
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(!Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
-                        finalList.add(examList.get(i));
+                    if(Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
+                        finalList.remove(i);
                     }
                 }
                 examListResponse = ExamListResponse.builder()

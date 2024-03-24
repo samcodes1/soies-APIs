@@ -264,13 +264,13 @@ public class OgaService {
             }
 
             List<Oga> finalList = new ArrayList<>();
-
+            finalList = ogaList;
             List<OgaSubmission> quizSubmissions = ogaSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(!Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
-                        finalList.add(ogaList.get(i));
+                    if(Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
+                        finalList.remove(i);
                     }
                 }
                 ogaListResponse = OgaListResponse.builder()
