@@ -108,7 +108,7 @@ public class TeacherController {
             @ApiResponse(code = 404, message = "Teacher not found"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    @GetMapping("/{email}")
+    @GetMapping("/get/{email}")
     public ResponseEntity<TeacherResponse> getTeacherById(@PathVariable String email) {
         TeacherResponse teacherResponse = teacherService.getTeacherByEmail(email);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
