@@ -514,13 +514,14 @@ public class AssignmentService {
         }
     }
 
+
     public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
         AssignmentSubmissionResponse assignmentSubmissionListResponse;
 
         try {
             Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
 
-            if(!assignmentSubmissionsPage.isEmpty()){
+            if(assignmentSubmissionsPage.isEmpty()){
                 throw new NotFoundException("No submission found");
             }
             assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
