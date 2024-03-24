@@ -21,7 +21,7 @@ public class OgaSubmission {
     private Long id;
     private Long ogaId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private int totalMarks;
     private int gainedMarks;
     private double percentage;

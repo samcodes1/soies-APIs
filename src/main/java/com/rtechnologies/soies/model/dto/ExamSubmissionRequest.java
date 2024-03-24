@@ -16,7 +16,7 @@ import java.util.List;
 public class ExamSubmissionRequest {
     private Long examId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private List<ExamQuestion> examQuestionList;
     private int totalMarks;
 }

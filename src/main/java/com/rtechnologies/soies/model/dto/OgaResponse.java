@@ -22,6 +22,7 @@ public class OgaResponse {
     private Date dueDate;
     private int totalMarks;
     private String time;
+    private String term;
     private boolean visibility;
     private String messageStatus;
 }

@@ -20,6 +20,7 @@ public class CreateQuizRequest {
     private Date dueDate;
     private String time;
     private int totalMarks;
+    private String term;
     private List<QuizQuestion> quizQuestions;
     private boolean visibility;
 }

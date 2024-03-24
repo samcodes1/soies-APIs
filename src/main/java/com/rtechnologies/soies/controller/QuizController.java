@@ -97,14 +97,27 @@ public class QuizController {
                 .body(response);
     }
 
-    @ApiOperation(value = "Get quizzes by course ID", response = QuizListResponse.class)
+    @ApiOperation(value = "Get quizzes by course ID and student roll number", response = QuizListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Quizzes retrieved successfully"),
+            @ApiResponse(code = 404, message = "No quizzes found for the given course ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/getByCourse/{courseId}")
+    public ResponseEntity<QuizListResponse> getQuizzesByCourseId(@PathVariable Long courseId) {
+        QuizListResponse response = quizService.getQuizzesByCourseId(courseId);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+
+    @ApiOperation(value = "Get quizzes by course ID and student roll number", response = QuizListResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Quizzes retrieved successfully"),
             @ApiResponse(code = 404, message = "No quizzes found for the given course ID"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/getByCourse/{courseId}/{studentRollNumber}")
-    public ResponseEntity<QuizListResponse> getQuizzesByCourseId(@PathVariable Long courseId,
+    public ResponseEntity<QuizListResponse> getQuizzesByCourseIdAndStuRollNum(@PathVariable Long courseId,
                                                                  @PathVariable String studentRollNumber) {
         QuizListResponse response = quizService.getQuizzesByCourseId(courseId,studentRollNumber);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)

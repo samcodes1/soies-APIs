@@ -22,6 +22,7 @@ public class ExamRequest {
     private Date dueDate;
     private String time;
     private int totalMarks;
+    private String term;
     private List<ExamQuestion> examQuestions;
     private boolean visibility;
 }

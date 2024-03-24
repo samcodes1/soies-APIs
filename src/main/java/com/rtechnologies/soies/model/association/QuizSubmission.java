@@ -25,7 +25,7 @@ public class QuizSubmission {
     private Long id;
     private Long quizId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private int totalMarks;
     private int gainedMarks;
     private double percentage;

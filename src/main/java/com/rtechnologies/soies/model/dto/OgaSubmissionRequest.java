@@ -16,7 +16,7 @@ import java.util.List;
 public class OgaSubmissionRequest {
     private Long ogaId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private List<OgaQuestion> ogaQuestionList;
     private int totalMarks;
 }

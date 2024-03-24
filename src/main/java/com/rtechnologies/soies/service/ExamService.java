@@ -97,6 +97,7 @@ public class ExamService {
                 .time(createExamRequest.getTime())
                 .totalMarks(createExamRequest.getTotalMarks())
                 .visibility(createExamRequest.isVisibility())
+                .term(createExamRequest.getTerm())
                 .build());
     }
 
@@ -108,6 +109,7 @@ public class ExamService {
                 .dueDate(createExamRequest.getDueDate())
                 .time(createExamRequest.getTime())
                 .totalMarks(createExamRequest.getTotalMarks())
+                .term(createExamRequest.getTerm())
                 .visibility(createExamRequest.isVisibility())
                 .build());
     }

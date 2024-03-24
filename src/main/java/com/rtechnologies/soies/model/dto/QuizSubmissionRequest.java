@@ -15,7 +15,7 @@ import java.util.List;
 public class QuizSubmissionRequest {
     private Long quizId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private List<QuizQuestion> quizQuestionList;
     private int totalMarks;
 }

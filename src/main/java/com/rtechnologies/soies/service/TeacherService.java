@@ -5,6 +5,7 @@ import com.rtechnologies.soies.model.association.TeacherSection;
 import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
 import com.rtechnologies.soies.model.dto.TeacherListResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
+import com.rtechnologies.soies.model.dto.TeacherSectionResponse;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.repository.TeacherSectionRepository;
 import com.rtechnologies.soies.utilities.Utility;
@@ -298,22 +299,22 @@ public class TeacherService {
     }
 
 
-    public TeacherResponse getTeacherById(Long teacherId) {
-        Utility.printDebugLogs("Get teacher by ID request: " + teacherId);
+    public TeacherResponse getTeacherByEmail(String email) {
+        Utility.printDebugLogs("Get teacher by Email request: " + email);
         TeacherResponse teacherResponse = new TeacherResponse();
 
         try {
             // Validate teacherId
-            if (teacherId == null || teacherId <= 0) {
-                Utility.printErrorLogs("Invalid teacher ID for fetching teacher: "+teacherId);
+            if (email == null || email.isEmpty()) {
+                Utility.printErrorLogs("Invalid teacher Email for fetching teacher: "+email);
                 teacherResponse.setMessageStatus("Failure");
                 return teacherResponse;
             }
 
             // Fetch teacher by ID
-            Optional<Teacher> optionalTeacher = teacherRepository.findById(teacherId);
+            Optional<Teacher> optionalTeacher = teacherRepository.findByEmail(email);
             if (optionalTeacher.isEmpty()) {
-                Utility.printDebugLogs("Teacher not found with ID: " + teacherId);
+                Utility.printDebugLogs("Teacher not found with Email: " + email);
                 teacherResponse.setMessageStatus("Failure");
                 return teacherResponse;
             }
@@ -347,5 +348,27 @@ public class TeacherService {
         }
     }
 
+    public TeacherSectionResponse getTeacherSection(Long teacherId) {
+        TeacherSectionResponse teacherResponse = new TeacherSectionResponse();
+        // Fetch teacher by ID
+        Optional<Teacher> optionalTeacher = teacherRepository.findById(teacherId);
+        if (optionalTeacher.isEmpty()) {
+            Utility.printDebugLogs("Teacher not found with ID: " + teacherId);
+            teacherResponse.setMessageStatus("Teacher not found with ID: " + teacherId);
+            return teacherResponse;
+        }
+
+        List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(teacherId);
+        if(teacherSections.isEmpty()) {
+            Utility.printDebugLogs("No sections allocated to teacher");
+            teacherResponse.setMessageStatus("No sections allocated to teacher");
+            return teacherResponse;
+        }
+
+        teacherResponse.setTeacherSections(teacherSections);
+        teacherResponse.setMessageStatus("Success");
+
+        return teacherResponse;
+    }
 }
 

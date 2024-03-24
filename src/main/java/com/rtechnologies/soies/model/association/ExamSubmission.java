@@ -21,7 +21,7 @@ public class ExamSubmission {
     private Long id;
     private Long examId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
     private int totalMarks;
     private int gainedMarks;
     private double percentage;

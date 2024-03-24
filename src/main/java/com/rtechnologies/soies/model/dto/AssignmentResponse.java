@@ -23,5 +23,6 @@ public class AssignmentResponse {
     private String dueDate;
     private int totalMarks;
     private boolean visibility;
+    private String term;
     private String messageStatus;
 }

@@ -22,6 +22,7 @@ public class OgaRequest {
     private Date dueDate;
     private String time;
     private int totalMarks;
+    private String term;
     private List<OgaQuestion> ogaQuestions;
     private boolean visibility;
 }

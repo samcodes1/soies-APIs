@@ -21,6 +21,7 @@ public class CreateExamRequest {
     private String description;
     private Date dueDate;
     private String time;
+    private String term;
     private int totalMarks;
     private List<ExamQuestion> examQuestions;
     private boolean visibility;

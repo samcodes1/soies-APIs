@@ -34,6 +34,7 @@ public class AssignmentController {
                                                                 @RequestParam("teacherId") Long teacherId,
                                                                 @RequestParam("assignmentTitle") String assignmentTitle,
                                                                 @RequestParam("description") String description,
+                                                                @RequestParam("term") String term,
                                                                 @RequestParam("totalMarks") int totalMarks,
                                                                 @RequestParam("visibility") boolean visibility) {
 
@@ -45,6 +46,7 @@ public class AssignmentController {
                 .description(description)
                 .totalMarks(totalMarks)
                 .visibility(visibility)
+                .term(term)
                 .build();
 
         System.out.println("In the request: " );
@@ -189,6 +191,20 @@ public class AssignmentController {
                                                                            @PathVariable String section,
                                                                            @PathVariable String studentRollNum) {
         AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId,section, studentRollNum);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+
+    @ApiOperation(value = "Get assignments by course ID and section", response = AssignmentListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Assignments retrieved successfully"),
+            @ApiResponse(code = 404, message = "No assignments found for the given course ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/getByCourse/{courseId}/{section}")
+    public ResponseEntity<AssignmentListResponse> getAssignmentsByCourseId(@PathVariable Long courseId,
+                                                                           @PathVariable String section) {
+        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId,section);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

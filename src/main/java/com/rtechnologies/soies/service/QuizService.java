@@ -97,6 +97,7 @@ public class QuizService {
                 .dueDate(createQuizRequest.getDueDate())
                 .time(createQuizRequest.getTime())
                 .totalMarks(createQuizRequest.getTotalMarks())
+                .term(createQuizRequest.getTerm())
                 .visibility(createQuizRequest.isVisibility())
                 .build());
     }
@@ -109,6 +110,7 @@ public class QuizService {
                 .dueDate(createQuizRequest.getDueDate())
                 .time(createQuizRequest.getTime())
                 .totalMarks(createQuizRequest.getTotalMarks())
+                .term(createQuizRequest.getTerm())
                 .visibility(createQuizRequest.isVisibility())
                 .build());
     }
@@ -327,6 +329,37 @@ public class QuizService {
         }
     }
 
+    public QuizListResponse getQuizzesByCourseId(Long courseId) {
+        Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
+        QuizListResponse quizListResponse;
+
+        try {
+            List<Quiz> quizList = quizRepository.findByCourseId(courseId);
+
+            if (quizList.isEmpty()) {
+                Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
+                throw new NotFoundException("No quizzes found for course ID: " + courseId);
+            }
+
+            quizListResponse = QuizListResponse.builder()
+                    .quizList(quizList)
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Quiz list response: " + quizListResponse);
+            return quizListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return QuizListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return QuizListResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
 
     //Quiz submission APIs
     public String submitQuiz(QuizSubmissionRequest quizSubmissionRequest){

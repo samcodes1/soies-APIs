@@ -99,6 +99,7 @@ public class OgaService {
                 .time(createOgaRequest.getTime())
                 .totalMarks(createOgaRequest.getTotalMarks())
                 .visibility(createOgaRequest.isVisibility())
+                .term(createOgaRequest.getTerm())
                 .build());
     }
 
@@ -162,6 +163,7 @@ public class OgaService {
                 .dueDate(ogaRequest.getDueDate())
                 .totalMarks(ogaRequest.getTotalMarks())
                 .visibility(ogaRequest.isVisibility())
+                .term(ogaRequest.getTerm())
                 .build());
     }
 
@@ -230,6 +232,7 @@ public class OgaService {
                     .totalMarks(oga.getTotalMarks())
                     .time(oga.getTime())
                     .visibility(oga.isVisibility())
+                    .term(oga.getTerm())
                     .messageStatus("Success")
                     .build();
 

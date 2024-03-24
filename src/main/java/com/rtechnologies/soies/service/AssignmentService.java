@@ -84,6 +84,7 @@ public class AssignmentService {
                 finalAssignment.setCourseId(assignment.getCourseId());
                 finalAssignment.setTeacherId(assignment.getTeacherId());
                 finalAssignment.setTotalMarks(assignment.getTotalMarks());
+                finalAssignment.setTerm(assignment.getTerm());
                 createdAssignment = assignmentRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
@@ -100,6 +101,7 @@ public class AssignmentService {
                     .file(createdAssignment.getFile())
                     .totalMarks(createdAssignment.getTotalMarks())
                     .visibility(createdAssignment.isVisibility())
+                    .term(createdAssignment.getTerm())
                     .messageStatus("Success")
                     .build();
 
@@ -164,6 +166,7 @@ public class AssignmentService {
                 finalAssignment.setCourseId(assignment.getCourseId());
                 finalAssignment.setTeacherId(assignment.getTeacherId());
                 finalAssignment.setTotalMarks(assignment.getTotalMarks());
+                finalAssignment.setTerm(assignment.getTerm());
                 updatedAssignment = assignmentRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
@@ -180,6 +183,7 @@ public class AssignmentService {
                     .file(updatedAssignment.getFile())
                     .totalMarks(updatedAssignment.getTotalMarks())
                     .visibility(updatedAssignment.isVisibility())
+                    .term(updatedAssignment.getTerm())
                     .messageStatus("Success")
                     .build();
 
@@ -328,6 +332,37 @@ public class AssignmentService {
 
             assignmentListResponse = AssignmentListResponse.builder()
                     .assignmentList(finalList)
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Assignment list response: " + assignmentListResponse);
+            return assignmentListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return AssignmentListResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
+
+    public AssignmentListResponse getAssignmentsByCourseId(Long courseId, String section) {
+        Utility.printDebugLogs("Get assignments by course ID: " + courseId);
+        AssignmentListResponse assignmentListResponse;
+
+        try {
+            List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSection(courseId, section);
+            if (assignmentList.isEmpty()) {
+                Utility.printDebugLogs("No assignments found for course ID: " + courseId);
+                throw new NotFoundException("No assignments found for course ID: " + courseId);
+            }
+
+            assignmentListResponse = AssignmentListResponse.builder()
+                    .assignmentList(assignmentList)
                     .messageStatus("Success")
                     .build();
 

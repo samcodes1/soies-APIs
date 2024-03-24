@@ -4,6 +4,7 @@ import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
 import com.rtechnologies.soies.model.dto.TeacherListResponse;
 import com.rtechnologies.soies.model.dto.TeacherResponse;
+import com.rtechnologies.soies.model.dto.TeacherSectionResponse;
 import com.rtechnologies.soies.service.TeacherService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -107,9 +108,23 @@ public class TeacherController {
             @ApiResponse(code = 404, message = "Teacher not found"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
+    @GetMapping("/{email}")
+    public ResponseEntity<TeacherResponse> getTeacherById(@PathVariable String email) {
+        TeacherResponse teacherResponse = teacherService.getTeacherByEmail(email);
+        return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(teacherResponse);
+    }
+
+    @ApiOperation(value = "Get a teacher sections by ID", response = TeacherSectionResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Teacher sections fetched successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 404, message = "Teacher not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
     @GetMapping("/{teacherId}")
-    public ResponseEntity<TeacherResponse> getTeacherById(@PathVariable Long teacherId) {
-        TeacherResponse teacherResponse = teacherService.getTeacherById(teacherId);
+    public ResponseEntity<TeacherSectionResponse> getTeacherSectionById(@PathVariable Long teacherId) {
+        TeacherSectionResponse teacherResponse = teacherService.getTeacherSection(teacherId);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }
