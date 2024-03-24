@@ -62,7 +62,7 @@ public class EventController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get Events by Teacher Email")
+    @ApiOperation(value = "Get Events by Teacher Emailm and section")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved events", response = EventListResponse.class),
             @ApiResponse(code = 400, message = "Bad Request"),
@@ -70,9 +70,22 @@ public class EventController {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     @GetMapping("/teacher")
-    public ResponseEntity<EventListResponse> getEventsByTeacherEmail(@RequestParam("teacherEmail") String teacherEmail,
+    public ResponseEntity<EventListResponse> getEventsByTeacherEmailAndSec(@RequestParam("teacherEmail") String teacherEmail,
                                                                      @RequestParam("section") String section) {
         EventListResponse response = eventService.getEventsByTeacherEmailAndSection(teacherEmail,section);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Get Events by Teacher Email")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved events", response = EventListResponse.class),
+            @ApiResponse(code = 400, message = "Bad Request"),
+            @ApiResponse(code = 404, message = "Teacher not found"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+    @GetMapping("/teacher/{email}")
+    public ResponseEntity<EventListResponse> getEventsByTeacherEmail(@PathVariable("email") String email) {
+        EventListResponse response = eventService.getEventsByTeacherEmail(email);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

@@ -203,6 +203,40 @@ public class EventService {
         }
     }
 
+    public EventListResponse getEventsByTeacherEmail(String teacherEmail) {
+        Utility.printDebugLogs("Get all events by teacher Email: " + teacherEmail);
+        EventListResponse eventListResponse;
+
+        try {
+            Optional<Teacher> teacher = teacherRepository.findByEmail(teacherEmail);
+
+            if (teacher.isEmpty()) {
+                Utility.printDebugLogs("No teacher found with Email: " + teacherEmail);
+                throw new IllegalArgumentException("No teacher found with ID: " + teacherEmail);
+            }
+
+            List<Event> events = eventRepository.findByTeacherId(teacher.get().getTeacherId());
+
+            eventListResponse = EventListResponse.builder()
+                    .eventList(events)
+                    .messageStatus("Success")
+                    .build();
+
+            Utility.printDebugLogs("Event list response: " + eventListResponse);
+            return eventListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return EventListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return EventListResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
+
     public EventListResponse getEventsByCourseId(List<Long> courseIds, List<String> sections) {
         Utility.printDebugLogs("Get events by course IDs: " + courseIds.toString());
         EventListResponse eventListResponse = new EventListResponse();
