@@ -126,6 +126,8 @@ public class StudentAttendanceService {
 
     }
 
+
+
     private int calculateTotalMinutesSpent(List<StudentAttendance> attendanceList) {
         // Calculate total minutes spent in the session
         int totalMinutes = 0;

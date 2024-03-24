@@ -267,16 +267,22 @@ public class OgaService {
 
             List<OgaSubmission> quizSubmissions = ogaSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            for(int i =0; i<quizSubmissions.size(); i++){
-                if(!Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
-                    finalList.add(ogaList.get(i));
+            if(!quizSubmissions.isEmpty()) {
+                for(int i =0; i<quizSubmissions.size(); i++){
+                    if(!Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
+                        finalList.add(ogaList.get(i));
+                    }
                 }
+                ogaListResponse = OgaListResponse.builder()
+                        .ogaList(finalList)
+                        .messageStatus("Success")
+                        .build();
+            } else {
+                ogaListResponse = OgaListResponse.builder()
+                        .ogaList(ogaList)
+                        .messageStatus("Success")
+                        .build();
             }
-
-            ogaListResponse = OgaListResponse.builder()
-                    .ogaList(finalList)
-                    .messageStatus("Success")
-                    .build();
 
             Utility.printDebugLogs("OGA list response: " + ogaListResponse);
             return ogaListResponse;

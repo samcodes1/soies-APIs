@@ -220,16 +220,22 @@ public class ExamService {
             List<Exam> finalList = new ArrayList<>();
             List<ExamSubmission> quizSubmissions = examSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            for(int i =0; i<quizSubmissions.size(); i++){
-                if(!Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
-                    finalList.add(examList.get(i));
+            if(!quizSubmissions.isEmpty()) {
+                for(int i =0; i<quizSubmissions.size(); i++){
+                    if(!Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
+                        finalList.add(examList.get(i));
+                    }
                 }
+                examListResponse = ExamListResponse.builder()
+                        .examList(finalList)
+                        .messageStatus("Success")
+                        .build();
+            } else {
+                examListResponse = ExamListResponse.builder()
+                        .examList(examList)
+                        .messageStatus("Success")
+                        .build();
             }
-
-            examListResponse = ExamListResponse.builder()
-                    .examList(finalList)
-                    .messageStatus("Success")
-                    .build();
 
             Utility.printDebugLogs("Exam list response: " + examListResponse);
             return examListResponse;

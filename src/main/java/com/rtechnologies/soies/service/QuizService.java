@@ -304,15 +304,22 @@ public class QuizService {
 
             List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            for(int i =0; i<quizSubmissions.size(); i++){
-                if(!Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
-                    finalList.add(quizList.get(i));
+            if(!quizSubmissions.isEmpty()) {
+                for(int i =0; i<quizSubmissions.size(); i++){
+                    if(!Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
+                        finalList.add(quizList.get(i));
+                    }
                 }
+                quizListResponse = QuizListResponse.builder()
+                        .quizList(finalList)
+                        .messageStatus("Success")
+                        .build();
+            } else {
+                quizListResponse = QuizListResponse.builder()
+                        .quizList(quizList)
+                        .messageStatus("Success")
+                        .build();
             }
-            quizListResponse = QuizListResponse.builder()
-                    .quizList(finalList)
-                    .messageStatus("Success")
-                    .build();
 
             Utility.printDebugLogs("Quiz list response: " + quizListResponse);
             return quizListResponse;
