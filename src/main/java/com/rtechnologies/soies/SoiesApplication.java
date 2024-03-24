@@ -14,8 +14,7 @@ public class SoiesApplication {
 	}
 
 	@PostMapping("/message")
-	public ResponseEntity<?> dummy() {
-		return ResponseEntity.status(200)
-				.body("Doneee");
+	public String dummy() {
+		return "doneee";
 	}
 }
