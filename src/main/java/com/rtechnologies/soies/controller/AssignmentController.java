@@ -30,8 +30,8 @@ public class AssignmentController {
     @PostMapping("/create")
     public ResponseEntity<AssignmentResponse> createAssignment(
                                                                 @RequestParam("file") MultipartFile file,
-                                                                @RequestParam("courseId") Long courseId,
-                                                                @RequestParam("teacherId") Long teacherId,
+                                                                @RequestParam("courseId") long courseId,
+                                                                @RequestParam("teacherId") long teacherId,
                                                                 @RequestParam("assignmentTitle") String assignmentTitle,
                                                                 @RequestParam("description") String description,
                                                                 @RequestParam("term") String term,
@@ -39,6 +39,7 @@ public class AssignmentController {
                                                                 @RequestParam("totalMarks") int totalMarks,
                                                                 @RequestParam("visibility") boolean visibility) {
 
+        System.out.println("In the request: " );
         AssignmentRequest assignmentRequest = AssignmentRequest.builder()
                 .courseId(courseId)
                 .teacherId(teacherId)
@@ -51,7 +52,7 @@ public class AssignmentController {
                 .section(section)
                 .build();
 
-        System.out.println("In the request: " );
+
         AssignmentResponse response = assignmentService.createAssignment(assignmentRequest);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
