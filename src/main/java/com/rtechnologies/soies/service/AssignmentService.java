@@ -332,7 +332,7 @@ public class AssignmentService {
                 for(int i =0; i<assignmentSubmissionList.size(); i++){
                     for(Assignment assignment : assignmentList){
                         if(Objects.equals(assignment.getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
-                            finalList.remove(i);
+                            finalList.remove(assignment);
                             break;
                         }
                     }

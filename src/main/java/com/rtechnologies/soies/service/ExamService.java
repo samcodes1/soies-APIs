@@ -224,7 +224,7 @@ public class ExamService {
                 for(int i =0; i<quizSubmissions.size(); i++){
                     for(Exam exam: examList) {
                         if(Objects.equals(exam.getExamId(), quizSubmissions.get(i).getExamId())) {
-                            finalList.remove(i);
+                            finalList.remove(exam);
                             break;
                         }
                     }

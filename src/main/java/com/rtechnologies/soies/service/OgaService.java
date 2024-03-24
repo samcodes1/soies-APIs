@@ -271,7 +271,7 @@ public class OgaService {
                 for(int i =0; i<quizSubmissions.size(); i++){
                     for(Oga oga : ogaList){
                         if(Objects.equals(oga.getOgaId(), quizSubmissions.get(i).getOgaId())) {
-                            finalList.remove(i);
+                            finalList.remove(oga);
                             break;
                         }
                     }
