@@ -222,8 +222,11 @@ public class ExamService {
             finalList = examList;
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(Objects.equals(examList.get(i).getExamId(), quizSubmissions.get(i).getExamId())) {
-                        finalList.remove(i);
+                    for(Exam exam: examList) {
+                        if(Objects.equals(exam.getExamId(), quizSubmissions.get(i).getExamId())) {
+                            finalList.remove(i);
+                            break;
+                        }
                     }
                 }
                 examListResponse = ExamListResponse.builder()

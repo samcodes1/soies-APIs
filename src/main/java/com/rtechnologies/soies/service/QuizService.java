@@ -309,6 +309,7 @@ public class QuizService {
                     for (Quiz quiz : quizList) {
                         if (Objects.equals(quiz.getQuizId(), quizSubmissions.get(i).getQuizId())) {
                             finalList.remove(i);
+                            break;
                         }
                     }
                 }

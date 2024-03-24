@@ -269,9 +269,13 @@ public class OgaService {
 
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(Objects.equals(ogaList.get(i).getOgaId(), quizSubmissions.get(i).getOgaId())) {
-                        finalList.remove(i);
+                    for(Oga oga : ogaList){
+                        if(Objects.equals(oga.getOgaId(), quizSubmissions.get(i).getOgaId())) {
+                            finalList.remove(i);
+                            break;
+                        }
                     }
+
                 }
                 ogaListResponse = OgaListResponse.builder()
                         .ogaList(finalList)
