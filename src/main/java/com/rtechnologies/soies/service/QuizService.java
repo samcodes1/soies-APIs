@@ -306,8 +306,10 @@ public class QuizService {
             finalList = quizList;
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
-                        finalList.remove(i);
+                    for (Quiz quiz : quizList) {
+                        if (Objects.equals(quiz.getQuizId(), quizSubmissions.get(i).getQuizId())) {
+                            finalList.remove(i);
+                        }
                     }
                 }
                 quizListResponse = QuizListResponse.builder()
