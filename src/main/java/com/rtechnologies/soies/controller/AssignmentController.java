@@ -35,6 +35,7 @@ public class AssignmentController {
                                                                 @RequestParam("assignmentTitle") String assignmentTitle,
                                                                 @RequestParam("description") String description,
                                                                 @RequestParam("term") String term,
+                                                                @RequestParam("section") String section,
                                                                 @RequestParam("totalMarks") int totalMarks,
                                                                 @RequestParam("visibility") boolean visibility) {
 
@@ -47,6 +48,7 @@ public class AssignmentController {
                 .totalMarks(totalMarks)
                 .visibility(visibility)
                 .term(term)
+                .section(section)
                 .build();
 
         System.out.println("In the request: " );

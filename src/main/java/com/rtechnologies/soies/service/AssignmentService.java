@@ -85,6 +85,7 @@ public class AssignmentService {
                 finalAssignment.setTeacherId(assignment.getTeacherId());
                 finalAssignment.setTotalMarks(assignment.getTotalMarks());
                 finalAssignment.setTerm(assignment.getTerm());
+                finalAssignment.setSection(assignment.getSection());
                 createdAssignment = assignmentRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
@@ -102,6 +103,7 @@ public class AssignmentService {
                     .totalMarks(createdAssignment.getTotalMarks())
                     .visibility(createdAssignment.isVisibility())
                     .term(createdAssignment.getTerm())
+                    .section(createdAssignment.getSection())
                     .messageStatus("Success")
                     .build();
 

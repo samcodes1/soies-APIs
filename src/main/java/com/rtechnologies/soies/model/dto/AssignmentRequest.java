@@ -20,6 +20,7 @@ public class AssignmentRequest {
     private String description;
     private MultipartFile file;
     private int totalMarks;
+    private String section;
     private String term;
     private boolean visibility;
 }

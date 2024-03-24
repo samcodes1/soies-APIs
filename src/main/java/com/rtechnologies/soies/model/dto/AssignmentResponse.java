@@ -21,6 +21,7 @@ public class AssignmentResponse {
     private String description;
     private String file;
     private String dueDate;
+    private String section;
     private int totalMarks;
     private boolean visibility;
     private String term;
