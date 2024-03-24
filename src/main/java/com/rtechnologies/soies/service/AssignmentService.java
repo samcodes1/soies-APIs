@@ -324,16 +324,24 @@ public class AssignmentService {
             List<AssignmentSubmission> assignmentSubmissionList =
                     assignmentSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            for(int i =0; i<assignmentSubmissionList.size(); i++){
-                if(!Objects.equals(assignmentList.get(i).getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
-                    finalList.add(assignmentList.get(i));
+            if(!assignmentSubmissionList.isEmpty()) {
+                for(int i =0; i<assignmentSubmissionList.size(); i++){
+                    if(!Objects.equals(assignmentList.get(i).getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
+                        finalList.add(assignmentList.get(i));
+                    }
                 }
+
+                assignmentListResponse = AssignmentListResponse.builder()
+                        .assignmentList(finalList)
+                        .messageStatus("Success")
+                        .build();
+            } else {
+                assignmentListResponse = AssignmentListResponse.builder()
+                        .assignmentList(assignmentList)
+                        .messageStatus("Success")
+                        .build();
             }
 
-            assignmentListResponse = AssignmentListResponse.builder()
-                    .assignmentList(finalList)
-                    .messageStatus("Success")
-                    .build();
 
             Utility.printDebugLogs("Assignment list response: " + assignmentListResponse);
             return assignmentListResponse;
