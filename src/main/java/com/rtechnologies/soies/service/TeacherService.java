@@ -2,10 +2,7 @@ package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.TeacherSection;
-import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
-import com.rtechnologies.soies.model.dto.TeacherListResponse;
-import com.rtechnologies.soies.model.dto.TeacherResponse;
-import com.rtechnologies.soies.model.dto.TeacherSectionResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.repository.TeacherSectionRepository;
 import com.rtechnologies.soies.utilities.Utility;
@@ -299,9 +296,9 @@ public class TeacherService {
     }
 
 
-    public TeacherResponse getTeacherByEmail(String email) {
+    public TeacherWithSectionResponse getTeacherByEmail(String email) {
         Utility.printDebugLogs("Get teacher by Email request: " + email);
-        TeacherResponse teacherResponse = new TeacherResponse();
+        TeacherWithSectionResponse teacherResponse = new TeacherWithSectionResponse();
 
         try {
             // Validate teacherId
@@ -319,8 +316,9 @@ public class TeacherService {
                 return teacherResponse;
             }
 
+            List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(optionalTeacher.get().getTeacherId());
             Teacher teacher = optionalTeacher.get();
-            teacherResponse = TeacherResponse.builder()
+            teacherResponse = TeacherWithSectionResponse.builder()
                     .teacherId(teacher.getTeacherId())
                     .campusName(teacher.getCampusName())
                     .employeeName(teacher.getEmployeeName())
@@ -330,6 +328,7 @@ public class TeacherService {
                     .joiningDate(teacher.getJoiningDate())
                     .phoneNumber(teacher.getPhoneNumber())
                     .address(teacher.getAddress())
+                    .teacherSections(teacherSections)
                     .messageStatus("Success")
                     .build();
 

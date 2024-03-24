@@ -1,10 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Teacher;
-import com.rtechnologies.soies.model.dto.CreateTeacherDTO;
-import com.rtechnologies.soies.model.dto.TeacherListResponse;
-import com.rtechnologies.soies.model.dto.TeacherResponse;
-import com.rtechnologies.soies.model.dto.TeacherSectionResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.TeacherService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -101,7 +98,7 @@ public class TeacherController {
                 .body(teacherListResponse);
     }
 
-    @ApiOperation(value = "Get a teacher by ID", response = TeacherResponse.class)
+    @ApiOperation(value = "Get a teacher by ID", response = TeacherWithSectionResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Teacher fetched successfully"),
             @ApiResponse(code = 400, message = "Invalid request data"),
@@ -109,8 +106,8 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/get/{email}")
-    public ResponseEntity<TeacherResponse> getTeacherById(@PathVariable String email) {
-        TeacherResponse teacherResponse = teacherService.getTeacherByEmail(email);
+    public ResponseEntity<TeacherWithSectionResponse> getTeacherById(@PathVariable String email) {
+        TeacherWithSectionResponse teacherResponse = teacherService.getTeacherByEmail(email);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }
