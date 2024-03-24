@@ -306,7 +306,7 @@ public class QuizService {
             finalList = quizList;
             if(!quizSubmissions.isEmpty()) {
                 for(int i =0; i<quizSubmissions.size(); i++){
-                    if(quizList.get(i).getQuizId() == quizSubmissions.get(i).getQuizId()) {
+                    if(Objects.equals(quizList.get(i).getQuizId(), quizSubmissions.get(i).getQuizId())) {
                         finalList.remove(i);
                     }
                 }
