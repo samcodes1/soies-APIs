@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -51,13 +53,21 @@ public class AuthenticationController {
         System.out.println("After");
         String jwt = jwtTokenProvider.generateToken(authentication);
         System.out.println("jwt: "+jwt);
+
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsernameOrEmail());
 
-        if(userDetails != null) {
-            return new JwtAuthenticationResponse(jwt);
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+        if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_TEACHER"))) {
+            System.out.println("done2");
+            return new JwtAuthenticationResponse(jwt, authorities,"ROLE_TEACHER");
+
+        } else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT"))) {
+            System.out.println("done");
+            return new JwtAuthenticationResponse(jwt,authorities, "ROLE_STUDENT");
         }
         return null;
     }
+
 
     @PostMapping("/logout")
     @ApiOperation(value = "Logout User", notes = "Logout currently authenticated user.")

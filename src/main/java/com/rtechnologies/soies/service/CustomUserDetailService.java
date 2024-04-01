@@ -11,7 +11,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CustomUserDetailService implements UserDetailsService {
@@ -24,21 +26,35 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Autowired
     private StudentAttendanceService studentAttendanceService;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Try to load a Teacher
         Optional<Teacher> teacher = teacherRepository.findByEmail(username);
-        if (teacher.isPresent()) {
-            return new CustomUserDetails(teacher.get());
+        if (teacher.isPresent()){
+           return CustomUserDetails.builder()
+                    .username(teacher.get().getEmail())
+                    .password(teacher.get().getPassword())
+                    .roles(Set.of("ROLE_TEACHER"))
+                    .authorities(Collections.singletonList(() -> "ROLE_TEACHER")) // Assuming "ROLE_TEACHER" as the authority for teachers
+                    .build();
         }
+
         // Try to load a Student
         Optional<Student> student = studentRepository.findByRollNumber(username);
         if (student.isPresent()) {
             studentAttendanceService.markAttendanceOnLogin(student.get().getRollNumber());
-            return new CustomUserDetails(student.get());
+            // Create UserDetails object for student
+            return CustomUserDetails.builder()
+                    .username(student.get().getRollNumber())
+                    .password(student.get().getPassword())
+                    .roles(Set.of("ROLE_STUDENT"))
+                    .authorities(Collections.singletonList(() -> "ROLE_STUDENT")) // Assuming "ROLE_STUDENT" as the authority for students
+                    .build();
         }
         throw new UsernameNotFoundException("User not found with username: " + username);
     }
+
 }
 
 

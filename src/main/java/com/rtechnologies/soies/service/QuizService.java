@@ -104,6 +104,7 @@ public class QuizService {
 
     public Quiz mapToQuiz(QuizRequest createQuizRequest) {
         return quizRepository.save(Quiz.builder()
+                        .quizId(createQuizRequest.getQuizId())
                 .courseId(createQuizRequest.getCourseId())
                 .quizTitle(createQuizRequest.getQuizTitle())
                 .description(createQuizRequest.getDescription())

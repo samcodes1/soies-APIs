@@ -27,8 +27,8 @@ public class StudentCourseController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PostMapping("/create-student-course")
-    public ResponseEntity<StudentCourse> createStudent(@RequestBody StudentCourse studentCourse) {
-        StudentCourse studentResponse = studentCourseService.createStudentCourse(studentCourse);
+    public ResponseEntity<StudentCourse> createStudent() {
+        StudentCourse studentResponse = studentCourseService.createStudentCourse();
         return ResponseEntity.status(200)
                 .body(studentResponse);
     }

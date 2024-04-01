@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,7 +44,8 @@ public class StudentCourseService {
 
     public StudentCourse createStudentCourse(){
 
-        for(int i =1; i <= 22; i++){
+        List<Student> students = studentRepository.findAll();
+        for(int i =1; i <=students.size(); i++){
             StudentCourse studentCourse = new StudentCourse();
             studentCourse.setCourseId(1L);
             studentCourse.setStudentId((long) i);

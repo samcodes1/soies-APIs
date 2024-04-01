@@ -22,7 +22,6 @@ public class StudentDashboardService {
     private StudentRepository studentRepository;
     @Autowired
     private CourseRepository courseRepository;
-
     @Autowired
     private StudentCourseRepository studentCourseRepository;
     public StudentDashboardResponse getStudentDashboard(String rollNumber){

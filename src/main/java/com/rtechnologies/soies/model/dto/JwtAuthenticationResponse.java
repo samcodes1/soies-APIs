@@ -1,12 +1,22 @@
 package com.rtechnologies.soies.model.dto;
 
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+
 public class JwtAuthenticationResponse {
     private String accessToken;
     private String tokenType = "Bearer";
-    // Constructors, getters, and setters
+    private Collection<? extends GrantedAuthority> authorities;
+    private String role;
 
-    public JwtAuthenticationResponse(String accessToken) {
+    public JwtAuthenticationResponse() {
+    }
+
+    public JwtAuthenticationResponse(String accessToken, Collection<? extends GrantedAuthority> authorities, String role) {
         this.accessToken = accessToken;
+        this.authorities = authorities;
+        this.role = role;
     }
 
     public String getAccessToken() {
@@ -23,5 +33,21 @@ public class JwtAuthenticationResponse {
 
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
+    }
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

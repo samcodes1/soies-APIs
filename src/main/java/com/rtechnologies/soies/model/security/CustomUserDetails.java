@@ -2,6 +2,8 @@ package com.rtechnologies.soies.model.security;
 
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
+import lombok.Builder;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,6 +11,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+@Data
+@Builder
 public class CustomUserDetails implements UserDetails {
 
     private final String username;
@@ -22,28 +26,6 @@ public class CustomUserDetails implements UserDetails {
 
     public Set<String> getRoles() {
         return roles;
-    }
-
-    public CustomUserDetails(Teacher teacher) {
-        this.username = teacher.getEmail();
-        this.password = teacher.getPassword();
-        this.authorities = Collections.singletonList(() -> "ROLE_TEACHER");
-        this.userId = teacher.getTeacherId();
-        this.userType = "TEACHER";
-        // Add roles based on your application logic
-        this.roles = Set.of("ROLE_TEACHER");
-
-    }
-
-    public CustomUserDetails(Student student) {
-        this.username = student.getRollNumber();
-        this.password = student.getPassword();
-        this.authorities = Collections.singletonList(() -> "ROLE_STUDENT");
-        this.userId = student.getStudentId();
-        this.userType = "STUDENT";
-        // Add roles based on your application logic
-        this.roles = Set.of("ROLE_STUDENT");
-
     }
 
     // Uncomment this part if you have a Student class

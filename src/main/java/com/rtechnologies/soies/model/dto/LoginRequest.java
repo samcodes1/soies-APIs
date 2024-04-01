@@ -3,7 +3,6 @@ package com.rtechnologies.soies.model.dto;
 public class LoginRequest {
     private String usernameOrEmail;
     private String password;
-
     // Constructors, getters, and setters
 
     public String getUsernameOrEmail() {
@@ -21,5 +20,6 @@ public class LoginRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
 }
 
