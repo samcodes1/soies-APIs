@@ -36,6 +36,8 @@ public class CustomUserDetailService implements UserDetailsService {
                     .username(teacher.get().getEmail())
                     .password(teacher.get().getPassword())
                     .roles(Set.of("ROLE_TEACHER"))
+                   .teacher(teacher.get())
+                   .student(null)
                     .authorities(Collections.singletonList(() -> "ROLE_TEACHER")) // Assuming "ROLE_TEACHER" as the authority for teachers
                     .build();
         }
@@ -49,6 +51,8 @@ public class CustomUserDetailService implements UserDetailsService {
                     .username(student.get().getRollNumber())
                     .password(student.get().getPassword())
                     .roles(Set.of("ROLE_STUDENT"))
+                    .teacher(null)
+                    .student(student.get())
                     .authorities(Collections.singletonList(() -> "ROLE_STUDENT")) // Assuming "ROLE_STUDENT" as the authority for students
                     .build();
         }

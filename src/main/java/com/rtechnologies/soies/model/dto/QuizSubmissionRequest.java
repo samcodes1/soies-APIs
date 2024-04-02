@@ -17,5 +17,6 @@ public class QuizSubmissionRequest {
     private Long courseId;
     private String studentRollNumber;
     private List<QuizQuestion> quizQuestionList;
+    private String term;
     private int totalMarks;
 }

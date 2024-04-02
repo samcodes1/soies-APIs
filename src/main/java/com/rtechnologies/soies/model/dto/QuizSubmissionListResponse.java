@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QuizSubmissionListResponse {
-    private List<QuizSubmission> quizSubmissionList;
+    private List<QuizSubmissionResponse> quizSubmissionList;
     private String messageStatus;
 }

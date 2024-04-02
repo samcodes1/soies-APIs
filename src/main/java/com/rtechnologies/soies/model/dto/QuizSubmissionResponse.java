@@ -15,14 +15,15 @@ import javax.persistence.Id;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QuizSubmissionResponse {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long quizId;
     private Long courseId;
-    private Long studentRollNumber;
+    private String studentRollNumber;
+    private String fullName;
     private int totalMarks;
     private int gainedMarks;
     private double percentage;
-    private String messageStatus;
+    private String date;
+    private String term;
+
 }

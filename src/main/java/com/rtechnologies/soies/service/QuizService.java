@@ -1,9 +1,6 @@
 package com.rtechnologies.soies.service;
 
-import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.Quiz;
-import com.rtechnologies.soies.model.QuizQuestion;
-import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.*;
 import com.rtechnologies.soies.model.association.QuizStudentAnswer;
 import com.rtechnologies.soies.model.association.QuizSubmission;
 import com.rtechnologies.soies.model.dto.*;
@@ -13,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +22,8 @@ public class QuizService {
     @Autowired
     private QuizRepository quizRepository;
 
+    @Autowired
+    private StudentRepository studentRepository;
     @Autowired
     private TeacherRepository teacherRepository;
 
@@ -423,12 +423,32 @@ public class QuizService {
             throw new NotFoundException("No quiz found with ID: " + quizId);
         }
 
-        quizSubmissionResponse.setQuizSubmissionList(submittedQuizzes);
+        List<QuizSubmissionResponse> quizSubmissionResponses = new ArrayList<>();
+        for(int i =0; i< submittedQuizzes.size(); i++){
+            quizSubmissionResponses.add(mapToQuizSubmissionResponse(submittedQuizzes.get(i)));
+        }
+
+        quizSubmissionResponse.setQuizSubmissionList(quizSubmissionResponses);
         quizSubmissionResponse.setMessageStatus("Success");
 
         return quizSubmissionResponse;
     }
 
+    public QuizSubmissionResponse mapToQuizSubmissionResponse(QuizSubmission quizSubmission) {
+        Optional<Student> student = studentRepository.findByRollNumber(quizSubmission.getStudentRollNumber());
+        return QuizSubmissionResponse.builder()
+                .id(quizSubmission.getId())
+                .quizId(quizSubmission.getQuizId())
+                .courseId(quizSubmission.getCourseId())
+                .studentRollNumber(quizSubmission.getStudentRollNumber())
+                .fullName(student.get().getStudentName())
+                .totalMarks(quizSubmission.getTotalMarks())
+                .gainedMarks(quizSubmission.getGainedMarks())
+                .percentage(quizSubmission.getPercentage())
+                .date(quizSubmission.getDate())
+                .term(quizSubmission.getTerm())
+                .build();
+    }
     //To be implemented during admin side
 //    public QuizSubmissionResponse getQuizSubmissionByStudentId(){
 //
@@ -441,6 +461,8 @@ public class QuizService {
                 .studentRollNumber(submissionRequest.getStudentRollNumber())
                 .totalMarks(submissionRequest.getTotalMarks())
                 .gainedMarks(0)
+                .date(LocalDate.now().toString())
+                .term(submissionRequest.getTerm())
                 .build();
     }
 }

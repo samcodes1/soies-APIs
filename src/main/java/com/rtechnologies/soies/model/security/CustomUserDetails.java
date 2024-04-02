@@ -23,7 +23,8 @@ public class CustomUserDetails implements UserDetails {
     private final Long userId;
     private final String userType;  // For example, "TEACHER" or "STUDENT"
     private final Set<String> roles;
-
+    private Student student;
+    private Teacher teacher;
     public Set<String> getRoles() {
         return roles;
     }
@@ -47,6 +48,22 @@ public class CustomUserDetails implements UserDetails {
 
     public String getUserType() {
         return userType;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
     }
 
     @Override
