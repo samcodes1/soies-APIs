@@ -3,6 +3,7 @@ package com.rtechnologies.soies.controller;
 import com.rtechnologies.soies.config.JwtConfig;
 import com.rtechnologies.soies.model.dto.JwtAuthenticationResponse;
 import com.rtechnologies.soies.model.dto.LoginRequest;
+import com.rtechnologies.soies.model.security.CustomUserDetails;
 import com.rtechnologies.soies.service.CustomUserDetailService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -54,16 +55,16 @@ public class AuthenticationController {
         String jwt = jwtTokenProvider.generateToken(authentication);
         System.out.println("jwt: "+jwt);
 
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsernameOrEmail());
+        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(loginRequest.getUsernameOrEmail());
 
         Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
         if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_TEACHER"))) {
             System.out.println("done2");
-            return new JwtAuthenticationResponse(jwt, authorities,"ROLE_TEACHER");
+            return new JwtAuthenticationResponse(jwt, authorities,"ROLE_TEACHER", userDetails.getStudent(), userDetails.getTeacher());
 
         } else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STUDENT"))) {
             System.out.println("done");
-            return new JwtAuthenticationResponse(jwt,authorities, "ROLE_STUDENT");
+            return new JwtAuthenticationResponse(jwt,authorities, "ROLE_STUDENT", userDetails.getStudent(), userDetails.getTeacher());
         }
         return null;
     }

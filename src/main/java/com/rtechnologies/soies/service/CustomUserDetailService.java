@@ -28,7 +28,7 @@ public class CustomUserDetailService implements UserDetailsService {
     private StudentAttendanceService studentAttendanceService;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Try to load a Teacher
         Optional<Teacher> teacher = teacherRepository.findByEmail(username);
         if (teacher.isPresent()){

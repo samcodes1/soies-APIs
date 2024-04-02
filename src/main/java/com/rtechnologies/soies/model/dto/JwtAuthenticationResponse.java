@@ -1,5 +1,7 @@
 package com.rtechnologies.soies.model.dto;
 
+import com.rtechnologies.soies.model.Student;
+import com.rtechnologies.soies.model.Teacher;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
@@ -9,14 +11,18 @@ public class JwtAuthenticationResponse {
     private String tokenType = "Bearer";
     private Collection<? extends GrantedAuthority> authorities;
     private String role;
-
+    private Teacher teacher;
+    private Student student;
     public JwtAuthenticationResponse() {
     }
 
-    public JwtAuthenticationResponse(String accessToken, Collection<? extends GrantedAuthority> authorities, String role) {
+    public JwtAuthenticationResponse(String accessToken, Collection<? extends GrantedAuthority> authorities, String role,
+                                     Student student, Teacher teacher) {
         this.accessToken = accessToken;
         this.authorities = authorities;
         this.role = role;
+        this.student = student;
+        this.teacher = teacher;
     }
 
     public String getAccessToken() {
