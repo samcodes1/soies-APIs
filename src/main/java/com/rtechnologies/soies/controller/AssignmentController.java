@@ -128,7 +128,7 @@ public class AssignmentController {
             @PathVariable String studentRollNumber
             ) {
         AssignmentSubmissionResponse studentListResponse = assignmentService.getAssignmentSubmissionById(assignmentId, studentRollNumber);
-        return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
+        return ResponseEntity.status(200)
                 .body(studentListResponse);
     }
 

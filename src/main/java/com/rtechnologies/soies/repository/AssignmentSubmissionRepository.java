@@ -8,14 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface AssignmentSubmissionRepository extends JpaRepository<AssignmentSubmission, Long> {
 
     Page<AssignmentSubmission> findByAssignmentId(Long assignmentId, Pageable pageable);
 
-    Optional<AssignmentSubmission> findByAssignmentIdAndStudentRollNumber(Long assignmentId, String studentRollNumber);
+    List<AssignmentSubmission> findByAssignmentIdAndStudentRollNumber(Long assignmentId, String studentRollNumber);
 
     List<AssignmentSubmission> findByStudentRollNumber(String studentRollNumber);
 

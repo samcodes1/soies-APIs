@@ -422,12 +422,12 @@ public class AssignmentService {
                 throw new NotFoundException("No student found with ID: " + assignment.getStudentId());
             }
 
-            Optional<AssignmentSubmission> assignmentSubmission = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(
+            List<AssignmentSubmission> assignmentSubmission = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(
                     assignment.getAssignmentId(), studentOptional.get().getRollNumber());
 
             long submissionId = 0;
-            if(assignmentSubmission.isPresent()) {
-                submissionId = assignmentSubmission.get().getSubmissionId();
+            if(!assignmentSubmission.isEmpty()) {
+                submissionId = assignmentSubmission.get(assignmentSubmission.size()-1).getSubmissionId();
             }
 
             String fileName = "";
@@ -439,7 +439,6 @@ public class AssignmentService {
                 Map data = cloudinary.uploader().upload(assignment.getSubmittedFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
                 String url =  data.get("url").toString();
 
-                System.out.println("URL is: " + url);
                 if(submissionId != 0){
                     finalAssignment.setSubmissionId(submissionId);
                 }
@@ -519,21 +518,21 @@ public class AssignmentService {
         AssignmentSubmissionResponse assignmentSubmissionListResponse;
 
         try {
-            Optional<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
-
+            List<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
+            int size = assignmentSubmissionsPage.size();
             if(assignmentSubmissionsPage.isEmpty()){
                 throw new NotFoundException("No submission found");
             }
             assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
-                    .submissionId(assignmentSubmissionsPage.get().getSubmissionId())
-                    .assignmentId(assignmentSubmissionsPage.get().getAssignmentId())
-                    .studentId(assignmentSubmissionsPage.get().getStudentRollNumber())
-                    .submittedFileURL(assignmentSubmissionsPage.get().getSubmittedFileURL())
-                    .comments(assignmentSubmissionsPage.get().getComments())
-                    .obtainedMarks(assignmentSubmissionsPage.get().getObtainedMarks())
-                    .grade(assignmentSubmissionsPage.get().getObtainedGrade())
-                    .submissionDate(assignmentSubmissionsPage.get().getSubmissionDate())
-                    .studentName(assignmentSubmissionsPage.get().getStudentName())
+                    .submissionId(assignmentSubmissionsPage.get(size-1).getSubmissionId())
+                    .assignmentId(assignmentSubmissionsPage.get(size-1).getAssignmentId())
+                    .studentId(assignmentSubmissionsPage.get(size-1).getStudentRollNumber())
+                    .submittedFileURL(assignmentSubmissionsPage.get(size-1).getSubmittedFileURL())
+                    .comments(assignmentSubmissionsPage.get(size-1).getComments())
+                    .obtainedMarks(assignmentSubmissionsPage.get(size-1).getObtainedMarks())
+                    .grade(assignmentSubmissionsPage.get(size-1).getObtainedGrade())
+                    .submissionDate(assignmentSubmissionsPage.get(size-1).getSubmissionDate())
+                    .studentName(assignmentSubmissionsPage.get(size-1).getStudentName())
                     .messageStatus("Success")
                     .build();
 
