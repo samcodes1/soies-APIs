@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.model.dto;
 
+import com.rtechnologies.soies.model.Admin;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,16 +14,18 @@ public class JwtAuthenticationResponse {
     private String role;
     private Teacher teacher;
     private Student student;
+    private Admin admin;
     public JwtAuthenticationResponse() {
     }
 
     public JwtAuthenticationResponse(String accessToken, Collection<? extends GrantedAuthority> authorities, String role,
-                                     Student student, Teacher teacher) {
+                                     Student student, Teacher teacher, Admin admin) {
         this.accessToken = accessToken;
         this.authorities = authorities;
         this.role = role;
         this.student = student;
         this.teacher = teacher;
+        this.admin = admin;
     }
 
     public String getAccessToken() {
@@ -71,5 +74,13 @@ public class JwtAuthenticationResponse {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
     }
 }

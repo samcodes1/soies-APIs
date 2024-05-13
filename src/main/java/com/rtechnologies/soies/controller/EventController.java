@@ -62,7 +62,7 @@ public class EventController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Get Events by Teacher Emailm and section")
+    @ApiOperation(value = "Get Events by Teacher Email and section")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved events", response = EventListResponse.class),
             @ApiResponse(code = 400, message = "Bad Request"),

@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.model.security;
 
+import com.rtechnologies.soies.model.Admin;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
 import lombok.Builder;
@@ -25,6 +26,7 @@ public class CustomUserDetails implements UserDetails {
     private final Set<String> roles;
     private Student student;
     private Teacher teacher;
+    private Admin admin;
     public Set<String> getRoles() {
         return roles;
     }
@@ -64,6 +66,14 @@ public class CustomUserDetails implements UserDetails {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
     }
 
     @Override

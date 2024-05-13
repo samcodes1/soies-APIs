@@ -1,8 +1,10 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.model.Admin;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.security.CustomUserDetails;
+import com.rtechnologies.soies.repository.AdminRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +29,25 @@ public class CustomUserDetailService implements UserDetailsService {
     @Autowired
     private StudentAttendanceService studentAttendanceService;
 
+    @Autowired
+    private AdminRepository adminRepository;
+
     @Override
     public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Try to load Admin
+        Optional<Admin> admin = adminRepository.findByEmail(username);
+        if (admin.isPresent()){
+            return CustomUserDetails.builder()
+                    .username(admin.get().getEmail())
+                    .password(admin.get().getPassword())
+                    .roles(Set.of("ROLE_ADMIN"))
+                    .teacher(null)
+                    .student(null)
+                    .admin(admin.get())
+                    .authorities(Collections.singletonList(() -> "ROLE_TEACHER")) // Assuming "ROLE_TEACHER" as the authority for teachers
+                    .build();
+        }
+
         // Try to load a Teacher
         Optional<Teacher> teacher = teacherRepository.findByEmail(username);
         if (teacher.isPresent()){
