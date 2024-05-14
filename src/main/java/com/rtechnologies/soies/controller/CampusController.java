@@ -32,6 +32,7 @@ public class CampusController {
         try {
             Campus savedCampus = campusService.createCampus(campus);
             return new ResponseEntity<>(savedCampus, HttpStatus.CREATED);
+
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
