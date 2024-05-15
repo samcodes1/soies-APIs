@@ -36,7 +36,6 @@ public class TeacherController {
     }
 
     @PostMapping(produces = "application/json", path = "/hello")
-    @PreAuthorize("hasAuthority('READ_TEACHER')")
     public Map<String, String> createTeacher() {
         System.out.println("Done2");
         return new HashMap<String, String>();
@@ -91,7 +90,6 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_TEACHER')")
     public ResponseEntity<TeacherListResponse> getAllTeachers() {
         TeacherListResponse teacherListResponse = teacherService.getAllTeachers();
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)
