@@ -45,13 +45,13 @@ public class CampusController {
         return ResponseEntity.ok(campuses);
     }
 
-    @GetMapping("/{campusId}/sections")
+    @GetMapping("/{campusId}/{grade}")
     @ApiOperation(value = "Get sections by campus ID and grade", response = List.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved list"),
             @ApiResponse(code = 404, message = "Campus not found")
     })
-    public ResponseEntity<List<Section>> getSectionsByCampusNameAndGrade(@PathVariable Long campusId, @RequestParam String grade) {
+    public ResponseEntity<List<Section>> getSectionsByCampusNameAndGrade(@PathVariable Long campusId, @PathVariable String grade) {
             List<Section> sections = campusService.getSectionsByCampusNameAndGrade(campusId, grade);
             return ResponseEntity.ok(sections);
     }
