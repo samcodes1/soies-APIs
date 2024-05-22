@@ -4,6 +4,8 @@ import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.dto.StudentListResponse;
 import com.rtechnologies.soies.model.dto.StudentResponse;
 import com.rtechnologies.soies.service.StudentService;
+import com.rtechnologies.soies.utilities.Utility;
+
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -79,9 +81,11 @@ public class StudentController {
     @GetMapping("/get-all-students-by-campus/{campusName}")
     public ResponseEntity<StudentListResponse> getAllStudentsByCampusName(
             @PathVariable String campusName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(required=false, defaultValue = "0", name = "page") Integer page,
+            @RequestParam(required=false, defaultValue = "10", name = "size") Integer size
     ) {
+        
+        System.out.println(campusName+"__"+Integer.toString(size)+"--"+Integer.toString(page));
         StudentListResponse studentListResponse = studentService.getAllStudentsByCampusName(campusName, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);

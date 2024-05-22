@@ -11,7 +11,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
+
 import java.util.Optional;
+
+import javax.transaction.Transactional;
 
 @Service
 public class StudentService {
@@ -122,6 +126,7 @@ public class StudentService {
         }
     }
 
+    @Transactional
     public StudentResponse deleteStudent(String rollNumber) {
         Utility.printDebugLogs("Student deletion request: " + rollNumber);
         StudentResponse studentResponse;
@@ -207,7 +212,8 @@ public class StudentService {
         StudentListResponse studentListResponse;
 
         try {
-            Page<Student> studentPage = studentRepository.findAllByCampusName(campusName, PageRequest.of(page, size));
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Student> studentPage = studentRepository.findAllByCampusName(campusName, pageable);
 
             if (studentPage.isEmpty()) {
                 throw new IllegalArgumentException("No students found for campus: " + campusName);
@@ -238,7 +244,8 @@ public class StudentService {
         StudentListResponse studentListResponse;
 
         try {
-            Page<Student> studentPage = studentRepository.findAll(PageRequest.of(page, size));
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Student> studentPage = studentRepository.findAll(pageable);
 
             if (studentPage.isEmpty()) {
                 throw new IllegalArgumentException("No students found");

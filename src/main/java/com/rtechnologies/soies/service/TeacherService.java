@@ -8,6 +8,9 @@ import com.rtechnologies.soies.repository.TeacherSectionRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +18,8 @@ import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
+
+import javax.transaction.Transactional;
 
 @Service
 public class TeacherService {
@@ -98,6 +103,8 @@ public class TeacherService {
                 // You may need to handle teacherSectionList mapping here if required
                 .build();
     }
+
+    @Transactional
     public TeacherResponse deleteTeacher(Long teacherId) {
         Utility.printDebugLogs("Teacher deletion request ID: " + teacherId);
         TeacherResponse teacherResponse;
@@ -273,18 +280,22 @@ public class TeacherService {
     }
 
 
-    public TeacherListResponse getAllTeachers() {
+    public TeacherListResponse getAllTeachers(int page, int size) {
         Utility.printDebugLogs("Get all teachers request");
         TeacherListResponse teacherListResponse = null;
 
         try {
             // Fetch all teachers
-            List<Teacher> teachers = teacherRepository.findAll();
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Teacher> teachersPage = teacherRepository.findAll(pageable);
+            if (teachersPage.isEmpty()) {
+                throw new IllegalArgumentException("No teacher found");
+            }
             teacherListResponse = TeacherListResponse.builder()
-                                    .teacherList(teachers)
+                                    .teacherList(teachersPage.getContent())
                                     .messageStatus("Success").build();
 
-            Utility.printDebugLogs("Fetched " + teachers.size() + " teachers");
+            Utility.printDebugLogs("Fetched teachers "+teacherListResponse);
             return teacherListResponse;
 
         } catch (Exception e) {
