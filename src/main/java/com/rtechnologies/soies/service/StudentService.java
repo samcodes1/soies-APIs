@@ -31,6 +31,7 @@ public class StudentService {
             if (student == null) {
                 Utility.printDebugLogs("Student creation request is null");
                 throw new IllegalArgumentException("Corrupt data received");
+
             }
 
             // Check for existing student
