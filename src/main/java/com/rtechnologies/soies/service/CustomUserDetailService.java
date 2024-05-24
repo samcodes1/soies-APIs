@@ -44,7 +44,8 @@ public class CustomUserDetailService implements UserDetailsService {
                     .teacher(null)
                     .student(null)
                     .admin(admin.get())
-                    .authorities(Collections.singletonList(() -> "ROLE_ADMIN")) // Assuming "ROLE_TEACHER" as the authority for teachers
+
+                    .authorities(Collections.singletonList(() -> "ROLE_ADMIN")) // Assuming "ROLE_ADMIN" as the authority for teachers
                     .build();
         }
 
