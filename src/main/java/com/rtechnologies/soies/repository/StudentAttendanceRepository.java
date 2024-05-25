@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface StudentAttendanceRepository extends JpaRepository<StudentAttendance,Long > {
-    List<StudentAttendance> findByStudentRollNumAndDate(String rollNumber, LocalDate now);
+    StudentAttendance findFirstByStudentRollNumAndDateOrderByLastLoginTimeDesc(String rollNumber, LocalDate now);
 }

@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.StudentAttendance;
 import com.rtechnologies.soies.model.association.StudentAttendanceFinal;
@@ -7,7 +8,10 @@ import com.rtechnologies.soies.model.dto.MarkAttendanceResponse;
 import com.rtechnologies.soies.repository.StudentAttendanceFinalRepository;
 import com.rtechnologies.soies.repository.StudentAttendanceRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
+import com.rtechnologies.soies.utilities.Utility;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+@EnableScheduling
 @Service
 public class StudentAttendanceService {
 
@@ -43,6 +48,7 @@ public class StudentAttendanceService {
         attendance.setStudentRollNum(studentRollNum);
         attendance.setStatus("Present");
         attendance.setDate(LocalDate.now());
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!NOW____________________"+LocalTime.now());
         attendance.setLastLoginTime(LocalTime.now());
         attendance = attendanceRepository.save(attendance);
 
@@ -104,22 +110,32 @@ public class StudentAttendanceService {
     }
 
     @Scheduled(cron = "0 0 0 * * *") // Run at 12 AM every day
-    public void autoAttendanceMarking(String studentRollNum) {
+    public void autoAttendanceMarking() throws JsonProcessingException {
         List<Student> students = studentRepository.findAll();
-
+        
         for(Student student : students) {
             // Calculate total time spent and mark attendance as absent if less than 15 minutes
-            List<StudentAttendance> todayAttendance = attendanceRepository.findByStudentRollNumAndDate(student.getRollNumber(),
+            StudentAttendance todayAttendance = attendanceRepository.findFirstByStudentRollNumAndDateOrderByLastLoginTimeDesc(student.getRollNumber(),
                     LocalDate.now());
-            int totalMinutesSpent = calculateTotalMinutesSpent(todayAttendance);
-            String attendanceStatus = totalMinutesSpent >= 15 ? "Present" : "Absent";
+
+            String attendanceStatus = null;
+            int totalMinutesSpent = 0;
+
+            if(todayAttendance!=null){
+                totalMinutesSpent = Math.abs(calculateTotalMinutesSpent(todayAttendance));
+                attendanceStatus = totalMinutesSpent >= 15 ? "Present" : "Absent";
+            }else{
+                attendanceStatus = "Absent";
+            }
 
             StudentAttendanceFinal studentAttendanceFinal = new StudentAttendanceFinal();
-            studentAttendanceFinal.setStudentRollNum(studentRollNum);
+            studentAttendanceFinal.setStudentRollNum(student.getRollNumber());
             studentAttendanceFinal.setDate(LocalDate.now());
             studentAttendanceFinal.setTotalTimeSpentInMinutes(totalMinutesSpent);
             studentAttendanceFinal.setStatus(attendanceStatus);
-            studentAttendanceFinal.setLastLoginTime(todayAttendance.get(todayAttendance.size()-1).getLastLoginTime());
+            if(todayAttendance!=null){
+                studentAttendanceFinal.setLastLoginTime(todayAttendance.getLastLoginTime());
+            }
 
             studentAttendanceFinalRepository.save(studentAttendanceFinal);
         }
@@ -128,16 +144,13 @@ public class StudentAttendanceService {
 
 
 
-    private int calculateTotalMinutesSpent(List<StudentAttendance> attendanceList) {
+    private int calculateTotalMinutesSpent(StudentAttendance attendance) {
         // Calculate total minutes spent in the session
         int totalMinutes = 0;
-        for (StudentAttendance attendance : attendanceList) {
-            // Calculate difference between login and logout time
-            LocalTime loginTime = attendance.getLastLoginTime();
-            LocalTime logoutTime = LocalTime.now(); // Assuming logout time is current time
-            long minutesSpent = ChronoUnit.MINUTES.between(loginTime, logoutTime);
-            totalMinutes += minutesSpent;
-        }
+        LocalTime loginTime = attendance.getLastLoginTime();
+        LocalTime logoutTime = LocalTime.now(); // Assuming logout time is current time
+        long minutesSpent = ChronoUnit.MINUTES.between(loginTime, logoutTime);
+        totalMinutes += minutesSpent;
         return totalMinutes;
     }
 }
