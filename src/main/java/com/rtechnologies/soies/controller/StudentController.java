@@ -84,8 +84,6 @@ public class StudentController {
             @RequestParam(required=false, defaultValue = "0", name = "page") Integer page,
             @RequestParam(required=false, defaultValue = "10", name = "size") Integer size
     ) {
-        
-        System.out.println(campusName+"__"+Integer.toString(size)+"--"+Integer.toString(page));
         StudentListResponse studentListResponse = studentService.getAllStudentsByCampusName(campusName, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
@@ -103,6 +101,24 @@ public class StudentController {
             @RequestParam(defaultValue = "10") int size
     ) {
         StudentListResponse studentListResponse = studentService.getAllStudents(page, size);
+        return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(studentListResponse);
+    }
+
+    @ApiOperation(value = "Get all students by grade section and course", response = StudentListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Students retrieved successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-students/{campusName}")
+    public ResponseEntity<StudentListResponse> getAllStudentsByGradeCourseSection(
+        @PathVariable String campusName,
+        @RequestParam(required = false) String course,
+        @RequestParam(required = false) String grade,
+        @RequestParam(required = false) String section
+    ) {
+        StudentListResponse studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }

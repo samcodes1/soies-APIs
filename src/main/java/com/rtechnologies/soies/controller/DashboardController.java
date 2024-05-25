@@ -1,10 +1,14 @@
 package com.rtechnologies.soies.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rtechnologies.soies.service.DashboardService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import java.util.concurrent.ExecutionException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,4 +35,18 @@ public class DashboardController {
     public ResponseEntity<?> getDashboardData(@PathVariable String teacherEmail) {
         return new ResponseEntity<>(dashboardService.getDashboardData(teacherEmail), HttpStatus.OK);
     }
+
+
+    @GetMapping("/data-stats")
+    @ApiOperation(value = "Get Dashboard Data Stats", notes = "Returns DashboardResponse based Stats.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved DashboardResponse"),
+            @ApiResponse(code = 404, message = "Teacher not found with the provided email"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+    public ResponseEntity<?> getDashboardDataStats( ) throws JsonProcessingException, InterruptedException, ExecutionException {
+        return new ResponseEntity<>(dashboardService.getDashboardDataStats(), HttpStatus.OK);
+    }
+
+    
 }

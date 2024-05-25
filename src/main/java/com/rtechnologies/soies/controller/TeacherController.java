@@ -126,4 +126,23 @@ public class TeacherController {
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }
+
+    @ApiOperation(value = "Get a teacher sections by course, grade or/and section", response = TeacherSectionResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Teacher sections fetched successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 404, message = "Teacher not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-teachers/{campusName}")
+    public ResponseEntity<TeacherListResponse> getTeachersByCourseGradeSection(
+        @PathVariable String campusName,
+        @RequestParam(required = false) String course,
+        @RequestParam(required = false) String grade,
+        @RequestParam(required = false) String section
+    ) {
+        TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, course, grade, section);
+        return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(teacherResponse);
+    }
 }
