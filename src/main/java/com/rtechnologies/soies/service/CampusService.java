@@ -28,6 +28,20 @@ public class CampusService {
         return campusRepository.save(campus);
     }
 
+    public Campus updateCampus(Long campusId, String updateRequest){
+        Optional<Campus> campusOptional = campusRepository.findById(campusId);
+
+        if(!campusOptional.isPresent()) {
+            throw new RuntimeException("Campus does not exists");
+        }
+
+        Campus entityCampus=campusOptional.get();
+
+        entityCampus.setCampusName(updateRequest);
+
+        return campusRepository.save(entityCampus);
+    }
+
     public List<Campus> getAllCampuses(){
         return campusRepository.findAll();
     }
@@ -50,5 +64,15 @@ public class CampusService {
         section.setGrade(section.getGrade().toLowerCase());
         // Save the new section
         return sectionRepository.save(section);
+    }
+
+    public Section updateSection(Long id, Section request){
+        Optional<Section> sectiontRes = sectionRepository.findById(id);
+
+        if(!sectiontRes.isPresent()) {
+            throw new RuntimeException("Section does not exists");
+        }
+        request.setId(id);
+        return sectionRepository.save(request);
     }
 }
