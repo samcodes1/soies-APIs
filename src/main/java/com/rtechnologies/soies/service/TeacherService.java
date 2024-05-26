@@ -381,9 +381,10 @@ public class TeacherService {
         return teacherResponse;
     }
 
-    public TeacherListResponse getTeachersByCourseGradeSection(String campusName, String courseName, String course, String grade, String section) {
+    public TeacherListResponse getTeachersByCourseGradeSection(String campusName, String courseName, String course, String grade, String section, int page, int size) {
         TeacherListResponse teacherResponse = new TeacherListResponse();
         // Fetch teacher by ID
+        Pageable pageable = PageRequest.of(page, size);
         List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade);
         if (listTeacher==null || listTeacher.isEmpty()) {
             Utility.printDebugLogs("Teacher not found");
