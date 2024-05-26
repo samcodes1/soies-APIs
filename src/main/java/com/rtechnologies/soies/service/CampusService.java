@@ -28,7 +28,7 @@ public class CampusService {
         return campusRepository.save(campus);
     }
 
-    public Campus updateCampus(Long campusId, String updateRequest){
+    public Campus updateCampus(Long campusId, Campus updateRequest){
         Optional<Campus> campusOptional = campusRepository.findById(campusId);
 
         if(!campusOptional.isPresent()) {
@@ -37,7 +37,7 @@ public class CampusService {
 
         Campus entityCampus=campusOptional.get();
 
-        entityCampus.setCampusName(updateRequest);
+        entityCampus.setCampusName(updateRequest.getCampusName());
 
         return campusRepository.save(entityCampus);
     }

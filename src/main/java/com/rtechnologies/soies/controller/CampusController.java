@@ -78,8 +78,8 @@ public class CampusController {
             @ApiResponse(code = 201, message = "Successfully created section"),
             @ApiResponse(code = 400, message = "Section already exists")
     })
-    @PutMapping("/update-campus/{campusId}/{campusUpdatedName}")
-    public ResponseEntity<Campus> putMethodName(@PathVariable Long campusId, @PathVariable String campusUpdatedName) {
+    @PutMapping("/update-campus/{campusId}")
+    public ResponseEntity<Campus> putMethodName(@PathVariable Long campusId, @RequestBody Campus campusUpdatedName) {
         try {
             Campus savedCampus = campusService.updateCampus(campusId, campusUpdatedName);
             return new ResponseEntity<>(savedCampus, HttpStatus.CREATED);
