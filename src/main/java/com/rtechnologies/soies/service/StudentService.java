@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -217,7 +218,13 @@ public class StudentService {
             Page<Student> studentPage = studentRepository.findAllByCampusName(campusName, pageable);
 
             if (studentPage.isEmpty()) {
-                throw new IllegalArgumentException("No students found for campus: " + campusName);
+                // throw new IllegalArgumentException("No students found for campus: " + campusName);
+                List<Student> emptyList = new ArrayList<>();
+                studentListResponse = StudentListResponse.builder()
+                    .studentList(emptyList)
+                    .messageStatus("Success")
+                    .build();
+                return studentListResponse;
             }
 
             studentListResponse = StudentListResponse.builder()

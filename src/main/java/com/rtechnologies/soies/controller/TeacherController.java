@@ -139,9 +139,11 @@ public class TeacherController {
         @PathVariable String campusName,
         @RequestParam(required = false) String course,
         @RequestParam(required = false) String grade,
-        @RequestParam(required = false) String section
+        @RequestParam(required = false) String section,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
     ) {
-        TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, course, grade, section);
+        TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, course, grade, section, page, size);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }
