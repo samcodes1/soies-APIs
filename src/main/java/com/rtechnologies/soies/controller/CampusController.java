@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/campuses")
 @Api(value = "Campus Management System")
@@ -65,6 +66,38 @@ public class CampusController {
     public ResponseEntity<Section> createSection(@PathVariable Long campusId, @RequestBody Section section) {
         try {
             section.setCampusId(campusId); // Set the campus ID from path
+            Section savedSection = campusService.createSection(section);
+            return new ResponseEntity<>(savedSection, HttpStatus.CREATED);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @ApiOperation(value = "Updates Campuses", response = Section.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Successfully created section"),
+            @ApiResponse(code = 400, message = "Section already exists")
+    })
+    @PutMapping("/update-campus/{campusId}/{campusUpdatedName}")
+    public ResponseEntity<Campus> putMethodName(@PathVariable Long campusId, @PathVariable String campusUpdatedName) {
+        try {
+            Campus savedCampus = campusService.updateCampus(campusId, campusUpdatedName);
+            return new ResponseEntity<>(savedCampus, HttpStatus.CREATED);
+
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+
+    @PostMapping("/sections-update/{sectionId}")
+    @ApiOperation(value = "Update a section for a campus", response = Section.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Successfully created section"),
+            @ApiResponse(code = 400, message = "Section already exists")
+    })
+    public ResponseEntity<Section> updateSection(@PathVariable Long sectionId, @RequestBody Section section) {
+        try {
             Section savedSection = campusService.createSection(section);
             return new ResponseEntity<>(savedSection, HttpStatus.CREATED);
         } catch (RuntimeException ex) {
