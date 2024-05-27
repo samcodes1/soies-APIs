@@ -90,7 +90,7 @@ public class CampusController {
     }
 
 
-    @PostMapping("/sections-update/{sectionId}")
+    @PutMapping("/sections-update/{sectionId}")
     @ApiOperation(value = "Update a section for a campus", response = Section.class)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successfully created section"),
