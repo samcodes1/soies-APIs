@@ -10,9 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("/v1/teachers")
@@ -147,4 +150,12 @@ public class TeacherController {
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }
+
+    @PostMapping("/upload-teacher-excel-data")
+    public ResponseEntity<TeacherResponse> teacherCsvFileRead(@RequestParam("file") MultipartFile file) throws IOException {
+        TeacherResponse teacherResponse = teacherService.saveTrachersFromFile(file);
+        return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 201 : 500)
+                .body(teacherResponse);
+    }
+    
 }

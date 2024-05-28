@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.TeacherSection;
 import com.rtechnologies.soies.model.dto.*;
@@ -14,8 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.multipart.MultipartFile;
 import org.webjars.NotFoundException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +32,9 @@ public class TeacherService {
 
     @Autowired
     private TeacherSectionRepository teacherSectionRepository;
+
+    @Autowired
+    private ExcelParser excelParser;
 
     public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
         Utility.printDebugLogs("Teacher creation request: "+teacher.toString());
@@ -59,8 +65,14 @@ public class TeacherService {
             Utility.printDebugLogs("Saved teacher: "+ savedTeacher.toString());
 
 
-            for(TeacherSection teacherSection : teacher.getTeacherSectionList()) {
-                teacherSection.setTeacherId(savedTeacher.getTeacherId());
+            // for(TeacherSection teacherSection : teacher.getTeacherSectionList()) {
+            //     teacherSection.setTeacherId(savedTeacher.getTeacherId());
+            // }
+
+            int length = teacher.getTeacherSectionList().size();
+
+            for (int i = 0; i < length; i++) {
+                teacher.getTeacherSectionList().get(i).setTeacherId(savedTeacher.getTeacherId());
             }
 
             teacherSectionRepository.saveAll(teacher.getTeacherSectionList());
@@ -402,6 +414,23 @@ public class TeacherService {
         teacherResponse.setTeacherList(listTeacher);
         teacherResponse.setMessageStatus("Success");
 
+        return teacherResponse;
+    }
+
+    public TeacherResponse saveTrachersFromFile(MultipartFile file) throws IOException {
+        List<Teacher> teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
+        teacherRepository.saveAll(teachers);
+        TeacherResponse teacherResponse = TeacherResponse.builder()
+                    .teacherId(null)
+                    .campusName(null)
+                    .employeeName(null)
+                    .email(null)
+                    .dateOfBirth(null)
+                    .gender(null)
+                    .joiningDate(null)
+                    .phoneNumber(null)
+                    .address(null)
+                    .messageStatus("Success").build();
         return teacherResponse;
     }
 }

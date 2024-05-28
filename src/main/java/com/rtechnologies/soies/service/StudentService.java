@@ -10,9 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Pageable;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,9 @@ public class StudentService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private ExcelParser excelParser;
 
     public StudentResponse createStudent(Student student) {
         Utility.printDebugLogs("Student creation request: " + student.toString());
@@ -308,5 +312,15 @@ public class StudentService {
                     .messageStatus("Failure")
                     .build();
         }
+    }
+
+     public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
+        List<Student> students = excelParser.parseStudentExcelFile(file.getInputStream());
+        studentRepository.saveAll(students);
+        StudentListResponse studentListResponse = StudentListResponse.builder()
+                    .studentList(null)
+                    .messageStatus("Success")
+                    .build();
+        return studentListResponse;
     }
 }
