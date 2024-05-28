@@ -9,9 +9,14 @@ import com.rtechnologies.soies.utilities.Utility;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @RestController
 @RequestMapping("/api/students")
@@ -122,4 +127,12 @@ public class StudentController {
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }
+
+    @PostMapping("/upload-student-excel-data")
+    public ResponseEntity<StudentListResponse> excelUploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        StudentListResponse response = studentService.saveStudentsFromFile(file);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+    
 }
