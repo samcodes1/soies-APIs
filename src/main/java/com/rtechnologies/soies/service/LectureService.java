@@ -42,6 +42,7 @@ public class LectureService {
         Utility.printDebugLogs("Lecture creation request: " + lecture.toString());
         LectureResponse lectureResponse = new LectureResponse();
 
+        System.out.println("REQUEST OBJ:>>>>> "+lecture.toString());
         try {
             // Validate lecture
             if (lecture == null) {
@@ -57,16 +58,17 @@ public class LectureService {
                 //For file
                 String folder = "uploaded-lecture";
                 String publicId = folder + "/" + fileName;
-                Map data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                Map<?,?> data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
                 String url =  data.get("url").toString();
 
                 System.out.println("Done 2");
                 String videoUrl = "";
                 //For video
                 if(lecture.getVideoURL() != null) {
+                    data=null;
                     fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId()+ "-"+ "video";
                     publicId = folder + "/" + fileName;
-                    data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                    data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
                     videoUrl =  data.get("url").toString();
                 }
                 System.out.println("Done 3");
