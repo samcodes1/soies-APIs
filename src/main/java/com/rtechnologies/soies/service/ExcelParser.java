@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.utilities.Utility;
 
 import java.util.ArrayList;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -54,23 +55,35 @@ public class ExcelParser {
         List<Teacher> teachers = new ArrayList<>();
         Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
-        System.out.println("row data>>>>>>>>>>>>>> ");
+        System.out.println("TEACHERS:> Number of rows in the sheet: " + (sheet.getLastRowNum() + 1)); // Adding 1 because index is 0-based
+        System.out.println("TEACHER:> row data>>>>>>>>>>>>>> ");
         for (Row row : sheet) {
-            System.out.println("While enter ");
+            System.out.println("While enter TEACHER");
             if (row.getRowNum() == 0) {
                 continue; // Skip header row
             }
             Teacher teacher = new Teacher();
             // System.out.println("row data>>>>>>>>>>>>>> "+row.getCell(0).getStringCellValue());
             teacher.setCampusName(row.getCell(0).getStringCellValue());
+            // System.err.println(row.getCell(0).getStringCellValue());
             teacher.setEmployeeName(row.getCell(1).getStringCellValue());
+            // System.err.println(row.getCell(1).getStringCellValue());
             teacher.setEmail(row.getCell(2).getStringCellValue());
+            // System.err.println(row.getCell(2).getStringCellValue());
             teacher.setPassword(new BCryptPasswordEncoder().encode(row.getCell(3).getStringCellValue()));
+            // System.err.println(new BCryptPasswordEncoder().encode(row.getCell(3).getStringCellValue()));
             teacher.setDateOfBirth(row.getCell(4).getDateCellValue().toString());
+            // System.err.println(row.getCell(4).getDateCellValue().toString());
             teacher.setGender(row.getCell(5).getStringCellValue());
+            // System.err.println(row.getCell(5).getStringCellValue());
             teacher.setJoiningDate(row.getCell(6).getDateCellValue().toString());
+            // System.err.println(row.getCell(6).getDateCellValue().toString());
             teacher.setPhoneNumber(row.getCell(7).getStringCellValue());
+            // System.err.println(row.getCell(7).getStringCellValue());
             teacher.setAddress(row.getCell(8).getStringCellValue());
+            // System.err.println(row.getCell(8).getStringCellValue());
+
+            System.out.println("\n\n\n\n");
             teachers.add(teacher);
         }
         workbook.close();
