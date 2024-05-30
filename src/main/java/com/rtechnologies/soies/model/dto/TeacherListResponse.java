@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.rtechnologies.soies.model.Teacher;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TeacherListResponse {
     private List<Teacher> teacherList;
+    List<TeacherProjection> teacherJoinData;
     private String messageStatus;
 }

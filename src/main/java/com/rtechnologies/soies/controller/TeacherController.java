@@ -146,7 +146,7 @@ public class TeacherController {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, course, grade, section, page, size);
+        TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, grade, section, page, size);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
     }

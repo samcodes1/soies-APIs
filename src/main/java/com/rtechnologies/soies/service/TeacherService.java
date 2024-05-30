@@ -393,11 +393,29 @@ public class TeacherService {
         return teacherResponse;
     }
 
-    public TeacherListResponse getTeachersByCourseGradeSection(String campusName, String courseName, String course, String grade, String section, int page, int size) {
+    public TeacherListResponse getTeachersByCourseGradeSection(String campusName, String courseName, String grade, String section, int page, int size) {
         TeacherListResponse teacherResponse = new TeacherListResponse();
         // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
-        List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
+        List<TeacherProjection> listTeacher = null; 
+        if(
+            (courseName==null || courseName.isEmpty()) && 
+            (grade==null || grade.isEmpty()) &&
+            (section==null || section.isEmpty())
+        ){
+            listTeacher = teacherRepository.findByCampusName(campusName, pageable);
+        }else if(
+            (courseName==null || courseName.isEmpty())
+            && (grade !=null || section!=null)
+        ){
+            listTeacher = teacherRepository.findByCampusNamesectionOrGrade(campusName, section, grade, pageable);
+        }else{
+            listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
+        }
+
+
+
+        // List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
         if (listTeacher==null || listTeacher.isEmpty()) {
             Utility.printDebugLogs("Teacher not found");
             teacherResponse.setMessageStatus("Teacher not found ");
@@ -411,7 +429,7 @@ public class TeacherService {
         //     return teacherResponse;
         // }
 
-        teacherResponse.setTeacherList(listTeacher);
+        teacherResponse.setTeacherJoinData(listTeacher);
         teacherResponse.setMessageStatus("Success");
 
         return teacherResponse;
