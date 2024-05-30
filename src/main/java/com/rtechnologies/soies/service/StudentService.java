@@ -251,12 +251,13 @@ public class StudentService {
         }
     }
 
-    public StudentListResponse getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section) {
+    public StudentListResponse getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section, int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
         StudentListResponse studentListResponse;
 
         try {
-            List<Student> studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course);
+            Pageable pageable = PageRequest.of(page, size);
+            List<Student> studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
 
             if (studentPage.isEmpty()) {
                 throw new IllegalArgumentException("No students found");

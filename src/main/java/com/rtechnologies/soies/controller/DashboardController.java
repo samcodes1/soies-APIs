@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Api(tags = "Dashboard")
@@ -44,8 +45,8 @@ public class DashboardController {
             @ApiResponse(code = 404, message = "Teacher not found with the provided email"),
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    public ResponseEntity<?> getDashboardDataStats( ) throws JsonProcessingException, InterruptedException, ExecutionException {
-        return new ResponseEntity<>(dashboardService.getDashboardDataStats(), HttpStatus.OK);
+    public ResponseEntity<?> getDashboardDataStats(@RequestParam(required = false) String campus) throws JsonProcessingException, InterruptedException, ExecutionException {
+        return new ResponseEntity<>(dashboardService.getDashboardDataStats(campus), HttpStatus.OK);
     }
 
     

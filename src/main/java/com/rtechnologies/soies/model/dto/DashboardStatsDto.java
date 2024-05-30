@@ -2,8 +2,11 @@ package com.rtechnologies.soies.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+// @JsonIgnoreProperties(ignoreUnknown = true)
 public interface DashboardStatsDto {
-    Float getPercent();
     String getGrade();
+
+    Float getPercent();
+
+    Long getPopulation();
 }

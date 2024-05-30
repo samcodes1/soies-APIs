@@ -397,7 +397,7 @@ public class TeacherService {
         TeacherListResponse teacherResponse = new TeacherListResponse();
         // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
-        List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade);
+        List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
         if (listTeacher==null || listTeacher.isEmpty()) {
             Utility.printDebugLogs("Teacher not found");
             teacherResponse.setMessageStatus("Teacher not found ");

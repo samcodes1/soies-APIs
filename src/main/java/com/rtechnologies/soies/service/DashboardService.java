@@ -57,7 +57,7 @@ public class DashboardService {
         return finalResponse;
     }
 
-    public DashboardResponse getDashboardDataStats() throws JsonProcessingException, InterruptedException, ExecutionException {
+    public DashboardResponse getDashboardDataStats(String campus) throws JsonProcessingException, InterruptedException, ExecutionException {
         DashboardResponse finalResponse = new DashboardResponse();
         CompletableFuture<Long> countTeacherAsynCall = CompletableFuture.supplyAsync(() -> teacherRepository.count());
         // Long numberOfTeacher = ;
@@ -65,14 +65,20 @@ public class DashboardService {
         // Long numberOfStudents = ;
         CompletableFuture<Long> countCampusAsynCall = CompletableFuture.supplyAsync(() -> campusRepository.count());
         // Long numberOfCampuses = ;
-        CompletableFuture<List<DashboardStatsDto>> countStudentPercentageAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.findPopulationPercentageInEachGrade());
-        // List<DashboardStatsDto> studentsList = ;
-        // System.out.println(Utility.objectToJSON(countStudentPercentageAsynCall.get()));
+        CompletableFuture<List<DashboardStatsDto>> countStudentPercentageAsynCall = null;
+
+        if(campus ==null || campus.isEmpty()){
+            countStudentPercentageAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.findPopulationPercentageInEachGrade());
+        }else{
+            countStudentPercentageAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.findPopulationPercentageInEachGradeCampusFilter(campus));
+        }
+
+        System.out.println(Utility.objectToJSON(countStudentPercentageAsynCall.get()));
         Map<String, Object> stats = new HashMap<>();
         stats.put("numberOfTeachers", countTeacherAsynCall.get());
         stats.put("numberOfStudents", countStudentAsynCall.get());
         stats.put("numberOfCampuses", countCampusAsynCall.get());
-        stats.put("studentsPercentagesInGrades", countStudentPercentageAsynCall.get());
+        stats.put("studentsPopulationStatsInGrades", countStudentPercentageAsynCall.get());
         finalResponse.setData(stats);
         return finalResponse;
     }

@@ -121,9 +121,11 @@ public class StudentController {
         @PathVariable String campusName,
         @RequestParam(required = false) String course,
         @RequestParam(required = false) String grade,
-        @RequestParam(required = false) String section
+        @RequestParam(required = false) String section,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
     ) {
-        StudentListResponse studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section);
+        StudentListResponse studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }
