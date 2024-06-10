@@ -131,12 +131,51 @@ public class ExcelParser {
                 student.setCampusName(nextRecord[4]);
                 student.setGrade(nextRecord[5]);
                 student.setSectionName(nextRecord[6]);
-                student.setGuardianEmail(nextRecord[7]);
+                student.setGuardianEmail(nextRecord[7].trim());
                 student.setPassword(new BCryptPasswordEncoder().encode(nextRecord[8]));
                 students.add(student);
             }
             System.out.println("FILE READ COMPLETE RETURNING");
             return students;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("parsing error");
+        }
+    }
+
+    public List<Teacher> csvParserTeacher(MultipartFile file){
+        List<Teacher> teachers = new ArrayList<>();
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("No Record Found in csv");
+        }
+
+        try (Reader reader = new InputStreamReader(file.getInputStream())) {
+            // Create a CSVReader using OpenCSV
+            CSVReader csvReader = new CSVReader(reader);
+            // Skip the header row
+            csvReader.skip(1);
+            // Read the CSV data line by line
+            String[] nextRecord;
+            while ((nextRecord = csvReader.readNext()) != null) {
+                if (nextRecord.length == 0) {
+                    continue;
+                }
+                // Check if the first field is empty (This may indicate the end of the file)
+                if (nextRecord[0].isEmpty()) {
+                    break;
+                }
+                Teacher teacher = new Teacher();
+                System.out.println("Record: " + Arrays.toString(nextRecord));
+                teacher.setUserName(nextRecord[1].trim());
+                teacher.setPassword(new BCryptPasswordEncoder().encode(nextRecord[2]));
+                teacher.setEmployeeName(nextRecord[3]+" "+nextRecord[4]);
+                teacher.setEmail(nextRecord[5].trim());
+                teacher.setGrade(nextRecord[6]);
+                teacher.setCampusName(nextRecord[7]);
+                teachers.add(teacher);
+            }
+            System.out.println("FILE READ COMPLETE RETURNING");
+            return teachers;
         } catch (Exception e) {
             e.printStackTrace();
             throw new IllegalArgumentException("parsing error");

@@ -26,5 +26,7 @@ public class Teacher {
     private String joiningDate;
     private String phoneNumber;
     private String address;
+    private String userName;
+    private String grade;
 }
 

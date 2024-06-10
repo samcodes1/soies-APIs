@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.webjars.NotFoundException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -436,20 +437,53 @@ public class TeacherService {
     }
 
     public TeacherResponse saveTrachersFromFile(MultipartFile file) throws IOException {
-        List<Teacher> teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
-        teacherRepository.saveAll(teachers);
-        TeacherResponse teacherResponse = TeacherResponse.builder()
-                    .teacherId(null)
-                    .campusName(null)
-                    .employeeName(null)
-                    .email(null)
-                    .dateOfBirth(null)
-                    .gender(null)
-                    .joiningDate(null)
-                    .phoneNumber(null)
-                    .address(null)
-                    .messageStatus("Success").build();
-        return teacherResponse;
+
+        List<Teacher> teachers = excelParser.csvParserTeacher(file);
+        System.out.println("TEACHERDATA:>> "+teachers.toString());
+        List<Teacher> nonexistingteachers = new ArrayList<>();
+        for (Teacher teacher : teachers) {
+            System.out.println("QUERY1");
+            Optional<Teacher> teacherdata = teacherRepository.findByEmail(teacher.getEmail());
+            System.out.println("QUERY2");
+            if(!teacherdata.isPresent()){
+                System.out.println("QUERY3");
+                nonexistingteachers.add(teacher);
+            }
+            System.out.println("QUERY4"); 
+        }
+    
+            teacherRepository.saveAll(nonexistingteachers);
+            TeacherResponse teacherListResponse = TeacherResponse.builder()
+                         .teacherId(null)
+                         .campusName(null)
+                         .employeeName(null)
+                         .email(null)
+                         .dateOfBirth(null)
+                         .gender(null)
+                         .joiningDate(null)
+                         .phoneNumber(null)
+                         .address(null)
+                        .messageStatus("Success")
+                        .build();
+            return teacherListResponse;
+
+        // if(Utility.isCSV(file)){
+
+        // }
+        // List<Teacher> teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
+        // teacherRepository.saveAll(teachers);
+        // TeacherResponse teacherResponse = TeacherResponse.builder()
+        //             .teacherId(null)
+        //             .campusName(null)
+        //             .employeeName(null)
+        //             .email(null)
+        //             .dateOfBirth(null)
+        //             .gender(null)
+        //             .joiningDate(null)
+        //             .phoneNumber(null)
+        //             .address(null)
+        //             .messageStatus("Success").build();
+        // return teacherResponse;
     }
 }
 
