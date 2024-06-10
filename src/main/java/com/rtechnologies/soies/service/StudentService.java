@@ -257,11 +257,35 @@ public class StudentService {
 
         try {
             Pageable pageable = PageRequest.of(page, size);
-            List<Student> studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
-
-            if (studentPage.isEmpty()) {
-                throw new IllegalArgumentException("No students found");
+            List<Student> studentPage = null;
+            if(course==null && grade ==null && section==null){
+                studentPage = studentRepository.findbycampus(campusName, pageable);
             }
+            else if(course!=null && grade ==null && section==null){
+                studentPage = studentRepository.findbycampusAndCourse(campusName, course, pageable);
+            }
+            else if(course!=null && grade !=null && section==null){
+                studentPage = studentRepository.findbycampusAndCourseAndGrade(campusName, course, grade, pageable);
+            }
+            else if(course!=null && grade !=null && section!=null){
+                studentPage = studentRepository.findbycampusAndCourseAndGradeAndSection(campusName, course, grade, section, pageable);
+            }
+            else if(course==null && grade !=null && section!=null){
+                studentPage = studentRepository.findbycampusAndGradeAndSection(campusName, grade, section, pageable);
+            }
+            else if(course==null && grade ==null && section!=null){
+                studentPage = studentRepository.findbycampusAndSection(campusName, section, pageable);
+            }
+            else if(course==null && grade !=null && section==null){
+                studentPage = studentRepository.findbycampusAndGrade(campusName, grade, pageable);
+            }
+            else{
+                studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
+            }
+
+            // if (studentPage.isEmpty()) {
+            //     throw new IllegalArgumentException("No students found");
+            // }
 
             studentListResponse = StudentListResponse.builder()
                     .studentList(studentPage)
