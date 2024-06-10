@@ -316,12 +316,38 @@ public class StudentService {
     }
 
      public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
-        List<Student> students = excelParser.parseStudentExcelFile(file.getInputStream());
-        studentRepository.saveAll(students);
-        StudentListResponse studentListResponse = StudentListResponse.builder()
-                    .studentList(null)
-                    .messageStatus("Success")
-                    .build();
-        return studentListResponse;
+        List<Student> students = null;
+        if(Utility.isCSV(file)){
+            // System.out.println();
+            students = excelParser.csvParserStudent(file);
+            List<Student> duplicates = new ArrayList<>();
+            List<Student> newStudents = new ArrayList<>();
+            for (Student student : students) {
+                Optional<Student> existingStudent = studentRepository.findByRollNumber(student.getRollNumber());
+                if (existingStudent.isPresent()) {
+                    duplicates.add(student);
+                } else {
+                    newStudents.add(student);
+                }
+            }
+    
+            // Save new students
+            studentRepository.saveAll(newStudents);
+            // studentRepository.saveAll(students);
+            StudentListResponse studentListResponse = StudentListResponse.builder()
+                        .studentList(duplicates)
+                        .messageStatus("Success")
+                        .build();
+            return studentListResponse;
+        }else if(Utility.isExcel(file)){
+            students = excelParser.parseStudentExcelFile(file.getInputStream());
+            studentRepository.saveAll(students);
+            StudentListResponse studentListResponse = StudentListResponse.builder()
+                        .studentList(null)
+                        .messageStatus("Success")
+                        .build();
+            return studentListResponse;
+        }
+        throw new IllegalArgumentException("Wrong file received!");
     }
 }

@@ -2,18 +2,23 @@ package com.rtechnologies.soies.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.opencsv.CSVReader;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
-import com.rtechnologies.soies.utilities.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Row;
 
@@ -31,20 +36,22 @@ public class ExcelParser {
                 continue; // Skip header row
             }
             Student student = new Student();
+            //Roll Number	First Name	Middle Name	Last Name	Campus Name	Class Name	Section Name	Email Ids	password	
             // System.out.println("row data>>>>>>>>>>>>>> "+row.getCell(0).getStringCellValue());
-            student.setRollNumber(Double.toString(row.getCell(0).getNumericCellValue()));
-            student.setStudentName(row.getCell(1).getStringCellValue());
-            student.setGender(row.getCell(2).getStringCellValue());
-            student.setGrade(row.getCell(3).getStringCellValue());
+            student.setRollNumber(row.getCell(0).getStringCellValue());
+
+            String fullName = new StringBuilder().append(row.getCell(1).getStringCellValue())
+            .append(" ")
+            .append(row.getCell(2).getStringCellValue())
+            .append(" ")
+            .append(row.getCell(3).getStringCellValue()).toString();
+
+            student.setStudentName(fullName);
             student.setCampusName(row.getCell(4).getStringCellValue());
-            student.setSectionName(row.getCell(5).getStringCellValue());
-            student.setDateOfBirth(row.getCell(6).getDateCellValue().toString());
-            student.setGuardianName(row.getCell(7).getStringCellValue());
-            student.setGuardianPhoneNumber(row.getCell(8).getStringCellValue());
-            student.setPassword(new BCryptPasswordEncoder().encode(row.getCell(9).getStringCellValue()));
-            student.setGuardianEmail(row.getCell(10).getStringCellValue());
-            student.setAddress(row.getCell(11).getStringCellValue());
-            student.setCity(row.getCell(12).getStringCellValue());
+            student.setGrade(row.getCell(5).getStringCellValue());
+            student.setSectionName(row.getCell(6).getStringCellValue());
+            student.setGuardianEmail(row.getCell(7).getStringCellValue());
+            student.setPassword(new BCryptPasswordEncoder().encode(row.getCell(6).getStringCellValue()));
             students.add(student);
         }
         workbook.close();
@@ -88,5 +95,51 @@ public class ExcelParser {
         }
         workbook.close();
         return teachers;
+    }
+
+    public List<Student> csvParserStudent(MultipartFile file){
+        List<Student> students = new ArrayList<>();
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("No Record Found in csv");
+        }
+
+        try (Reader reader = new InputStreamReader(file.getInputStream())) {
+            // Create a CSVReader using OpenCSV
+            CSVReader csvReader = new CSVReader(reader);
+            // Skip the header row
+            csvReader.skip(1);
+            // Read the CSV data line by line
+            String[] nextRecord;
+            while ((nextRecord = csvReader.readNext()) != null) {
+                if (nextRecord.length == 0) {
+                    continue;
+                }
+                // Check if the first field is empty (This may indicate the end of the file)
+                if (nextRecord[0].isEmpty()) {
+                    break;
+                }
+                Student student = new Student();
+                System.out.println("Record: " + Arrays.toString(nextRecord));
+                student.setRollNumber(nextRecord[0]);
+                String fullName = new StringBuilder().append(nextRecord[1])
+                .append(" ")
+                .append(nextRecord[2])
+                .append(" ")
+                .append(nextRecord[3]).toString();
+
+                student.setStudentName(fullName);
+                student.setCampusName(nextRecord[4]);
+                student.setGrade(nextRecord[5]);
+                student.setSectionName(nextRecord[6]);
+                student.setGuardianEmail(nextRecord[7]);
+                student.setPassword(new BCryptPasswordEncoder().encode(nextRecord[8]));
+                students.add(student);
+            }
+            System.out.println("FILE READ COMPLETE RETURNING");
+            return students;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("parsing error");
+        }
     }
 }

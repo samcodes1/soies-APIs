@@ -1,35 +1,27 @@
 package com.rtechnologies.soies.utilities;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SignatureException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Formatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
 
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import aj.org.objectweb.asm.Attribute;
+import com.opencsv.CSVReader;
+import com.rtechnologies.soies.model.Student;
 
 public class Utility {
 
@@ -157,5 +149,17 @@ public class Utility {
 
         // Get formatted String
         return FOMATTER.format(localDateTime.plusMonths(months));
+    }
+
+    public static boolean isCSV(MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        return fileName != null && fileName.toLowerCase().endsWith(".csv");
+    }
+
+    public static boolean isExcel(MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        return fileName != null && (fileName.toLowerCase().endsWith(".xls")
+                                     || fileName.toLowerCase().endsWith(".xlsx")
+                                     || fileName.toLowerCase().endsWith(".xlsm"));
     }
 }
