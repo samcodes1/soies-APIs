@@ -205,7 +205,6 @@ public class OgaService {
         Utility.printDebugLogs("Get OGA by ID: " + ogaId);
         OgaResponse ogaResponse;
 
-        try {
             Optional<Oga> optionalOga = ogaRepository.findById(ogaId);
 
             if (optionalOga.isEmpty()) {
@@ -238,24 +237,13 @@ public class OgaService {
 
             Utility.printDebugLogs("OGA response: " + ogaResponse);
             return ogaResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return OgaResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return OgaResponse.builder()
-                    .messageStatus("Failure")
-                    .build();
-        }
+        
     }
 
     public OgaListResponse getOgasByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get OGAs by course ID: " + courseId);
         OgaListResponse ogaListResponse;
 
-        try {
             List<Oga> ogaList = ogaRepository.findByCourseId(courseId);
 
             if (ogaList.isEmpty()) {
@@ -290,17 +278,6 @@ public class OgaService {
 
             Utility.printDebugLogs("OGA list response: " + ogaListResponse);
             return ogaListResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return OgaListResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return OgaListResponse.builder()
-                    .messageStatus("Failure")
-                    .build();
-        }
     }
 
     public String submitOga(OgaSubmissionRequest ogaSubmissionRequest){

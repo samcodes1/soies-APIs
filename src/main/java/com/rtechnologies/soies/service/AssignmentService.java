@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.ArrayList;
 
+import javax.transaction.Transactional;
+
 @Service
 public class AssignmentService {
 
@@ -43,11 +45,11 @@ public class AssignmentService {
     @Autowired
     private AssignmentSubmissionRepository assignmentSubmissionRepository;
 
+    @Transactional
     public AssignmentResponse createAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment creation request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
 
-        try {
             if (assignment == null) {
                 Utility.printDebugLogs("Assignment creation request is null");
                 throw new NotFoundException("Corrupt data received");
@@ -110,17 +112,6 @@ public class AssignmentService {
 
             Utility.printDebugLogs("Assignment response: " + assignmentResponse);
             return assignmentResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return AssignmentResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return AssignmentResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        }
     }
 
     public AssignmentResponse updateAssignment(AssignmentRequest assignment) {

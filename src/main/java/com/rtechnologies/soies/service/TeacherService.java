@@ -250,7 +250,7 @@ public class TeacherService {
 //        }
 //    }
 
-    public TeacherListResponse getAllTeachersByCampusName(String campusName) {
+    public TeacherListResponse getAllTeachersByCampusName(String campusName,int page, int size) {
         Utility.printDebugLogs("Get all teachers by campusName request: " + campusName);
         TeacherListResponse teacherListResponse = new TeacherListResponse();
 
@@ -263,7 +263,8 @@ public class TeacherService {
             }
 
             // Fetch teachers by campusName
-            List<Teacher> teachers = teacherRepository.findByCampusName(campusName);
+            Pageable pageable = PageRequest.of(page, size);
+            List<Teacher> teachers = teacherRepository.findByCampusNamePage(campusName, pageable);
 
             if(teachers.isEmpty() || teachers.size() < 0) {
                 Utility.printErrorLogs("No record found of teachers for campus name: " + campusName);
@@ -399,29 +400,38 @@ public class TeacherService {
         // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
         List<TeacherProjection> listTeacher = null; 
-        if(
-            (courseName==null || courseName.isEmpty()) && 
-            (grade==null || grade.isEmpty()) &&
-            (section==null || section.isEmpty())
-        ){
+        if( courseName==null && grade==null && section==null ){
             listTeacher = teacherRepository.findByCampusName(campusName, pageable);
-        }else if(
-            (courseName==null || courseName.isEmpty())
-            && (grade !=null || section!=null)
-        ){
+        }else if( courseName==null && grade==null && section!=null ){
+            listTeacher = teacherRepository.findByCampusNamesection(campusName, section, pageable);
+        }else if( courseName!=null && grade==null && section==null ){
+            listTeacher = teacherRepository.findByCampusNameCourse( campusName, courseName, pageable);
+        }
+        else if( courseName==null && grade!=null && section==null ){
+            listTeacher = teacherRepository.findByCampusNameGrade( campusName, grade, pageable);
+        }
+        else if( courseName==null && grade!=null && section!=null )
+        {
             listTeacher = teacherRepository.findByCampusNamesectionOrGrade(campusName, section, grade, pageable);
-        }else{
+        }
+        else if ( courseName!=null && grade==null && section!=null ){
+            listTeacher = teacherRepository.findByCampusNameCourseAndSection(campusName, courseName, section, pageable);
+        }
+        else if( courseName!=null && grade!=null && section==null ){
+            listTeacher = teacherRepository.findByCampusNameCourseAndGrade(campusName, courseName, grade, pageable);
+        }
+        else{
             listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
         }
 
 
 
         // List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
-        if (listTeacher==null || listTeacher.isEmpty()) {
-            Utility.printDebugLogs("Teacher not found");
-            teacherResponse.setMessageStatus("Teacher not found ");
-            return teacherResponse;
-        }
+        // if (listTeacher==null || listTeacher.isEmpty()) {
+        //     Utility.printDebugLogs("Teacher not found");
+        //     teacherResponse.setMessageStatus("Teacher not found ");
+        //     return teacherResponse;
+        // }
 
         // List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(teacherId);
         // if(teacherSections.isEmpty()) {

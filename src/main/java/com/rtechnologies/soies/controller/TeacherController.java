@@ -80,8 +80,10 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/by-campus/{campusName}")
-    public ResponseEntity<TeacherListResponse> getAllTeachersByCampusName(@PathVariable String campusName) {
-        TeacherListResponse teacherListResponse = teacherService.getAllTeachersByCampusName(campusName);
+    public ResponseEntity<TeacherListResponse> getAllTeachersByCampusName(@PathVariable String campusName,
+    @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        TeacherListResponse teacherListResponse = teacherService.getAllTeachersByCampusName(campusName, page, size);
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherListResponse);
     }

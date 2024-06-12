@@ -293,7 +293,6 @@ public class QuizService {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         QuizListResponse quizListResponse;
 
-        try {
             List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
             if (quizList.isEmpty()) {
@@ -327,24 +326,13 @@ public class QuizService {
 
             Utility.printDebugLogs("Quiz list response: " + quizListResponse);
             return quizListResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return QuizListResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return QuizListResponse.builder()
-                    .messageStatus("Failure")
-                    .build();
-        }
+        
     }
 
     public QuizListResponse getQuizzesByCourseId(Long courseId) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         QuizListResponse quizListResponse;
 
-        try {
             List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
             if (quizList.isEmpty()) {
@@ -359,17 +347,6 @@ public class QuizService {
 
             Utility.printDebugLogs("Quiz list response: " + quizListResponse);
             return quizListResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return QuizListResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
-        } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
-            return QuizListResponse.builder()
-                    .messageStatus("Failure")
-                    .build();
-        }
     }
 
     //Quiz submission APIs

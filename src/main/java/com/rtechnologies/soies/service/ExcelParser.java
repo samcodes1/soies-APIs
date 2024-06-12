@@ -120,19 +120,19 @@ public class ExcelParser {
                 }
                 Student student = new Student();
                 System.out.println("Record: " + Arrays.toString(nextRecord));
-                student.setRollNumber(nextRecord[0]);
+                student.setRollNumber(nextRecord[0].trim());
                 String fullName = new StringBuilder().append(nextRecord[1])
                 .append(" ")
                 .append(nextRecord[2])
                 .append(" ")
                 .append(nextRecord[3]).toString();
 
-                student.setStudentName(fullName);
-                student.setCampusName(nextRecord[4]);
-                student.setGrade(nextRecord[5]);
-                student.setSectionName(nextRecord[6]);
-                student.setGuardianEmail(nextRecord[7].trim());
-                student.setPassword(new BCryptPasswordEncoder().encode(nextRecord[8]));
+                student.setStudentName(fullName.trim().toLowerCase());
+                student.setCampusName(nextRecord[4].trim().toLowerCase());
+                student.setGrade(nextRecord[5].trim().toLowerCase());
+                student.setSectionName(nextRecord[6].trim().toLowerCase());
+                student.setGuardianEmail(nextRecord[7].trim().toLowerCase());
+                student.setPassword(new BCryptPasswordEncoder().encode(nextRecord[8].trim()));
                 students.add(student);
             }
             System.out.println("FILE READ COMPLETE RETURNING");
@@ -167,11 +167,11 @@ public class ExcelParser {
                 Teacher teacher = new Teacher();
                 System.out.println("Record: " + Arrays.toString(nextRecord));
                 teacher.setUserName(nextRecord[1].trim());
-                teacher.setPassword(new BCryptPasswordEncoder().encode(nextRecord[2]));
-                teacher.setEmployeeName(nextRecord[3]+" "+nextRecord[4]);
-                teacher.setEmail(nextRecord[5].trim());
-                teacher.setGrade(nextRecord[6]);
-                teacher.setCampusName(nextRecord[7]);
+                teacher.setPassword(new BCryptPasswordEncoder().encode(nextRecord[2].trim()));
+                teacher.setEmployeeName(nextRecord[3].trim().toLowerCase()+" "+nextRecord[4].trim().toLowerCase());
+                teacher.setEmail(nextRecord[5].trim().toLowerCase());
+                teacher.setGrade(nextRecord[6].trim().toLowerCase());
+                teacher.setCampusName(nextRecord[7].trim().toLowerCase());
                 teachers.add(teacher);
             }
             System.out.println("FILE READ COMPLETE RETURNING");
