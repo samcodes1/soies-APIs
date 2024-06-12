@@ -257,7 +257,7 @@ public class StudentService {
 
         try {
             Pageable pageable = PageRequest.of(page, size);
-            List<Student> studentPage = null;
+            Page<Student> studentPage = null;
             if(course==null && grade ==null && section==null){
                 studentPage = studentRepository.findbycampus(campusName, pageable);
             }
@@ -288,7 +288,7 @@ public class StudentService {
             // }
 
             studentListResponse = StudentListResponse.builder()
-                    .studentList(studentPage)
+                    .studentPage(studentPage)
                     .messageStatus("Success")
                     .build();
 

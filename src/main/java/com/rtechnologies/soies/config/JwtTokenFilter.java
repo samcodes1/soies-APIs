@@ -30,25 +30,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            // System.out.println("On the filter level");
-            // String token = jwtConfig.extractJwtFromRequest(request);
-            // System.out.println("The token is: " + token);
-            // String username = jwtConfig.getUsernameFromToken(token);
-            // UserDetails userDetails = customUserDetailService.loadUserByUsername(username);
-            // System.out.println("The User Details is: " + userDetails.getUsername());
-            // if (token != null && jwtConfig.validateToken(token, userDetails)) {
-            //     System.out.println("Inside if");
-            //     // Extract roles from the token
-            //     List<String> roles = jwtConfig.getRolesFromToken(token);
+            System.out.println("On the filter level");
+            String token = jwtConfig.extractJwtFromRequest(request);
+            System.out.println("The token is: " + token);
+            String username = jwtConfig.getUsernameFromToken(token);
+            UserDetails userDetails = customUserDetailService.loadUserByUsername(username);
+            System.out.println("The User Details is: " + userDetails.getUsername());
+            if (token != null && jwtConfig.validateToken(token, userDetails)) {
+                System.out.println("Inside if");
+                // Extract roles from the token
+                List<String> roles = jwtConfig.getRolesFromToken(token);
 
-            //     System.out.println("Roles" + roles.toString());
-            //     // Set up authentication
-            //     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            //             username, null, AuthorityUtils.createAuthorityList(roles.toArray(new String[0])));
-            //     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                System.out.println("Roles" + roles.toString());
+                // Set up authentication
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        username, null, AuthorityUtils.createAuthorityList(roles.toArray(new String[0])));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            //     SecurityContextHolder.getContext().setAuthentication(authentication);
-            // }
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
         } catch (Exception e) {
             // Handle exception, e.g., log or send a response with an error message

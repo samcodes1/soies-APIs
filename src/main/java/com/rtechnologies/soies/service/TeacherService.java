@@ -399,7 +399,7 @@ public class TeacherService {
         TeacherListResponse teacherResponse = new TeacherListResponse();
         // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
-        List<TeacherProjection> listTeacher = null; 
+        Page<TeacherProjection> listTeacher = null; 
         if( courseName==null && grade==null && section==null ){
             listTeacher = teacherRepository.findByCampusName(campusName, pageable);
         }else if( courseName==null && grade==null && section!=null ){
@@ -440,7 +440,7 @@ public class TeacherService {
         //     return teacherResponse;
         // }
 
-        teacherResponse.setTeacherJoinData(listTeacher);
+        teacherResponse.setTeacherJoinDataPage(listTeacher);
         teacherResponse.setMessageStatus("Success");
 
         return teacherResponse;

@@ -27,41 +27,41 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     "AND (?2 IS NULL OR s.grade = ?2) " +
     "AND (?3 IS NULL OR s.section_name = ?3) " +
     "AND (?4 IS NULL OR c.course_name = ?4)", 
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 " +
     "AND (?2 IS NULL OR s.grade = ?2) " +
     "AND (?3 IS NULL OR s.section_name = ?3) " +
     "AND (?4 IS NULL OR c.course_name = ?4)", 
     nativeQuery = true)
-    List<Student> findByGradeAndSectionNameAndStudentCourses(String campusName, String grade, String sectionName, String course, Pageable page);
+    Page<Student> findByGradeAndSectionNameAndStudentCourses(String campusName, String grade, String sectionName, String course, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 ",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 ",
     nativeQuery = true)
-    List<Student> findbycampus(String campusName, Pageable page);
+    Page<Student> findbycampus(String campusName, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and c.course_name=?2",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and c.course_name=?2",
     nativeQuery = true)
-    List<Student> findbycampusAndCourse(String campusName, String course, Pageable page);
+    Page<Student> findbycampusAndCourse(String campusName, String course, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and c.course_name=?2 and s.grade=?3",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and c.course_name=?2 and s.grade=?3",
     nativeQuery = true)
-    List<Student> findbycampusAndCourseAndGrade(String campusName, String course, String grade, Pageable page);
+    Page<Student> findbycampusAndCourseAndGrade(String campusName, String course, String grade, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
@@ -70,34 +70,34 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and c.course_name=?2 and s.grade=?3 and s.section_name=?4",
     nativeQuery = true)
-    List<Student> findbycampusAndCourseAndGradeAndSection(String campusName, String course, String grade, String section, Pageable page);
+    Page<Student> findbycampusAndCourseAndGradeAndSection(String campusName, String course, String grade, String section, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.grade=?2 and s.section_name=?3",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.grade=?2 and s.section_name=?3",
     nativeQuery = true)
-    List<Student> findbycampusAndGradeAndSection(String campusName, String grade, String section, Pageable page);
+    Page<Student> findbycampusAndGradeAndSection(String campusName, String grade, String section, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.section_name=?2",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.section_name=?2",
     nativeQuery = true)
-    List<Student> findbycampusAndSection(String campusName, String section, Pageable page);
+    Page<Student> findbycampusAndSection(String campusName, String section, Pageable page);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.grade=?2",
-    countQuery = "SELECT COUNT(s.*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
+    countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id "+
     "INNER JOIN course c ON sc.course_id = c.course_id WHERE "+
     "s.campus_name = ?1 and s.grade=?2",
     nativeQuery = true)
-    List<Student> findbycampusAndGrade(String campusName, String grade, Pageable page);
+    Page<Student> findbycampusAndGrade(String campusName, String grade, Pageable page);
 
 
     @Query(value = "SELECT s.grade, (COUNT(s.student_id) * 100 / (SELECT COUNT(student_id) FROM student)) as percent, COUNT(s.student_id) as population FROM student s GROUP BY s.grade", nativeQuery = true)

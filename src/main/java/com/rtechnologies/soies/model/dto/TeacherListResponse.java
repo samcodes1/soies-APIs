@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
+
+import org.springframework.data.domain.Page;
+
 import java.util.List;
 
 @Data
@@ -18,5 +21,6 @@ import java.util.List;
 public class TeacherListResponse {
     private List<Teacher> teacherList;
     List<TeacherProjection> teacherJoinData;
+    Page<TeacherProjection> teacherJoinDataPage;
     private String messageStatus;
 }
