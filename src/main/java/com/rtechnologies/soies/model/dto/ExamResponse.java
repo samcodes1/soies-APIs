@@ -1,6 +1,7 @@
 package com.rtechnologies.soies.model.dto;
 
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.Exam;
 import com.rtechnologies.soies.model.ExamQuestion;
 import com.rtechnologies.soies.model.QuizQuestion;
 import com.rtechnologies.soies.model.Teacher;
@@ -11,6 +12,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
 
 @Data
 @Builder
@@ -27,4 +30,5 @@ public class ExamResponse {
     private String time;
     private boolean visibility;
     private String messageStatus;
+    private Page<Exam> examListingPage;
 }

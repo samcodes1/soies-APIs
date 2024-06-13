@@ -446,6 +446,7 @@ public class TeacherService {
         return teacherResponse;
     }
 
+    @Transactional
     public TeacherResponse saveTrachersFromFile(MultipartFile file) throws IOException {
 
         List<Teacher> teachers = excelParser.csvParserTeacher(file);

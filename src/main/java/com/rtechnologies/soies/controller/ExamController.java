@@ -110,4 +110,19 @@ public class ExamController {
         ExamSubmissionListResponse response = examService.getAllExamSubmission(examId);
         return ResponseEntity.ok(response);
     }
+
+    @ApiOperation(value = "Exams Listing API", response = ExamSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Exam submissions retrieved successfully"),
+            @ApiResponse(code = 404, message = "Exam not found"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping
+    public ResponseEntity<ExamResponse> getAllExams(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        ExamResponse response = examService.getAllExams(page, size);
+        return ResponseEntity.ok(response);
+    }
 }

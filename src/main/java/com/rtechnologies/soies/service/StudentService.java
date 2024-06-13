@@ -338,7 +338,7 @@ public class StudentService {
                     .build();
         }
     }
-
+    @Transactional
      public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
         List<Student> students = null;
         if(Utility.isCSV(file)){

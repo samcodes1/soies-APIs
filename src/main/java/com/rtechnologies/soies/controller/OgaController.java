@@ -29,6 +29,22 @@ public class OgaController {
                 .body(response);
     }
 
+    @ApiOperation(value = "OGA Listing pagination", response = OgaResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OGA created successfully"),
+            @ApiResponse(code = 400, message = "Invalid request data"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping
+    public ResponseEntity<OgaResponse> ogaPaginationListing(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        OgaResponse response = ogaService.getPageListing(page, size);
+        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
+                .body(response);
+    }
+
     @ApiOperation(value = "Update an existing OGA", response = OgaResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OGA updated successfully"),

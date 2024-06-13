@@ -8,6 +8,9 @@ import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
@@ -353,6 +356,20 @@ public class ExamService {
         }
 
         examSubmissionListResponse.setExamSubmissionList(submittedExams);
+        examSubmissionListResponse.setMessageStatus("Success");
+
+        return examSubmissionListResponse;
+    }
+
+    public ExamResponse getAllExams(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Exam> submittedExams = examRepository.findAll(pageable);
+        ExamResponse examSubmissionListResponse = new ExamResponse();
+        if(submittedExams.isEmpty()) {
+            throw new NotFoundException("No Exam found with ID: ");
+        }
+
+        examSubmissionListResponse.setExamListingPage(submittedExams);
         examSubmissionListResponse.setMessageStatus("Success");
 
         return examSubmissionListResponse;

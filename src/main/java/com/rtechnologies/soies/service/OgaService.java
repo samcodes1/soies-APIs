@@ -13,6 +13,9 @@ import com.rtechnologies.soies.repository.OgaStudentAnswerRepository;
 import com.rtechnologies.soies.repository.OgaSubmissionRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
@@ -343,5 +346,15 @@ public class OgaService {
                 .totalMarks(submissionRequest.getTotalMarks())
                 .gainedMarks(0)
                 .build();
+    }
+
+    public OgaResponse getPageListing(int page, int size){
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Oga> ogapagination = ogaRepository.findAll(pageable);
+        OgaResponse response = new OgaResponse();
+        response.setOgaPagination(ogapagination);
+        response.setMessageStatus("Success");
+        return response;
     }
 }

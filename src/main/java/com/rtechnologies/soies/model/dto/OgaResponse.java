@@ -1,6 +1,7 @@
 package com.rtechnologies.soies.model.dto;
 
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.Oga;
 import com.rtechnologies.soies.model.OgaQuestion;
 import com.rtechnologies.soies.model.QuizQuestion;
 import com.rtechnologies.soies.model.Teacher;
@@ -8,6 +9,8 @@ import lombok.*;
 
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
 
 @Data
 @Builder
@@ -25,4 +28,5 @@ public class OgaResponse {
     private String term;
     private boolean visibility;
     private String messageStatus;
+    private Page<Oga> ogaPagination;
 }
