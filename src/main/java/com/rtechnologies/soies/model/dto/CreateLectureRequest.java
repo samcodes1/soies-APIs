@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.sql.Date;
+
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
@@ -18,4 +21,5 @@ public class CreateLectureRequest {
     private MultipartFile file; // or PDF URL, choose the appropriate data type
     private int totalViews;
     private boolean isVisible;
+    private Date publishDate;
 }

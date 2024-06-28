@@ -81,6 +81,7 @@ public class LectureService {
                 lecture1.setCourseId(lecture.getCourseId());
                 lecture1.setTotalViews(0);
                 lecture1.setVideoURL(videoUrl);
+                lecture1.setPublishDate(lecture.getPublishDate());
                 createdLecture = lectureRepository.save(lecture1);
 
             } catch (IOException ioException) {
@@ -98,6 +99,7 @@ public class LectureService {
                     .powerPointURL(createdLecture.getPowerPointURL())
                     .totalViews(createdLecture.getTotalViews())
                     .isVisible(createdLecture.isVisible())
+                    .publishDate(createdLecture.getPublishDate())
                     .messageStatus("Success")
                     .build();
 

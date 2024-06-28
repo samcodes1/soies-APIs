@@ -31,9 +31,9 @@ public class AssignmentController {
     public ResponseEntity<AssignmentResponse> createAssignment(
                                                                 @RequestParam("file") MultipartFile file,
                                                                 @RequestParam("courseId") long courseId,
-                                                                @RequestParam("teacherId") long teacherId,
+                                                                @RequestParam(name = "teacherId", required=false) long teacherId,
                                                                 @RequestParam("assignmentTitle") String assignmentTitle,
-                                                                @RequestParam("description") String description,
+                                                                @RequestParam(name = "description", required=false) String description,
                                                                 @RequestParam("term") String term,
                                                                 @RequestParam("section") String section,
                                                                 @RequestParam("totalMarks") int totalMarks,

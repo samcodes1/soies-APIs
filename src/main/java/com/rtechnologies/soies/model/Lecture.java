@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -28,5 +30,6 @@ public class Lecture {
     private String powerPointURL; // or PDF URL, choose the appropriate data type
     private int totalViews;
     private boolean isVisible;
+    private Date publishDate;
 }
 

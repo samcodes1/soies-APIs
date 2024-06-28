@@ -42,7 +42,7 @@ public class CampusController {
     @GetMapping
     @ApiOperation(value = "Retrieve all campuses", response = List.class)
     public ResponseEntity<List<Campus>> getAllCampuses() {
-        List<Campus> campuses = campusService.getAllCampuses();
+        List<Campus> campuses = campusService.getAllCampuses(null);
         return ResponseEntity.ok(campuses);
     }
 
@@ -100,6 +100,36 @@ public class CampusController {
         try {
             Section savedSection = campusService.createSection(section);
             return new ResponseEntity<>(savedSection, HttpStatus.CREATED);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @GetMapping("/get-campus")
+    @ApiOperation(value = "getcampus data", response = Section.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Successfully created section"),
+            @ApiResponse(code = 400, message = "Section already exists")
+    })
+    public ResponseEntity<List<Campus>> getCampusData(@RequestParam(required = false) Long campusid) {
+        try {
+            List<Campus> savedcampusdata = campusService.getAllCampuses(campusid);
+            return ResponseEntity.ok(savedcampusdata);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @DeleteMapping("/get-campus/{campusId}")
+    @ApiOperation(value = "delete campus data", response = Section.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Successfully created section"),
+            @ApiResponse(code = 400, message = "Section already exists")
+    })
+    public ResponseEntity<Campus> deleteCampusData(@PathVariable Long campusId) {
+        try {
+            Campus savedcampusdata = campusService.deleteCampuses(campusId);
+            return ResponseEntity.ok(savedcampusdata);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }

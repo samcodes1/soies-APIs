@@ -366,7 +366,10 @@ public class AssignmentService {
             List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSection(courseId, section);
             if (assignmentList.isEmpty()) {
                 Utility.printDebugLogs("No assignments found for course ID: " + courseId);
-                throw new NotFoundException("No assignments found for course ID: " + courseId);
+                return AssignmentListResponse.builder()
+                    .assignmentList(new ArrayList<>())
+                    .messageStatus("Success")
+                    .build();
             }
 
             assignmentListResponse = AssignmentListResponse.builder()

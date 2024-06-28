@@ -297,7 +297,10 @@ public class QuizService {
 
             if (quizList.isEmpty()) {
                 Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-                throw new NotFoundException("No quizzes found for course ID: " + courseId);
+                return QuizListResponse.builder()
+                        .quizList(new ArrayList<>())
+                        .messageStatus("Success")
+                        .build();
             }
 
             List<Quiz> finalList = new ArrayList<>();
@@ -337,7 +340,10 @@ public class QuizService {
 
             if (quizList.isEmpty()) {
                 Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-                throw new NotFoundException("No quizzes found for course ID: " + courseId);
+                return QuizListResponse.builder()
+                    .quizList(new ArrayList<>())
+                    .messageStatus("Success")
+                    .build();
             }
 
             quizListResponse = QuizListResponse.builder()

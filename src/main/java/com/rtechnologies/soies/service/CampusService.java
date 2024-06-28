@@ -42,8 +42,14 @@ public class CampusService {
         return campusRepository.save(entityCampus);
     }
 
-    public List<Campus> getAllCampuses(){
-        return campusRepository.findAll();
+    public List<Campus> getAllCampuses(Long id){
+        if(id==null){
+            return campusRepository.findAll();
+        }
+        
+        List<Campus> data = new java.util.ArrayList<>();
+        data.add(campusRepository.findById(id).get());
+        return data;
     }
 
     public List<Section> getSectionsByCampusNameAndGrade(Long campusId, String grade) {
@@ -74,5 +80,10 @@ public class CampusService {
         }
         request.setId(id);
         return sectionRepository.save(request);
+    }
+
+    public Campus deleteCampuses(Long id){
+        campusRepository.deleteById(id);
+        return new Campus();
     }
 }
