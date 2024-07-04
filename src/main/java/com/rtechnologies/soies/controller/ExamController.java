@@ -125,4 +125,14 @@ public class ExamController {
         ExamResponse response = examService.getAllExams(page, size);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{courseid}")
+    public ResponseEntity<ExamResponse> getAllExamsByCourseId(
+        @PathVariable Long courseid,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        ExamResponse response = examService.getAllExamsByCourseId(courseid, page, size);
+        return ResponseEntity.ok(response);
+    }
 }

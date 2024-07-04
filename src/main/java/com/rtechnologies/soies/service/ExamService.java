@@ -384,4 +384,13 @@ public class ExamService {
                 .gainedMarks(0)
                 .build();
     }
+
+    public ExamResponse getAllExamsByCourseId(Long courseid, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Exam> submittedExams = examRepository.findAllByCourseId(courseid, pageable);
+        ExamResponse examSubmissionListResponse = new ExamResponse();
+        examSubmissionListResponse.setExamListingPage(submittedExams);
+        examSubmissionListResponse.setMessageStatus("Success");
+        return examSubmissionListResponse;
+    }
 }

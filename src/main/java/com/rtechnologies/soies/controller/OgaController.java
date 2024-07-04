@@ -122,4 +122,20 @@ public class OgaController {
             OgaSubmissionListResponse response = ogaService.getAllOgaSubmission(ogaId);
             return ResponseEntity.ok(response);
     }
+
+    @ApiOperation(value = "Get all For OGA by Course ID", response = OgaSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OGA submissions retrieved successfully"),
+            @ApiResponse(code = 404, message = "No OGA found with the provided ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-oga/{courseid}")
+    public ResponseEntity<OgaResponse> getAllOgaByCourseId(
+        @PathVariable Long courseid,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        OgaResponse response = ogaService.getAllOgaByCourseid(courseid, page, size);
+            return ResponseEntity.ok(response);
+    }
 }
