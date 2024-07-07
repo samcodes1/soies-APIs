@@ -48,9 +48,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     Page<TeacherProjection> findByCampusNameCourse(String campusName, String courseName, Pageable pageable);
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@Query(value = "SELECT t.*,ts.`section`, c.course_name as course, c.credits from  teacher t INNER JOIN teacher_course tc ON t.teacher_id = tc.teacher_id INNER JOIN course c ON c.course_id = tc.course_id INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id WHERE t.campus_name = ?1 AND  c.grade = ?2", 
+@Query(value = "select t.teacher_id,t.address,c.campus_name,t.date_of_birth,t.email,t.employee_name,t.gender,t.joining_date,t.phone_number,s.grade,t.user_name,s.section_name as `section` from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.grade=?2", 
 
-    countQuery = "SELECT count(*) from  teacher t INNER JOIN teacher_course tc ON t.teacher_id = tc.teacher_id INNER JOIN course c ON c.course_id = tc.course_id INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id WHERE t.campus_name = ?1 AND  c.grade = ?2", 
+    countQuery = "select count(*) from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.grade=?2", 
 
     nativeQuery = true)
     Page<TeacherProjection> findByCampusNameGrade(String campusName, String grade, Pageable pageable);
@@ -74,9 +74,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     //////////////////////////////////////////////////////////////
 
-    @Query(value = "SELECT t.*,ts.`section` from teacher t INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id where t.campus_name = ?1 AND ts.`section` = ?2 AND ts.grade = ?3", 
+    @Query(value = "select t.teacher_id,t.address,c.campus_name,t.date_of_birth,t.email,t.employee_name,t.gender,t.joining_date,t.phone_number,s.grade,t.user_name,s.section_name as `section` from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.section_name=?2 and s.grade=?3", 
 
-    countQuery = "SELECT COUNT(*) from teacher t INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id where where t.campus_name = ?1 AND ts.`section` = ?2 AND ts.grade = ?3", 
+    countQuery = "select count(*) from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.section_name=?2 and s.grade=?3", 
 
     nativeQuery = true)
     Page<TeacherProjection> findByCampusNamesectionOrGrade(String campusName, String section, String grade,Pageable pageable);
@@ -99,9 +99,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     Page<TeacherProjection> findByCampusNameCourseAndGrade(String campusName, String course, String grade, Pageable pageable);
     //////////////////////////////////////////////////////////////
 
-    @Query(value = "SELECT t.*,ts.`section`  from teacher t INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id where t.campus_name = ?1 AND ts.`section` = ?2", 
+    @Query(value = "select t.teacher_id,t.address,c.campus_name,t.date_of_birth,t.email,t.employee_name,t.gender,t.joining_date,t.phone_number,s.grade,t.user_name,s.section_name as `section` from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.section_name=?2", 
 
-    countQuery = "SELECT COUNT(*) from teacher t INNER JOIN teacher_section ts ON t.teacher_id = ts.teacher_id where where t.campus_name = ?1 AND ts.`section` = ?2", 
+    countQuery = "select count(*) from teacher t inner join teacher_campus_section_grade_branch tcsgb on t.teacher_id= tcsgb.teache_id_fk inner join `section` s on s.id=tcsgb.section_id_fk inner join campus c on c.id = s.campus_id where c.campus_name=?1 and s.section_name=?2", 
     
     nativeQuery = true)
     Page<TeacherProjection> findByCampusNamesection(String campusName, String section, Pageable pageable);
