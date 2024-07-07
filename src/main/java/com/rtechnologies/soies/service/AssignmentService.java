@@ -57,10 +57,10 @@ public class AssignmentService {
 
             //Check for teacher
             Optional<Teacher> teacher = teacherRepository.findById(assignment.getTeacherId());
-            if(teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + assignment.getTeacherId());
-                throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
-            }
+            // if(teacher.isEmpty()) {
+            //     Utility.printDebugLogs("No teacher found with ID: " + assignment.getTeacherId());
+            //     throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
+            // }
 
             //Check for course
             Optional<Course> course = courseRepository.findById(assignment.getCourseId());
@@ -99,7 +99,7 @@ public class AssignmentService {
             assignmentResponse = AssignmentResponse.builder()
                     .assignmentId(createdAssignment.getAssignmentId())
                     .course(course.get())
-                    .teacher(teacher.get())
+                    .teacher(teacher.orElse(new Teacher()))
                     .assignmentTitle(createdAssignment.getAssignmentTitle())
                     .description(createdAssignment.getDescription())
                     .file(createdAssignment.getFile())
