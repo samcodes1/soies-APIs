@@ -257,7 +257,7 @@ public class LectureService {
                         .videoURL(fetchedLecture.getVideoURL())
                         .powerPointURL(fetchedLecture.getPowerPointURL())
                         .totalViews(fetchedLecture.getTotalViews())
-                        .isVisible(fetchedLecture.isVisible())
+                        .isVisible(fetchedLecture.isVisible()).publishDate(fetchedLecture.getPublishDate())
                         .messageStatus("Success")
                         .build();
 
@@ -352,7 +352,7 @@ public class LectureService {
                         .videoURL(fetchedLecture.getVideoURL())
                         .powerPointURL(fetchedLecture.getPowerPointURL())
                         .totalViews(fetchedLecture.getTotalViews())
-                        .isVisible(fetchedLecture.isVisible())
+                        .isVisible(fetchedLecture.isVisible()).publishDate(fetchedLecture.getPublishDate())
                         .messageStatus("Success")
                         .build();
 

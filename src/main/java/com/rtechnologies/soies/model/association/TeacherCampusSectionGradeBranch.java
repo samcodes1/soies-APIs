@@ -1,24 +1,25 @@
-package com.rtechnologies.soies.model;
+package com.rtechnologies.soies.model.association;
 
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.Id;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import javax.persistence.*;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(uniqueConstraints={@UniqueConstraint(columnNames={"section"})})
-public class SectionCommon {
+public class TeacherCampusSectionGradeBranch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long sectionId;
-    private String section;
+    private Long id;
+
+    private Long teacheIdFk;
+    private Long sectionIdFk;
 }

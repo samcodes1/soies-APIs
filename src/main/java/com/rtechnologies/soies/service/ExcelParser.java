@@ -6,16 +6,27 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.opencsv.CSVReader;
+import com.rtechnologies.soies.model.Campus;
+import com.rtechnologies.soies.model.Section;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.association.TeacherCampusSectionGradeBranch;
+import com.rtechnologies.soies.repository.CampusRepository;
+import com.rtechnologies.soies.repository.SectionRepository;
+import com.rtechnologies.soies.repository.TeacherCampusSectionGradeBranchRepo;
+import com.rtechnologies.soies.repository.TeacherRepository;
 
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -24,6 +35,17 @@ import org.apache.poi.ss.usermodel.Row;
 
 @Service
 public class ExcelParser {
+    @Autowired
+    CampusRepository campusRepositoryObj;
+
+    @Autowired
+    SectionRepository sectionRepositoryObj;
+
+    @Autowired
+    TeacherCampusSectionGradeBranchRepo TeacherCampusSectionGradeBranchRepoObj;
+
+    @Autowired
+    TeacherRepository teacherRepositoryobj;
 
     public List<Student> parseStudentExcelFile(InputStream is) throws IOException {
         List<Student> students = new ArrayList<>();
@@ -58,6 +80,7 @@ public class ExcelParser {
         return students;
     }
 
+    @Transactional
     public List<Teacher> parseTeacherExcelFile(InputStream is) throws IOException {
         List<Teacher> teachers = new ArrayList<>();
         Workbook workbook = new XSSFWorkbook(is);
@@ -69,29 +92,75 @@ public class ExcelParser {
             if (row.getRowNum() == 0) {
                 continue; // Skip header row
             }
+
+            String grade = row.getCell(6).getStringCellValue();
+            System.err.println(grade);
+            String section = row.getCell(8).getStringCellValue();
+            System.err.println(section);
+
+            String campusName = row.getCell(7).getStringCellValue();
+            System.err.println(campusName);
+            
+            // check for campus existsnce if yes the go for grade and section existnace in that campus
+            Optional<Campus> campusdata = campusRepositoryObj.findByCampusName(campusName);
+            Long campusId = null;
+            if(!campusdata.isPresent()){
+                Campus campus = Campus.builder().campusName(campusName).build();
+                campus = campusRepositoryObj.save(campus);
+                campusId = campus.getId();
+                System.err.println("DOESNOT EXISTS SO ENTERED DATA AGAIN: "+campusId);
+            }else{
+
+                campusId = campusdata.get().getId();
+                System.err.println("EXISTS: "+campusId);
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////////
+            // Now check for grade and section against campus id
+            Optional<Section> sectionGradeData = sectionRepositoryObj.findByCampusIdAndSectionNameIgnoreCaseAndGrade(campusId, section, grade);
+            Long sectionGradeId = null;
+            if(!sectionGradeData.isPresent()){
+                Section s = Section.builder().campusId(campusId).grade(grade).sectionName(section).build();
+                s = sectionRepositoryObj.save(s);
+                sectionGradeId = s.getId();
+                System.err.println("sectionGradeId DOESNOT EXISTS SO ENTERED DATA AGAIN: "+sectionGradeId);
+            }else{
+                sectionGradeId = sectionGradeData.get().getId();
+                System.err.println("sectionGradeId EXISTS: "+sectionGradeId);
+            }
+
             Teacher teacher = new Teacher();
-            // System.out.println("row data>>>>>>>>>>>>>> "+row.getCell(0).getStringCellValue());
-            teacher.setCampusName(row.getCell(0).getStringCellValue());
-            // System.err.println(row.getCell(0).getStringCellValue());
-            teacher.setEmployeeName(row.getCell(1).getStringCellValue());
-            // System.err.println(row.getCell(1).getStringCellValue());
-            teacher.setEmail(row.getCell(2).getStringCellValue());
-            // System.err.println(row.getCell(2).getStringCellValue());
-            teacher.setPassword(new BCryptPasswordEncoder().encode(row.getCell(3).getStringCellValue()));
-            // System.err.println(new BCryptPasswordEncoder().encode(row.getCell(3).getStringCellValue()));
-            teacher.setDateOfBirth(row.getCell(4).getDateCellValue().toString());
-            // System.err.println(row.getCell(4).getDateCellValue().toString());
-            teacher.setGender(row.getCell(5).getStringCellValue());
-            // System.err.println(row.getCell(5).getStringCellValue());
-            teacher.setJoiningDate(row.getCell(6).getDateCellValue().toString());
-            // System.err.println(row.getCell(6).getDateCellValue().toString());
-            teacher.setPhoneNumber(row.getCell(7).getStringCellValue());
-            // System.err.println(row.getCell(7).getStringCellValue());
-            teacher.setAddress(row.getCell(8).getStringCellValue());
-            // System.err.println(row.getCell(8).getStringCellValue());
+             System.out.println("row data>>>>>>>>>>>>>> "+row.getCell(1).getStringCellValue());
+            
+            teacher.setUserName(row.getCell(1).getStringCellValue().toLowerCase());
+             System.err.println(row.getCell(1).getStringCellValue().toLowerCase());
+
+             
+            teacher.setPassword(new BCryptPasswordEncoder().encode(row.getCell(2).getStringCellValue()));
+             System.err.println(new BCryptPasswordEncoder().encode(row.getCell(2).getStringCellValue()));
+
+            teacher.setEmployeeName(row.getCell(3).getStringCellValue()+" "+row.getCell(4).getStringCellValue());
+             System.err.println(row.getCell(3).getStringCellValue()+" "+row.getCell(4).getStringCellValue());
+
+            teacher.setEmail(row.getCell(5).getStringCellValue().toLowerCase());
+             System.err.println(row.getCell(5).getStringCellValue().toLowerCase());
+
+             Optional<Teacher> teacherTempdata = teacherRepositoryobj.findByEmail(row.getCell(5).getStringCellValue().toLowerCase());
+
+            Long teacherId = null;
+            if(!teacherTempdata.isPresent()){
+                Teacher t = teacherRepositoryobj.save(teacher);
+                teacherId = t.getTeacherId();
+                TeacherCampusSectionGradeBranchRepoObj.save(TeacherCampusSectionGradeBranch.builder().teacheIdFk(teacherId).sectionIdFk(sectionGradeId).build());
+            }else{
+                Optional<TeacherCampusSectionGradeBranch> data = TeacherCampusSectionGradeBranchRepoObj.findByTeacheIdFkAndSectionIdFk(teacherTempdata.get().getTeacherId(), sectionGradeId);
+                if(!data.isPresent()){
+                    TeacherCampusSectionGradeBranchRepoObj.save(TeacherCampusSectionGradeBranch.builder().teacheIdFk(teacherTempdata.get().getTeacherId()).sectionIdFk(sectionGradeId).build());
+                }
+            }
 
             System.out.println("\n\n\n\n");
-            teachers.add(teacher);
+            // teachers.add(teacher);
         }
         workbook.close();
         return teachers;

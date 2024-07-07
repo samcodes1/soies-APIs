@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.webjars.NotFoundException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -448,22 +449,20 @@ public class TeacherService {
 
     @Transactional
     public TeacherResponse saveTrachersFromFile(MultipartFile file) throws IOException {
-
-        List<Teacher> teachers = excelParser.csvParserTeacher(file);
-        System.out.println("TEACHERDATA:>> "+teachers.toString());
-        List<Teacher> nonexistingteachers = new ArrayList<>();
-        for (Teacher teacher : teachers) {
-            System.out.println("QUERY1");
-            Optional<Teacher> teacherdata = teacherRepository.findByEmail(teacher.getEmail());
-            System.out.println("QUERY2");
-            if(!teacherdata.isPresent()){
-                System.out.println("QUERY3");
-                nonexistingteachers.add(teacher);
+        Runnable runnable = () -> {
+            List<Teacher> teachers;
+            try {
+                teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
+                System.out.println("TEACHERDATA:>> "+teachers.toString());
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
-            System.out.println("QUERY4"); 
-        }
-    
-            teacherRepository.saveAll(nonexistingteachers);
+        };
+
+        Thread thread = new Thread(runnable);
+        thread.start(); // Start the thread
+        
             TeacherResponse teacherListResponse = TeacherResponse.builder()
                          .teacherId(null)
                          .campusName(null)
