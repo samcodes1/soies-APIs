@@ -94,7 +94,7 @@ public class AssignmentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PutMapping("/update")
-    public ResponseEntity<AssignmentResponse> updateAssignment(@RequestBody AssignmentRequest assignment) {
+    public ResponseEntity<AssignmentResponse> updateAssignment(@ModelAttribute AssignmentRequest assignment) {
         AssignmentResponse response = assignmentService.updateAssignment(assignment);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);

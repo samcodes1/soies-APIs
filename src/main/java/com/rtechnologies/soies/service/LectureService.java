@@ -149,6 +149,7 @@ public class LectureService {
                     .powerPointURL(updatedLecture.getPowerPointURL())
                     .totalViews(updatedLecture.getTotalViews())
                     .isVisible(updatedLecture.isVisible())
+                    .publishDate(updatedLecture.getPublishDate())
                     .messageStatus("Success")
                     .build();
 
