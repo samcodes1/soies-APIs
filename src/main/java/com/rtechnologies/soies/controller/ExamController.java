@@ -126,8 +126,8 @@ public class ExamController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{courseid}")
-    public ResponseEntity<ExamResponse> getAllExamsByCourseId(
+    @GetMapping("/get-by-course/{courseid}")
+    public ResponseEntity<ExamResponse> getAllExamsByCourseIdController(
         @PathVariable Long courseid,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size

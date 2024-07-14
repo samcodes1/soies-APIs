@@ -160,6 +160,7 @@ public class OgaService {
 
     private Oga mapToOga(OgaRequest ogaRequest) {
         return ogaRepository.save(Oga.builder()
+                .ogaId(ogaRequest.getOgaId())
                 .courseId(ogaRequest.getCourseId())
                 .ogaTitle(ogaRequest.getOgaTitle())
                 .description(ogaRequest.getDescription())

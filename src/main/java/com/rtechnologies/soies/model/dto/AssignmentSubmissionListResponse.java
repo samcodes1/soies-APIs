@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -14,5 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 public class AssignmentSubmissionListResponse {
     private List<AssignmentSubmission> assignmentSubmissionResponseList;
+    private Page<AssignmentSubmission> assignmentSubmissionResponsePage;
     private String messageStatus;
 }

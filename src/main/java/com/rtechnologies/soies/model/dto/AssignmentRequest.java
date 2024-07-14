@@ -22,5 +22,6 @@ public class AssignmentRequest {
     private int totalMarks;
     private String section;
     private String term;
+    private String dueDate;
     private boolean visibility;
 }

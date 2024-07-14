@@ -37,7 +37,8 @@ public class AssignmentController {
                                                                 @RequestParam("term") String term,
                                                                 @RequestParam("section") String section,
                                                                 @RequestParam("totalMarks") int totalMarks,
-                                                                @RequestParam("visibility") boolean visibility) {
+                                                                @RequestParam("visibility") boolean visibility,
+                                                                @RequestParam(name = "dueDate", required=false) String dueDate) {
 
         System.out.println("In the request: " );
         AssignmentRequest assignmentRequest = AssignmentRequest.builder()
@@ -49,6 +50,7 @@ public class AssignmentController {
                 .totalMarks(totalMarks)
                 .visibility(visibility)
                 .term(term)
+                .dueDate(dueDate)
                 .section(section)
                 .build();
 

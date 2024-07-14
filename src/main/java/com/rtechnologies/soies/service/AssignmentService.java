@@ -88,6 +88,7 @@ public class AssignmentService {
                 finalAssignment.setTeacherId(assignment.getTeacherId());
                 finalAssignment.setTotalMarks(assignment.getTotalMarks());
                 finalAssignment.setTerm(assignment.getTerm());
+                finalAssignment.setDueDate(assignment.getDueDate());
                 finalAssignment.setSection(assignment.getSection());
                 createdAssignment = assignmentRepository.save(finalAssignment);
             } catch (IOException ioException) {
@@ -107,6 +108,7 @@ public class AssignmentService {
                     .visibility(createdAssignment.isVisibility())
                     .term(createdAssignment.getTerm())
                     .section(createdAssignment.getSection())
+                    .dueDate(createdAssignment.getDueDate())
                     .messageStatus("Success")
                     .build();
 
@@ -486,10 +488,10 @@ public class AssignmentService {
 
         try {
             Page<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentId(assignmentId, PageRequest.of(page, size));
-            List<AssignmentSubmission> assignmentList = assignmentSubmissionsPage.getContent();
+            // List<AssignmentSubmission> assignmentList = assignmentSubmissionsPage.getContent();
 
             assignmentSubmissionListResponse = AssignmentSubmissionListResponse.builder()
-                    .assignmentSubmissionResponseList(assignmentList)
+                    .assignmentSubmissionResponsePage(assignmentSubmissionsPage)
                     .messageStatus("Success")
                     .build();
 

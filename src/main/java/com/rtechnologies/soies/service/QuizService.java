@@ -270,6 +270,7 @@ public class QuizService {
                     .visibility(quiz.isVisibility())
                     .quizQuestions(quizQuestions)
                     .time(quiz.getTime())
+                    .dueDate(quiz.getDueDate())
                     .messageStatus("Success")
                     .course(course.get())
                     .build();
