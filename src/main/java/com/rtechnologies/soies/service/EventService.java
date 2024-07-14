@@ -38,26 +38,26 @@ public class EventService {
             }
 
             // Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(event.getTeacherId());
-            if (teacher.isEmpty()) {
-                Utility.printDebugLogs("No teacher found with ID: " + event.getTeacherId());
-                throw new IllegalArgumentException("No teacher found with ID: " + event.getTeacherId());
-            }
+            Optional<Teacher> teacher = teacherRepository.findById(event.getTeacherId()==null?-1:event.getTeacherId());
+            // if (teacher.isEmpty()) {
+            //     Utility.printDebugLogs("No teacher found with ID: " + event.getTeacherId());
+            //     throw new IllegalArgumentException("No teacher found with ID: " + event.getTeacherId());
+            // }
 
             // Check for course
-            Optional<Course> course = courseRepository.findById(event.getCourseId());
-            if (course.isEmpty()) {
-                Utility.printDebugLogs("No course found with ID: " + event.getCourseId());
-                throw new IllegalArgumentException("No course found with ID: " + event.getCourseId());
-            }
+            Optional<Course> course = courseRepository.findById(event.getCourseId()==null?-1:event.getCourseId());
+            // if (course.isEmpty()) {
+            //     Utility.printDebugLogs("No course found with ID: " + event.getCourseId());
+            //     throw new IllegalArgumentException("No course found with ID: " + event.getCourseId());
+            // }
 
             Event createdEvent = eventRepository.save(event);
             Utility.printDebugLogs("Event created successfully: " + createdEvent);
 
             eventResponse = EventResponse.builder()
                     .id(createdEvent.getId())
-                    .course(course.get())
-                    .teacher(teacher.get())
+                    .course(course.orElse(new Course()))
+                    .teacher(teacher.orElse(new Teacher()))
                     .title(createdEvent.getTitle())
                     .eventDate(createdEvent.getEventDate())
                     .type(createdEvent.getType())
