@@ -24,4 +24,6 @@ public class MarkAttendanceResponse {
     private String date;
     private LocalTime lastLoginTime;
     private String messageStatus;
+
+    private int totalTimeSpentInMinutes;
 }

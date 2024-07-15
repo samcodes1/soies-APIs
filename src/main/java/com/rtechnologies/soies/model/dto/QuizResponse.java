@@ -23,4 +23,5 @@ public class QuizResponse {
     private String time;
     private boolean visibility;
     private String messageStatus;
+    private String term;
 }

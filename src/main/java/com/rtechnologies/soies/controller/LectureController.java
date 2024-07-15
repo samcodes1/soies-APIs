@@ -1,6 +1,8 @@
 package com.rtechnologies.soies.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rtechnologies.soies.model.Lecture;
+import com.rtechnologies.soies.model.LectureUpdateModel;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.LectureService;
 import io.swagger.annotations.ApiOperation;
@@ -38,7 +40,7 @@ public class LectureController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PutMapping
-    public ResponseEntity<LectureResponse> updateLecture(@RequestBody Lecture lecture) {
+    public ResponseEntity<LectureResponse> updateLecture(@ModelAttribute LectureUpdateModel lecture) throws JsonProcessingException {
         LectureResponse lectureResponse = lectureService.updateLecture(lecture);
         return ResponseEntity.status(lectureResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(lectureResponse);

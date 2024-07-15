@@ -2,8 +2,10 @@ package com.rtechnologies.soies.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rtechnologies.soies.model.Assignment;
 import com.rtechnologies.soies.model.Lecture;
+import com.rtechnologies.soies.model.LectureUpdateModel;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.LectureReport;
 import com.rtechnologies.soies.model.dto.*;
@@ -42,7 +44,7 @@ public class LectureService {
         Utility.printDebugLogs("Lecture creation request: " + lecture.toString());
         LectureResponse lectureResponse = new LectureResponse();
 
-        System.out.println("REQUEST OBJ:>>>>> "+lecture.toString());
+        System.out.println("REQUEST OBJ:>>>>> " + lecture.toString());
         try {
             // Validate lecture
             if (lecture == null) {
@@ -58,18 +60,18 @@ public class LectureService {
                 //For file
                 String folder = "uploaded-lecture";
                 String publicId = folder + "/" + fileName;
-                Map<?,?> data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
-                String url =  data.get("url").toString();
+                Map<?, ?> data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String url = data.get("url").toString();
 
                 System.out.println("Done 2");
                 String videoUrl = "";
                 //For video
-                if(lecture.getVideoURL() != null) {
-                    data=null;
-                    fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId()+ "-"+ "video";
+                if (lecture.getVideoURL() != null) {
+                    data = null;
+                    fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId() + "-" + "video";
                     publicId = folder + "/" + fileName;
                     data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
-                    videoUrl =  data.get("url").toString();
+                    videoUrl = data.get("url").toString();
                 }
                 System.out.println("Done 3");
                 Lecture lecture1 = new Lecture();
@@ -118,9 +120,10 @@ public class LectureService {
         }
     }
 
-    public LectureResponse updateLecture(Lecture lecture) {
-        Utility.printDebugLogs("Lecture update request: " + lecture.toString());
+    public LectureResponse updateLecture(LectureUpdateModel lecture) throws JsonProcessingException {
+        System.out.println("Lecture update request: " + lecture.getLectureId() + lecture.getVideoURL());
         LectureResponse lectureResponse = new LectureResponse();
+        String fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId();
 
         try {
             // Validate lecture
@@ -136,8 +139,33 @@ public class LectureService {
                 throw new NotFoundException("No record found for Lecture ID: " + lecture.getLectureId());
             }
 
+            Lecture existingLecture = optionalLecture.get();
+
+            // Update PowerPoint URL
+            String folder = "uploaded-lecture";
+            String publicId = folder + "/" + fileName;
+            Map<?, ?> data = cloudinary.uploader().upload(lecture.getPowerPointURL().getBytes(), ObjectUtils.asMap("public_id", publicId));
+            String powerPointUrl = data.get("url").toString();
+
+            // Update video URL if provided
+            String videoUrl = existingLecture.getVideoURL();  // Default to existing value
+            if (lecture.getVideoURL() != null) {
+                fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId() + "-" + "video";
+                publicId = folder + "/" + fileName;
+                data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
+                videoUrl = data.get("url").toString();
+            }
+
             // Save the updated lecture
-            Lecture updatedLecture = lectureRepository.save(lecture);
+            existingLecture.setLectureTitle(lecture.getLectureTitle());
+            existingLecture.setDescription(lecture.getDescription());
+            existingLecture.setVideoURL(videoUrl);
+            existingLecture.setPowerPointURL(powerPointUrl);
+            existingLecture.setTotalViews(lecture.getTotalViews());
+            existingLecture.setVisible(lecture.isVisible());
+            existingLecture.setPublishDate(lecture.getPublishDate());
+
+            Lecture updatedLecture = lectureRepository.save(existingLecture);
             Utility.printDebugLogs("Lecture updated successfully: " + updatedLecture);
 
             lectureResponse = LectureResponse.builder()
@@ -213,7 +241,7 @@ public class LectureService {
 
             // Fetch lectures by courseId
             List<Lecture> lectureList = lectureRepository.findAllByCourseId(courseId);
-            if(lectureList.size() <=0){
+            if (lectureList.size() <= 0) {
                 Utility.printDebugLogs("No record found for courses");
                 lectureListResponse.setMessageStatus("Success");
                 return lectureListResponse;
@@ -324,6 +352,7 @@ public class LectureService {
             return lectureResponse;
         }
     }
+
     public LectureResponse setVisibility(long lectureId, boolean isVisible) {
         Utility.printDebugLogs("Set visibility request for lecture ID: " + lectureId);
         LectureResponse lectureResponse = new LectureResponse();
@@ -427,7 +456,7 @@ public class LectureService {
     private LectureReportResponse convertToResponse(LectureReport lectureReport) {
         Optional<Student> student = studentRepository.findByRollNumber(lectureReport.getStudentRollNumber());
 
-        if(student.isPresent()){
+        if (student.isPresent()) {
             return LectureReportResponse.builder()
                     .id(lectureReport.getId())
                     .studentName(student.get().getStudentName()) // Assuming there's a method like getStudentName in your entity
@@ -438,7 +467,7 @@ public class LectureService {
                     .build();
         }
 
-       return null;
+        return null;
     }
 
     public LectureReportGraphResponse getLectureReportGraphData(long lectureId) {

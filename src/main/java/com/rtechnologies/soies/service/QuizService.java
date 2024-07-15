@@ -38,6 +38,7 @@ public class QuizService {
 
     @Autowired
     private QuizStudentAnswerRepository quizStudentAnswerRepository;
+
     public QuizResponse createQuiz(CreateQuizRequest quiz) {
         Utility.printDebugLogs("Quiz creation request: " + quiz.toString());
         QuizResponse quizResponse;
@@ -50,7 +51,7 @@ public class QuizService {
 
             //Check for course
             Optional<Course> course = courseRepository.findById(quiz.getCourseId());
-            if(course.isEmpty()) {
+            if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + quiz.getCourseId());
                 throw new NotFoundException("No course found with ID: " + quiz.getCourseId());
             }
@@ -58,7 +59,7 @@ public class QuizService {
             Quiz createdQuiz = mapToQuiz(quiz);
             Utility.printDebugLogs("Quiz created successfully: " + createdQuiz);
 
-            for(int i=0; i<quiz.getQuizQuestions().size(); i++){
+            for (int i = 0; i < quiz.getQuizQuestions().size(); i++) {
                 quiz.getQuizQuestions().get(i).setQuizId(createdQuiz.getQuizId());
             }
 
@@ -104,7 +105,7 @@ public class QuizService {
 
     public Quiz mapToQuiz(QuizRequest createQuizRequest) {
         return quizRepository.save(Quiz.builder()
-                        .quizId(createQuizRequest.getQuizId())
+                .quizId(createQuizRequest.getQuizId())
                 .courseId(createQuizRequest.getCourseId())
                 .quizTitle(createQuizRequest.getQuizTitle())
                 .description(createQuizRequest.getDescription())
@@ -133,7 +134,7 @@ public class QuizService {
 
             //Check for course
             Optional<Course> course = courseRepository.findById(quiz.getCourseId());
-            if(course.isEmpty()) {
+            if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + quiz.getCourseId());
                 throw new NotFoundException("No course found with ID: " + quiz.getCourseId());
             }
@@ -141,7 +142,7 @@ public class QuizService {
             Quiz createdQuiz = mapToQuiz(quiz);
             Utility.printDebugLogs("Quiz created successfully: " + createdQuiz);
 
-            for(int i=0; i<quiz.getQuizQuestions().size(); i++){
+            for (int i = 0; i < quiz.getQuizQuestions().size(); i++) {
                 quiz.getQuizQuestions().get(i).setQuizId(createdQuiz.getQuizId());
             }
 
@@ -254,7 +255,7 @@ public class QuizService {
 
             //Check for course
             Optional<Course> course = courseRepository.findById(optionalQuiz.get().getCourseId());
-            if(course.isEmpty()) {
+            if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + optionalQuiz.get().getCourseId());
                 throw new NotFoundException("No course found with ID: " + optionalQuiz.get().getCourseId());
             }
@@ -273,6 +274,8 @@ public class QuizService {
                     .dueDate(quiz.getDueDate())
                     .messageStatus("Success")
                     .course(course.get())
+                    .dueDate(quiz.getDueDate())
+                    .term(quiz.getTerm())
                     .build();
 
             Utility.printDebugLogs("Quiz response: " + quizResponse);
@@ -290,78 +293,78 @@ public class QuizService {
         }
     }
 
-    public QuizListResponse getQuizzesByCourseId(Long courseId,String studentRollNum) {
+    public QuizListResponse getQuizzesByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         QuizListResponse quizListResponse;
 
-            List<Quiz> quizList = quizRepository.findByCourseId(courseId);
+        List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
-            if (quizList.isEmpty()) {
-                Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-                return QuizListResponse.builder()
-                        .quizList(new ArrayList<>())
-                        .messageStatus("Success")
-                        .build();
-            }
+        if (quizList.isEmpty()) {
+            Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
+            return QuizListResponse.builder()
+                    .quizList(new ArrayList<>())
+                    .messageStatus("Success")
+                    .build();
+        }
 
-            List<Quiz> finalList = new ArrayList<>();
+        List<Quiz> finalList = new ArrayList<>();
 
-            List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
-            finalList = quizList;
-            if(!quizSubmissions.isEmpty()) {
-                for(int i =0; i<quizSubmissions.size(); i++){
-                    for (Quiz quiz : quizList) {
-                        if (Objects.equals(quiz.getQuizId(), quizSubmissions.get(i).getQuizId())) {
-                            finalList.remove(quiz);
-                            break;
-                        }
+        List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
+        finalList = quizList;
+        if (!quizSubmissions.isEmpty()) {
+            for (int i = 0; i < quizSubmissions.size(); i++) {
+                for (Quiz quiz : quizList) {
+                    if (Objects.equals(quiz.getQuizId(), quizSubmissions.get(i).getQuizId())) {
+                        finalList.remove(quiz);
+                        break;
                     }
                 }
-                quizListResponse = QuizListResponse.builder()
-                        .quizList(finalList)
-                        .messageStatus("Success")
-                        .build();
-            } else {
-                quizListResponse = QuizListResponse.builder()
-                        .quizList(quizList)
-                        .messageStatus("Success")
-                        .build();
             }
+            quizListResponse = QuizListResponse.builder()
+                    .quizList(finalList)
+                    .messageStatus("Success")
+                    .build();
+        } else {
+            quizListResponse = QuizListResponse.builder()
+                    .quizList(quizList)
+                    .messageStatus("Success")
+                    .build();
+        }
 
-            Utility.printDebugLogs("Quiz list response: " + quizListResponse);
-            return quizListResponse;
-        
+        Utility.printDebugLogs("Quiz list response: " + quizListResponse);
+        return quizListResponse;
+
     }
 
     public QuizListResponse getQuizzesByCourseId(Long courseId) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         QuizListResponse quizListResponse;
 
-            List<Quiz> quizList = quizRepository.findByCourseId(courseId);
+        List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
-            if (quizList.isEmpty()) {
-                Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-                return QuizListResponse.builder()
+        if (quizList.isEmpty()) {
+            Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
+            return QuizListResponse.builder()
                     .quizList(new ArrayList<>())
                     .messageStatus("Success")
                     .build();
-            }
+        }
 
-            quizListResponse = QuizListResponse.builder()
-                    .quizList(quizList)
-                    .messageStatus("Success")
-                    .build();
+        quizListResponse = QuizListResponse.builder()
+                .quizList(quizList)
+                .messageStatus("Success")
+                .build();
 
-            Utility.printDebugLogs("Quiz list response: " + quizListResponse);
-            return quizListResponse;
+        Utility.printDebugLogs("Quiz list response: " + quizListResponse);
+        return quizListResponse;
     }
 
     //Quiz submission APIs
-    public String submitQuiz(QuizSubmissionRequest quizSubmissionRequest){
+    public String submitQuiz(QuizSubmissionRequest quizSubmissionRequest) {
         QuizSubmission quizSubmission = new QuizSubmission();
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizSubmissionRequest.getQuizId());
 
-        if(quizQuestions.isEmpty()) {
+        if (quizQuestions.isEmpty()) {
             throw new NotFoundException("No quiz found with ID: " + quizSubmissionRequest.getCourseId());
         }
         quizSubmission = mapToQuizSubmission(quizSubmissionRequest);
@@ -369,17 +372,17 @@ public class QuizService {
 
 
         int totalMarks = quizSubmission.getTotalMarks();
-        int perQuestionMark = totalMarks/quizQuestions.size();
+        int perQuestionMark = totalMarks / quizQuestions.size();
         int gainedMarks = 0;
 
         //Save answers to the DB
-        for(int i=0; i<quizSubmissionRequest.getQuizQuestionList().size(); i++){
+        for (int i = 0; i < quizSubmissionRequest.getQuizQuestionList().size(); i++) {
             boolean isCorrect = false;
 
-            if(quizSubmissionRequest.getQuizQuestionList().
+            if (quizSubmissionRequest.getQuizQuestionList().
                     get(i).getAnswer().equals(quizQuestions.get(i).getAnswer())) {
-                gainedMarks+=perQuestionMark;
-                isCorrect=true;
+                gainedMarks += perQuestionMark;
+                isCorrect = true;
             }
 
             quizStudentAnswerRepository.save(QuizStudentAnswer.builder().
@@ -388,10 +391,10 @@ public class QuizService {
                     .answer(quizSubmissionRequest.getQuizQuestionList().
                             get(i).getAnswer())
                     .isCorrect(isCorrect)
-                    . build());
+                    .build());
         }
 
-        double percentage = (double) gainedMarks/totalMarks * 100;
+        double percentage = (double) gainedMarks / totalMarks * 100;
         quizSubmission.setGainedMarks(gainedMarks);
         quizSubmission.setPercentage(percentage);
 
@@ -400,15 +403,15 @@ public class QuizService {
         return "Quiz submitted successfully";
     }
 
-    public QuizSubmissionListResponse getAllQuizSubmission(Long quizId){
+    public QuizSubmissionListResponse getAllQuizSubmission(Long quizId) {
         List<QuizSubmission> submittedQuizzes = quizSubmissionRepository.findByQuizId(quizId);
         QuizSubmissionListResponse quizSubmissionResponse = new QuizSubmissionListResponse();
-        if(submittedQuizzes.isEmpty()) {
+        if (submittedQuizzes.isEmpty()) {
             throw new NotFoundException("No quiz found with ID: " + quizId);
         }
 
         List<QuizSubmissionResponse> quizSubmissionResponses = new ArrayList<>();
-        for(int i =0; i< submittedQuizzes.size(); i++){
+        for (int i = 0; i < submittedQuizzes.size(); i++) {
             quizSubmissionResponses.add(mapToQuizSubmissionResponse(submittedQuizzes.get(i)));
         }
 

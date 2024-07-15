@@ -36,7 +36,7 @@ public class StudentAttendanceService {
     public MarkAttendanceResponse markAttendanceOnLogin(String studentRollNum) {
         Optional<Student> student = studentRepository.findByRollNumber(studentRollNum);
         MarkAttendanceResponse response = new MarkAttendanceResponse();
-        if(student.isEmpty()){
+        if (student.isEmpty()) {
             response.setStatus("No student found with roll number: " + studentRollNum);
             return response;
         }
@@ -48,7 +48,7 @@ public class StudentAttendanceService {
         attendance.setStudentRollNum(studentRollNum);
         attendance.setStatus("Present");
         attendance.setDate(LocalDate.now());
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!NOW____________________"+LocalTime.now());
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!NOW____________________" + LocalTime.now());
         attendance.setLastLoginTime(LocalTime.now());
         attendance = attendanceRepository.save(attendance);
 
@@ -69,7 +69,7 @@ public class StudentAttendanceService {
     public MarkAttendanceResponse markAttendanceOnLogout(Long sessionId) {
         Optional<StudentAttendance> studentAttendance = attendanceRepository.findById(sessionId);
         MarkAttendanceResponse response = new MarkAttendanceResponse();
-        if(studentAttendance.isEmpty()) {
+        if (studentAttendance.isEmpty()) {
             response.setStatus("No session found with ID: " + sessionId);
             return response;
         }
@@ -103,6 +103,7 @@ public class StudentAttendanceService {
                 .status(attendance.getStatus())
                 .date(formattedDate)
                 .lastLoginTime(attendance.getLastLoginTime())
+                .totalTimeSpentInMinutes(attendance.getTotalTimeSpentInMinutes())
                 .messageStatus("Success")
                 .build();
 
@@ -112,8 +113,8 @@ public class StudentAttendanceService {
     @Scheduled(cron = "0 0 0 * * *") // Run at 12 AM every day
     public void autoAttendanceMarking() throws JsonProcessingException {
         List<Student> students = studentRepository.findAll();
-        
-        for(Student student : students) {
+
+        for (Student student : students) {
             // Calculate total time spent and mark attendance as absent if less than 15 minutes
             StudentAttendance todayAttendance = attendanceRepository.findFirstByStudentRollNumAndDateOrderByLastLoginTimeDesc(student.getRollNumber(),
                     LocalDate.now());
@@ -121,10 +122,10 @@ public class StudentAttendanceService {
             String attendanceStatus = null;
             int totalMinutesSpent = 0;
 
-            if(todayAttendance!=null){
+            if (todayAttendance != null) {
                 totalMinutesSpent = Math.abs(calculateTotalMinutesSpent(todayAttendance));
                 attendanceStatus = totalMinutesSpent >= 15 ? "Present" : "Absent";
-            }else{
+            } else {
                 attendanceStatus = "Absent";
             }
 
@@ -133,7 +134,7 @@ public class StudentAttendanceService {
             studentAttendanceFinal.setDate(LocalDate.now());
             studentAttendanceFinal.setTotalTimeSpentInMinutes(totalMinutesSpent);
             studentAttendanceFinal.setStatus(attendanceStatus);
-            if(todayAttendance!=null){
+            if (todayAttendance != null) {
                 studentAttendanceFinal.setLastLoginTime(todayAttendance.getLastLoginTime());
             }
 
@@ -141,7 +142,6 @@ public class StudentAttendanceService {
         }
 
     }
-
 
 
     private int calculateTotalMinutesSpent(StudentAttendance attendance) {
