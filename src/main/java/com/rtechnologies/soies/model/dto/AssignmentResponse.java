@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 
@@ -19,7 +20,7 @@ public class AssignmentResponse {
     private Teacher teacher;
     private String assignmentTitle;
     private String description;
-    private String file;
+    private MultipartFile file;
     private String dueDate;
     private String section;
     private int totalMarks;
