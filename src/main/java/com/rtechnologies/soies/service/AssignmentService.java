@@ -125,59 +125,76 @@ public class AssignmentService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            //Check for assignment
+            // Check for assignment
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
             if (assignmentOptional.isEmpty()) {
                 throw new NotFoundException("No Assignment found with ID: " + assignment.getAssignmentId());
             }
 
+            Assignment existingAssignment = assignmentOptional.get();
+
             // Check for teacher
-            Optional<Teacher> teacher = teacherRepository.findById(assignment.getTeacherId());
-            if (teacher.isEmpty()) {
+            Optional<Teacher> teacherOptional = teacherRepository.findById(assignment.getTeacherId());
+            if (teacherOptional.isEmpty()) {
                 throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
             }
 
             // Check for course
-            Optional<Course> course = courseRepository.findById(assignment.getCourseId());
-            if (course.isEmpty()) {
+            Optional<Course> courseOptional = courseRepository.findById(assignment.getCourseId());
+            if (courseOptional.isEmpty()) {
                 throw new NotFoundException("No course found with ID: " + assignment.getCourseId());
             }
 
+            String fileName = assignment.getAssignmentTitle() != null ? assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId() : "assignment-" + assignment.getCourseId();
+            String fileUrl = existingAssignment.getFile();
 
-            String fileName = "";
-            fileName = assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId();
-            Assignment updatedAssignment = new Assignment();
             try {
-                String folder = "uploaded-assignments";
-                String publicId = folder + "/" + fileName;
-                Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
-                String url = data.get("url").toString();
-
-                Assignment finalAssignment = new Assignment();
-                finalAssignment.setAssignmentId(assignment.getAssignmentId());
-                finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
-                finalAssignment.setFile(url);
-                finalAssignment.setDescription(assignment.getDescription());
-                finalAssignment.setVisibility(true);
-                finalAssignment.setCourseId(assignment.getCourseId());
-                finalAssignment.setTeacherId(assignment.getTeacherId());
-                finalAssignment.setTotalMarks(assignment.getTotalMarks());
-                finalAssignment.setTerm(assignment.getTerm());
-                finalAssignment.setSection(assignment.getSection());
-                updatedAssignment = assignmentRepository.save(finalAssignment);
+                if (assignment.getFile() != null && !assignment.getFile().isEmpty()) {
+                    String folder = "uploaded-assignments";
+                    String publicId = folder + "/" + fileName;
+                    Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                    fileUrl = data.get("url").toString();
+                }
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
             }
+
+            // Update only the provided fields
+            if (assignment.getAssignmentTitle() != null) {
+                existingAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
+            }
+            if (assignment.getDescription() != null) {
+                existingAssignment.setDescription(assignment.getDescription());
+            }
+            if (assignment.getDueDate() != null) {
+                existingAssignment.setDueDate(assignment.getDueDate());
+            }
+            if (assignment.getTotalMarks() != 0) { // Assuming 0 is not a valid update value
+                existingAssignment.setTotalMarks(assignment.getTotalMarks());
+            }
+            if (assignment.getTerm() != null) {
+                existingAssignment.setTerm(assignment.getTerm());
+            }
+            if (assignment.getSection() != null) {
+                existingAssignment.setSection(assignment.getSection());
+            }
+            existingAssignment.setVisibility(assignment.isVisibility());
+            existingAssignment.setFile(fileUrl);
+            existingAssignment.setCourseId(assignment.getCourseId());
+            existingAssignment.setTeacherId(assignment.getTeacherId());
+
+            Assignment updatedAssignment = assignmentRepository.save(existingAssignment);
 
             Utility.printDebugLogs("Assignment updated successfully: " + updatedAssignment);
 
             assignmentResponse = AssignmentResponse.builder()
                     .assignmentId(updatedAssignment.getAssignmentId())
-                    .course(course.get())
-                    .teacher(teacher.get())
+                    .course(courseOptional.get())
+                    .teacher(teacherOptional.get())
                     .assignmentTitle(updatedAssignment.getAssignmentTitle())
                     .description(updatedAssignment.getDescription())
                     .file(updatedAssignment.getFile())
+                    .dueDate(updatedAssignment.getDueDate())
                     .totalMarks(updatedAssignment.getTotalMarks())
                     .visibility(updatedAssignment.isVisibility())
                     .term(updatedAssignment.getTerm())
@@ -199,6 +216,7 @@ public class AssignmentService {
                     .build();
         }
     }
+
 
     public AssignmentResponse deleteAssignment(Long assignmentId) {
         Utility.printDebugLogs("Assignment deletion request: " + assignmentId);
