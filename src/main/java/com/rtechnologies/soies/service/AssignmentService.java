@@ -69,19 +69,23 @@ public class AssignmentService {
             throw new NotFoundException("No course found with ID: " + assignment.getCourseId());
         }
 
-        String fileName = "";
-        fileName = assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId();
+        String fileName = assignment.getAssignmentTitle().toLowerCase() + "-" + assignment.getCourseId();
         Assignment createdAssignment = new Assignment();
+
         try {
             String folder = "uploaded-assignments";
             String publicId = folder + "/" + fileName;
-            Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
-            String url = data.get("url").toString();
 
-            System.out.println("URL is: " + url);
+            // Upload file to Cloudinary
+            Map<String, Object> data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+
+            // Retrieve the secure URL (HTTPS)
+            String secureUrl = data.get("secure_url").toString();
+
+            System.out.println("Secure URL is: " + secureUrl);
             Assignment finalAssignment = new Assignment();
             finalAssignment.setAssignmentTitle(assignment.getAssignmentTitle());
-            finalAssignment.setFile(url);
+            finalAssignment.setFile(secureUrl);
             finalAssignment.setDescription(assignment.getDescription());
             finalAssignment.setVisibility(true);
             finalAssignment.setCourseId(assignment.getCourseId());

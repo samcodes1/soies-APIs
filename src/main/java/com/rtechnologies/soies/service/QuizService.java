@@ -11,10 +11,8 @@ import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
 import java.time.LocalDate;
+import java.util.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -297,49 +295,57 @@ public class QuizService {
         }
     }
 
-    public QuizListResponse getQuizzesByCourseId(Long courseId, String studentRollNum) {
+    public QuizResponseDTO getQuizzesByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
-        QuizListResponse quizListResponse;
 
+        // Fetch quizzes for the course
         List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
         if (quizList.isEmpty()) {
             Utility.printDebugLogs("No quizzes found for course ID: " + courseId);
-            return QuizListResponse.builder()
+            return QuizResponseDTO.builder()
                     .quizList(new ArrayList<>())
                     .messageStatus("Success")
                     .build();
         }
 
-        List<Quiz> finalList = new ArrayList<>();
-
+        // Fetch quiz submissions by the student
         List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
-        finalList = quizList;
+
+        // Convert Quiz to QuizDTO
+        List<QuizDTO> quizResponseList = quizList.stream()
+                .map(this::convertToQuizDTO)  // Method to map Quiz to QuizDTO
+                .collect(Collectors.toList());
+
+        // Remove quizzes that have been submitted
         if (!quizSubmissions.isEmpty()) {
-            for (int i = 0; i < quizSubmissions.size(); i++) {
-                for (Quiz quiz : quizList) {
-                    if (Objects.equals(quiz.getQuizId(), quizSubmissions.get(i).getQuizId())) {
-                        finalList.remove(quiz);
-                        break;
-                    }
-                }
-            }
-            quizListResponse = QuizListResponse.builder()
-                    .quizList(finalList)
-                    .messageStatus("Success")
-                    .build();
-        } else {
-            quizListResponse = QuizListResponse.builder()
-                    .quizList(quizList)
-                    .messageStatus("Success")
-                    .build();
+            Set<Long> submittedQuizIds = quizSubmissions.stream()
+                    .map(QuizSubmission::getQuizId)
+                    .collect(Collectors.toSet());
+            quizResponseList.removeIf(quizDTO -> submittedQuizIds.contains(quizDTO.getQuizId()));
         }
 
-        Utility.printDebugLogs("Quiz list response: " + quizListResponse);
-        return quizListResponse;
-
+        // Build and return the response
+        return QuizResponseDTO.builder()
+                .quizList(quizResponseList)
+                .messageStatus("Success")
+                .build();
     }
 
+    private QuizDTO convertToQuizDTO(Quiz quiz) {
+        // Implement the conversion from Quiz to QuizDTO
+        return QuizDTO.builder()
+                .quizId(quiz.getQuizId())
+                .courseId(quiz.getCourseId())
+                .quizTitle(quiz.getQuizTitle())
+                .description(quiz.getDescription())
+                .dueDate(quiz.getDueDate())
+                .totalMarks(quiz.getTotalMarks())  // Ensure you have this field in your Quiz class
+                .time(quiz.getTime())
+                .visibility(quiz.isVisibility())
+                .term(quiz.getTerm())
+                .build();
+    }
     public QuizListResponse getQuizzesByCourseId(Long courseId) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         List<Quiz> quizList = quizRepository.findByCourseId(courseId);
@@ -357,7 +363,7 @@ public class QuizService {
                 .collect(Collectors.toList());
 
         QuizListResponse quizListResponse = QuizListResponse.builder()
-                .quizListResponse(quizResponses)
+                .quizList(quizResponses)
                 .messageStatus("Success")
                 .build();
 

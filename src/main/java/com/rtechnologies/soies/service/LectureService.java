@@ -60,8 +60,10 @@ public class LectureService {
                 //For file
                 String folder = "uploaded-lecture";
                 String publicId = folder + "/" + fileName;
-                Map<?, ?> data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
-                String url = data.get("url").toString();
+
+                // Upload file and get HTTPS URL
+                Map<String, Object> data = cloudinary.uploader().upload(lecture.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                String fileUrl = data.get("secure_url").toString();
 
                 System.out.println("Done 2");
                 String videoUrl = "";
@@ -71,13 +73,13 @@ public class LectureService {
                     fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId() + "-" + "video";
                     publicId = folder + "/" + fileName;
                     data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
-                    videoUrl = data.get("url").toString();
+                    videoUrl = data.get("secure_url").toString();
                 }
                 System.out.println("Done 3");
                 Lecture lecture1 = new Lecture();
 
                 lecture1.setLectureTitle(lecture.getLectureTitle());
-                lecture1.setPowerPointURL(url);
+                lecture1.setPowerPointURL(fileUrl);
                 lecture1.setDescription(lecture.getDescription());
                 lecture1.setVisible(true);
                 lecture1.setCourseId(lecture.getCourseId());

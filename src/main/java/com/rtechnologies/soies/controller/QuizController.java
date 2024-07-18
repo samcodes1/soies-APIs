@@ -118,9 +118,9 @@ public class QuizController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/getByCourse/{courseId}/{studentRollNumber}")
-    public ResponseEntity<QuizListResponse> getQuizzesByCourseIdAndStuRollNum(@PathVariable Long courseId,
+    public ResponseEntity<QuizResponseDTO> getQuizzesByCourseIdAndStuRollNum(@PathVariable Long courseId,
                                                                  @PathVariable String studentRollNumber) {
-        QuizListResponse response = quizService.getQuizzesByCourseId(courseId,studentRollNumber);
+        QuizResponseDTO response = quizService.getQuizzesByCourseId(courseId,studentRollNumber);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }

@@ -75,6 +75,10 @@ public class OgaService {
                     .totalMarks(createdOga.getTotalMarks())
                     .visibility(createdOga.isVisibility())
                     .ogaQuestions(ogaRequest.getOgaQuestions())
+                    .totalMarks(ogaRequest.getTotalMarks())
+                    .dueDate(ogaRequest.getDueDate())
+                    .term(ogaRequest.getTerm())
+                    .time(ogaRequest.getTime())
                     .messageStatus("Success")
                     .build();
 
@@ -123,7 +127,7 @@ public class OgaService {
 
             //Check for course
             Optional<Course> course = courseRepository.findById(ogaRequest.getCourseId());
-            if(course.isEmpty()) {
+            if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + ogaRequest.getCourseId());
                 throw new NotFoundException("No course found with ID: " + ogaRequest.getCourseId());
             }
@@ -140,6 +144,10 @@ public class OgaService {
                     .totalMarks(updatedOga.getTotalMarks())
                     .visibility(updatedOga.isVisibility())
                     .ogaQuestions(ogaRequest.getOgaQuestions())
+                    .time(ogaRequest.getTime())
+                    .dueDate(ogaRequest.getDueDate())
+                    .totalMarks(ogaRequest.getTotalMarks())
+                    .term(ogaRequest.getTerm())
                     .messageStatus("Success")
                     .build();
 
@@ -209,86 +217,86 @@ public class OgaService {
         Utility.printDebugLogs("Get OGA by ID: " + ogaId);
         OgaResponse ogaResponse;
 
-            Optional<Oga> optionalOga = ogaRepository.findById(ogaId);
+        Optional<Oga> optionalOga = ogaRepository.findById(ogaId);
 
-            if (optionalOga.isEmpty()) {
-                Utility.printDebugLogs("No OGA found with ID: " + ogaId);
-                throw new NotFoundException("No OGA found with ID: " + ogaId);
-            }
+        if (optionalOga.isEmpty()) {
+            Utility.printDebugLogs("No OGA found with ID: " + ogaId);
+            throw new NotFoundException("No OGA found with ID: " + ogaId);
+        }
 
-            Optional<Course> optionalCourse = courseRepository.findById(optionalOga.get().getCourseId());
-            if (optionalCourse.isEmpty()) {
-                Utility.printDebugLogs("No course found with ID: " + optionalOga.get().getCourseId());
-                throw new NotFoundException("No course found with ID: " + optionalOga.get().getCourseId());
-            }
+        Optional<Course> optionalCourse = courseRepository.findById(optionalOga.get().getCourseId());
+        if (optionalCourse.isEmpty()) {
+            Utility.printDebugLogs("No course found with ID: " + optionalOga.get().getCourseId());
+            throw new NotFoundException("No course found with ID: " + optionalOga.get().getCourseId());
+        }
 
-            Oga oga = optionalOga.get();
-            List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaId);
+        Oga oga = optionalOga.get();
+        List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaId);
 
-            ogaResponse = OgaResponse.builder()
-                    .ogaId(oga.getOgaId())
-                    .course(optionalCourse.get())
-                    .ogaTitle(oga.getOgaTitle())
-                    .description(oga.getDescription())
-                    .ogaQuestions(ogaQuestions)
-                    .dueDate(oga.getDueDate())
-                    .totalMarks(oga.getTotalMarks())
-                    .time(oga.getTime())
-                    .visibility(oga.isVisibility())
-                    .term(oga.getTerm())
-                    .messageStatus("Success")
-                    .build();
+        ogaResponse = OgaResponse.builder()
+                .ogaId(oga.getOgaId())
+                .course(optionalCourse.get())
+                .ogaTitle(oga.getOgaTitle())
+                .description(oga.getDescription())
+                .ogaQuestions(ogaQuestions)
+                .dueDate(oga.getDueDate())
+                .totalMarks(oga.getTotalMarks())
+                .time(oga.getTime())
+                .visibility(oga.isVisibility())
+                .term(oga.getTerm())
+                .messageStatus("Success")
+                .build();
 
-            Utility.printDebugLogs("OGA response: " + ogaResponse);
-            return ogaResponse;
-        
+        Utility.printDebugLogs("OGA response: " + ogaResponse);
+        return ogaResponse;
+
     }
 
     public OgaListResponse getOgasByCourseId(Long courseId, String studentRollNum) {
         Utility.printDebugLogs("Get OGAs by course ID: " + courseId);
         OgaListResponse ogaListResponse;
 
-            List<Oga> ogaList = ogaRepository.findByCourseId(courseId);
+        List<Oga> ogaList = ogaRepository.findByCourseId(courseId);
 
-            if (ogaList.isEmpty()) {
-                Utility.printDebugLogs("No OGAs found for course ID: " + courseId);
-                throw new NotFoundException("No OGAs found for course ID: " + courseId);
-            }
+        if (ogaList.isEmpty()) {
+            Utility.printDebugLogs("No OGAs found for course ID: " + courseId);
+            throw new NotFoundException("No OGAs found for course ID: " + courseId);
+        }
 
-            List<Oga> finalList = new ArrayList<>();
-            finalList = ogaList;
-            List<OgaSubmission> quizSubmissions = ogaSubmissionRepository.findByStudentRollNumber(studentRollNum);
+        List<Oga> finalList = new ArrayList<>();
+        finalList = ogaList;
+        List<OgaSubmission> quizSubmissions = ogaSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            if(!quizSubmissions.isEmpty()) {
-                for(int i =0; i<quizSubmissions.size(); i++){
-                    for(Oga oga : ogaList){
-                        if(Objects.equals(oga.getOgaId(), quizSubmissions.get(i).getOgaId())) {
-                            finalList.remove(oga);
-                            break;
-                        }
+        if (!quizSubmissions.isEmpty()) {
+            for (int i = 0; i < quizSubmissions.size(); i++) {
+                for (Oga oga : ogaList) {
+                    if (Objects.equals(oga.getOgaId(), quizSubmissions.get(i).getOgaId())) {
+                        finalList.remove(oga);
+                        break;
                     }
-
                 }
-                ogaListResponse = OgaListResponse.builder()
-                        .ogaList(finalList)
-                        .messageStatus("Success")
-                        .build();
-            } else {
-                ogaListResponse = OgaListResponse.builder()
-                        .ogaList(ogaList)
-                        .messageStatus("Success")
-                        .build();
-            }
 
-            Utility.printDebugLogs("OGA list response: " + ogaListResponse);
-            return ogaListResponse;
+            }
+            ogaListResponse = OgaListResponse.builder()
+                    .ogaList(finalList)
+                    .messageStatus("Success")
+                    .build();
+        } else {
+            ogaListResponse = OgaListResponse.builder()
+                    .ogaList(ogaList)
+                    .messageStatus("Success")
+                    .build();
+        }
+
+        Utility.printDebugLogs("OGA list response: " + ogaListResponse);
+        return ogaListResponse;
     }
 
-    public String submitOga(OgaSubmissionRequest ogaSubmissionRequest){
+    public String submitOga(OgaSubmissionRequest ogaSubmissionRequest) {
         OgaSubmission ogaSubmission = new OgaSubmission();
         List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaSubmissionRequest.getOgaId());
 
-        if(ogaQuestions.isEmpty()) {
+        if (ogaQuestions.isEmpty()) {
             throw new NotFoundException("No OGA found with ID: " + ogaSubmissionRequest.getOgaId());
         }
         ogaSubmission = mapToOgaSubmission(ogaSubmissionRequest);
@@ -296,17 +304,17 @@ public class OgaService {
 
 
         int totalMarks = ogaSubmission.getTotalMarks();
-        int perQuestionMark = totalMarks/ogaQuestions.size();
+        int perQuestionMark = totalMarks / ogaQuestions.size();
         int gainedMarks = 0;
 
         //Save answers to the DB
-        for(int i=0; i<ogaSubmissionRequest.getOgaQuestionList().size(); i++){
+        for (int i = 0; i < ogaSubmissionRequest.getOgaQuestionList().size(); i++) {
             boolean isCorrect = false;
 
-            if(ogaSubmissionRequest.getOgaQuestionList().
+            if (ogaSubmissionRequest.getOgaQuestionList().
                     get(i).getAnswer().equals(ogaQuestions.get(i).getAnswer())) {
-                gainedMarks+=perQuestionMark;
-                isCorrect=true;
+                gainedMarks += perQuestionMark;
+                isCorrect = true;
             }
 
             ogaStudentAnswerRepository.save(OgaStudentAnswer.builder().
@@ -315,10 +323,10 @@ public class OgaService {
                     .answer(ogaSubmissionRequest.getOgaQuestionList().
                             get(i).getAnswer())
                     .isCorrect(isCorrect)
-                    . build());
+                    .build());
         }
 
-        double percentage = (double) gainedMarks/totalMarks * 100;
+        double percentage = (double) gainedMarks / totalMarks * 100;
         ogaSubmission.setGainedMarks(gainedMarks);
         ogaSubmission.setPercentage(percentage);
 
@@ -327,10 +335,10 @@ public class OgaService {
         return "OGA submitted successfully";
     }
 
-    public OgaSubmissionListResponse getAllOgaSubmission(Long ogaId){
+    public OgaSubmissionListResponse getAllOgaSubmission(Long ogaId) {
         List<OgaSubmission> submittedOgas = ogaSubmissionRepository.findByOgaId(ogaId);
         OgaSubmissionListResponse ogaSubmissionListResponse = new OgaSubmissionListResponse();
-        if(submittedOgas.isEmpty()) {
+        if (submittedOgas.isEmpty()) {
             throw new NotFoundException("No Oga found with ID: " + ogaId);
         }
 
@@ -339,6 +347,7 @@ public class OgaService {
 
         return ogaSubmissionListResponse;
     }
+
     public static OgaSubmission mapToOgaSubmission(OgaSubmissionRequest submissionRequest) {
         return OgaSubmission.builder()
                 .ogaId(submissionRequest.getOgaId())
@@ -349,7 +358,7 @@ public class OgaService {
                 .build();
     }
 
-    public OgaResponse getPageListing(int page, int size){
+    public OgaResponse getPageListing(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Oga> ogapagination = ogaRepository.findAll(pageable);
@@ -359,7 +368,7 @@ public class OgaService {
         return response;
     }
 
-    public OgaResponse getAllOgaByCourseid(Long courseid, int page, int size){
+    public OgaResponse getAllOgaByCourseid(Long courseid, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Oga> ogaPage = ogaRepository.findByCourseId(courseid, pageable);
         OgaResponse ogaSubmissionListResponse = new OgaResponse();

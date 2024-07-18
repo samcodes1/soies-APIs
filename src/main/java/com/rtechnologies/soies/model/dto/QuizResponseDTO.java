@@ -11,7 +11,8 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QuizListResponse {
-    private List<QuizResponse> quizList;
+public class QuizResponseDTO {
+
+    private List<QuizDTO> quizList;
     private String messageStatus;
 }

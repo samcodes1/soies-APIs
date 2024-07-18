@@ -52,7 +52,7 @@ public class ExamService {
 
             //Check for course
             Optional<Course> course = courseRepository.findById(exam.getCourseId());
-            if(course.isEmpty()) {
+            if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + exam.getCourseId());
                 throw new NotFoundException("No course found with ID: " + exam.getCourseId());
             }
@@ -60,7 +60,7 @@ public class ExamService {
             Exam createExam = mapToQuiz(exam);
             Utility.printDebugLogs("Exam created successfully: " + createExam);
 
-            for(int i=0; i<exam.getExamQuestions().size(); i++){
+            for (int i = 0; i < exam.getExamQuestions().size(); i++) {
                 exam.getExamQuestions().get(i).setExamId(createExam.getExamId());
             }
 
@@ -73,6 +73,11 @@ public class ExamService {
                     .totalMarks(createExam.getTotalMarks())
                     .visibility(createExam.isVisibility())
                     .examQuestions(exam.getExamQuestions())
+                    .dueDate(exam.getDueDate())
+                    .totalMarks(exam.getTotalMarks())
+                    .time(exam.getTime())
+                    .visibility(exam.isVisibility())
+                    .description(exam.getDescription())
                     .messageStatus("Success")
                     .build();
 
@@ -116,6 +121,7 @@ public class ExamService {
                 .visibility(createExamRequest.isVisibility())
                 .build());
     }
+
     public ExamResponse updateExam(ExamRequest exam) {
         Utility.printDebugLogs("Exam update request: " + exam.toString());
         ExamResponse examResponse;
@@ -141,7 +147,7 @@ public class ExamService {
 
             Exam updatedExam = mapToQuiz(exam);
 
-            for(int i=0; i<exam.getExamQuestions().size(); i++){
+            for (int i = 0; i < exam.getExamQuestions().size(); i++) {
                 exam.getExamQuestions().get(i).setExamId(updatedExam.getExamId());
             }
 
@@ -156,6 +162,11 @@ public class ExamService {
                     .visibility(updatedExam.isVisibility())
                     .course(course.get())
                     .examQuestions(exam.getExamQuestions())
+                    .visibility(exam.isVisibility())
+                    .description(exam.getDescription())
+                    .time(exam.getTime())
+                    .totalMarks(exam.getTotalMarks())
+                    .dueDate(exam.getDueDate())
                     .messageStatus("Success")
                     .build();
 
@@ -223,10 +234,10 @@ public class ExamService {
             List<Exam> finalList = new ArrayList<>();
             List<ExamSubmission> quizSubmissions = examSubmissionRepository.findByStudentRollNumber(studentRollNum);
             finalList = examList;
-            if(!quizSubmissions.isEmpty()) {
-                for(int i =0; i<quizSubmissions.size(); i++){
-                    for(Exam exam: examList) {
-                        if(Objects.equals(exam.getExamId(), quizSubmissions.get(i).getExamId())) {
+            if (!quizSubmissions.isEmpty()) {
+                for (int i = 0; i < quizSubmissions.size(); i++) {
+                    for (Exam exam : examList) {
+                        if (Objects.equals(exam.getExamId(), quizSubmissions.get(i).getExamId())) {
                             finalList.remove(exam);
                             break;
                         }
@@ -287,6 +298,11 @@ public class ExamService {
                     .visibility(exam.isVisibility())
                     .course(course.get())
                     .examQuestions(examQuestions)
+                    .dueDate(exam.getDueDate())
+                    .visibility(exam.isVisibility())
+                    .description(exam.getDescription())
+                    .time(exam.getTime())
+                    .totalMarks(exam.getTotalMarks())
                     .messageStatus("Success")
                     .build();
 
@@ -309,7 +325,7 @@ public class ExamService {
         ExamSubmission examSubmission = new ExamSubmission();
         List<ExamQuestion> examQuestions = examQuestionRepository.findByExamId(examSubmissionRequest.getExamId());
 
-        if(examQuestions.isEmpty()) {
+        if (examQuestions.isEmpty()) {
             throw new NotFoundException("No Exam found with ID: " + examSubmissionRequest.getExamId());
         }
 
@@ -321,10 +337,10 @@ public class ExamService {
         int gainedMarks = 0;
 
         // Save answers to the DB
-        for(int i = 0; i < examSubmissionRequest.getExamQuestionList().size(); i++) {
+        for (int i = 0; i < examSubmissionRequest.getExamQuestionList().size(); i++) {
             boolean isCorrect = false;
 
-            if(examSubmissionRequest.getExamQuestionList()
+            if (examSubmissionRequest.getExamQuestionList()
                     .get(i).getAnswer().equals(examQuestions.get(i).getAnswer())) {
                 gainedMarks += perQuestionMark;
                 isCorrect = true;
@@ -351,7 +367,7 @@ public class ExamService {
     public ExamSubmissionListResponse getAllExamSubmission(Long examId) {
         List<ExamSubmission> submittedExams = examSubmissionRepository.findByExamId(examId);
         ExamSubmissionListResponse examSubmissionListResponse = new ExamSubmissionListResponse();
-        if(submittedExams.isEmpty()) {
+        if (submittedExams.isEmpty()) {
             throw new NotFoundException("No Exam found with ID: " + examId);
         }
 
@@ -365,7 +381,7 @@ public class ExamService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Exam> submittedExams = examRepository.findAll(pageable);
         ExamResponse examSubmissionListResponse = new ExamResponse();
-        if(submittedExams.isEmpty()) {
+        if (submittedExams.isEmpty()) {
             throw new NotFoundException("No Exam found with ID: ");
         }
 
