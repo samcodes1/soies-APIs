@@ -8,6 +8,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface StudentAttendanceRepository extends JpaRepository<StudentAttendance,Long > {
+public interface StudentAttendanceRepository extends JpaRepository<StudentAttendance, Long> {
     StudentAttendance findFirstByStudentRollNumAndDateOrderByLastLoginTimeDesc(String rollNumber, LocalDate now);
+
+    StudentAttendance findFirstByStudentRollNumOrderByDateDesc(String rollNumber);
+
 }

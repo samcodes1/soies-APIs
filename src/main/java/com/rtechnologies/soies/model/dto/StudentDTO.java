@@ -1,28 +1,19 @@
-package com.rtechnologies.soies.model;
+package com.rtechnologies.soies.model.dto;
 
-import com.rtechnologies.soies.model.association.StudentAttendance;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import java.time.LocalTime;
 
-@Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(uniqueConstraints={@UniqueConstraint(columnNames={"roll_number"})})
-public class Student {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class StudentDTO {
     private Long studentId;
-
-    @Column(name = "roll_number")
     private String rollNumber;
-    private String password;
     private String studentName;
     private String gender;
     private String campusName;
@@ -34,7 +25,5 @@ public class Student {
     private String guardianEmail;
     private String address;
     private String city;
-
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private StudentAttendance studentAttendance;
+    private LocalTime lastLoginTime;
 }

@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StudentListResponse {
    private List<Student> studentList;
-   private Page<Student> studentPage;
+    private List<StudentDTO> students;
+
+    private Page<Student> studentPage;
    private String messageStatus;
 }

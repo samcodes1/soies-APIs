@@ -1,8 +1,11 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Student;
+import com.rtechnologies.soies.model.association.StudentAttendance;
+import com.rtechnologies.soies.model.dto.StudentDTO;
 import com.rtechnologies.soies.model.dto.StudentListResponse;
 import com.rtechnologies.soies.model.dto.StudentResponse;
+import com.rtechnologies.soies.repository.StudentAttendanceRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -28,6 +32,9 @@ public class StudentService {
 
     @Autowired
     private ExcelParser excelParser;
+
+    @Autowired
+    StudentAttendanceRepository attendanceRepository;
 
     public StudentResponse createStudent(Student student) {
         Utility.printDebugLogs("Student creation request: " + student.toString());
@@ -225,9 +232,9 @@ public class StudentService {
                 // throw new IllegalArgumentException("No students found for campus: " + campusName);
                 List<Student> emptyList = new ArrayList<>();
                 studentListResponse = StudentListResponse.builder()
-                    .studentList(emptyList)
-                    .messageStatus("Success")
-                    .build();
+                        .studentList(emptyList)
+                        .messageStatus("Success")
+                        .build();
                 return studentListResponse;
             }
 
@@ -251,44 +258,56 @@ public class StudentService {
         }
     }
 
+
     public StudentListResponse getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section, int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
         StudentListResponse studentListResponse;
 
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<Student> studentPage = null;
-            if(course==null && grade ==null && section==null){
-                studentPage = studentRepository.findbycampus(campusName, pageable);
-            }
-            else if(course!=null && grade ==null && section==null){
+            Page<Student> studentPage;
+
+            if (course == null && grade == null && section == null) {
+                studentPage = studentRepository.findbycampusStudent(campusName, pageable);
+            } else if (course != null && grade == null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourse(campusName, course, pageable);
-            }
-            else if(course!=null && grade !=null && section==null){
+            } else if (course != null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourseAndGrade(campusName, course, grade, pageable);
-            }
-            else if(course!=null && grade !=null && section!=null){
+            } else if (course != null && grade != null && section != null) {
                 studentPage = studentRepository.findbycampusAndCourseAndGradeAndSection(campusName, course, grade, section, pageable);
-            }
-            else if(course==null && grade !=null && section!=null){
+            } else if (course == null && grade != null && section != null) {
                 studentPage = studentRepository.findbycampusAndGradeAndSection(campusName, grade, section, pageable);
-            }
-            else if(course==null && grade ==null && section!=null){
+            } else if (course == null && grade == null && section != null) {
                 studentPage = studentRepository.findbycampusAndSection(campusName, section, pageable);
-            }
-            else if(course==null && grade !=null && section==null){
+            } else if (course == null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndGrade(campusName, grade, pageable);
-            }
-            else{
+            } else {
                 studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
             }
 
-            // if (studentPage.isEmpty()) {
-            //     throw new IllegalArgumentException("No students found");
-            // }
+            List<StudentDTO> studentDTOList = studentPage.getContent().stream().map(student -> {
+                StudentAttendance attendance = attendanceRepository.findFirstByStudentRollNumOrderByDateDesc(student.getRollNumber());
+                StudentDTO studentDTO = StudentDTO.builder()
+                        .studentId(student.getStudentId())
+                        .rollNumber(student.getRollNumber())
+                        .studentName(student.getStudentName())
+                        .gender(student.getGender())
+                        .campusName(student.getCampusName())
+                        .grade(student.getGrade())
+                        .sectionName(student.getSectionName())
+                        .dateOfBirth(student.getDateOfBirth())
+                        .guardianName(student.getGuardianName())
+                        .guardianPhoneNumber(student.getGuardianPhoneNumber())
+                        .guardianEmail(student.getGuardianEmail())
+                        .address(student.getAddress())
+                        .city(student.getCity())
+                        .lastLoginTime(attendance != null ? attendance.getLastLoginTime() : null)
+                        .build();
+                return studentDTO;
+            }).collect(Collectors.toList());
 
             studentListResponse = StudentListResponse.builder()
-                    .studentPage(studentPage)
+                    .students(studentDTOList)
                     .messageStatus("Success")
                     .build();
 
@@ -306,6 +325,7 @@ public class StudentService {
                     .build();
         }
     }
+
 
     public StudentListResponse getAllStudents(int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
@@ -338,10 +358,11 @@ public class StudentService {
                     .build();
         }
     }
+
     @Transactional
-     public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
+    public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
         List<Student> students = null;
-        if(Utility.isCSV(file)){
+        if (Utility.isCSV(file)) {
             // System.out.println();
             students = excelParser.csvParserStudent(file);
             List<Student> duplicates = new ArrayList<>();
@@ -354,22 +375,22 @@ public class StudentService {
                     newStudents.add(student);
                 }
             }
-    
+
             // Save new students
             studentRepository.saveAll(newStudents);
             // studentRepository.saveAll(students);
             StudentListResponse studentListResponse = StudentListResponse.builder()
-                        .studentList(duplicates)
-                        .messageStatus("Success")
-                        .build();
+                    .studentList(duplicates)
+                    .messageStatus("Success")
+                    .build();
             return studentListResponse;
-        }else if(Utility.isExcel(file)){
+        } else if (Utility.isExcel(file)) {
             students = excelParser.parseStudentExcelFile(file.getInputStream());
             studentRepository.saveAll(students);
             StudentListResponse studentListResponse = StudentListResponse.builder()
-                        .studentList(null)
-                        .messageStatus("Success")
-                        .build();
+                    .studentList(null)
+                    .messageStatus("Success")
+                    .build();
             return studentListResponse;
         }
         throw new IllegalArgumentException("Wrong file received!");
