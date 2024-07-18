@@ -20,6 +20,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TeacherListResponse {
     private List<Teacher> teacherList;
+    private List<TeacherDTO> teacherCompleteList;
     List<TeacherProjection> teacherJoinData;
     Page<TeacherProjection> teacherJoinDataPage;
     private String messageStatus;

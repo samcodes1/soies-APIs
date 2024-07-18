@@ -1,9 +1,13 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.association.TeacherCourse;
 import com.rtechnologies.soies.model.association.TeacherSection;
 import com.rtechnologies.soies.model.dto.*;
+import com.rtechnologies.soies.repository.CourseRepository;
+import com.rtechnologies.soies.repository.TeacherCourseRepository;
 import com.rtechnologies.soies.repository.TeacherRepository;
 import com.rtechnologies.soies.repository.TeacherSectionRepository;
 import com.rtechnologies.soies.utilities.Utility;
@@ -22,7 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -36,20 +42,26 @@ public class TeacherService {
     private TeacherSectionRepository teacherSectionRepository;
 
     @Autowired
+    private TeacherCourseRepository teacherCourseRepository;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Autowired
     private ExcelParser excelParser;
 
     public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
-        Utility.printDebugLogs("Teacher creation request: "+teacher.toString());
-        System.out.println("Teacher creation request: "+teacher.toString());
+        Utility.printDebugLogs("Teacher creation request: " + teacher.toString());
+        System.out.println("Teacher creation request: " + teacher.toString());
         TeacherResponse teacherResponse = null;
         try {
             if (teacher == null) {
-                Utility.printDebugLogs("Teacher object is null: "+ teacher.toString());
+                Utility.printDebugLogs("Teacher object is null: " + teacher.toString());
                 throw new IllegalArgumentException("Corrupt data receive");
             }
 
             Optional<Teacher> teacherOptional = teacherRepository.findByEmail(teacher.getEmail());
-            if(teacherOptional.isPresent()) {
+            if (teacherOptional.isPresent()) {
                 Utility.printErrorLogs("Teacher already exists with following email: "
                         + teacher.getEmail());
                 throw new IllegalArgumentException("Account already exists");
@@ -64,7 +76,7 @@ public class TeacherService {
             Teacher savingTeacher = mapToTeacher(teacher);
             // Save the teacher with the hashed password
             Teacher savedTeacher = teacherRepository.save(savingTeacher);
-            Utility.printDebugLogs("Saved teacher: "+ savedTeacher.toString());
+            Utility.printDebugLogs("Saved teacher: " + savedTeacher.toString());
 
 
             // for(TeacherSection teacherSection : teacher.getTeacherSectionList()) {
@@ -79,7 +91,7 @@ public class TeacherService {
 
             teacherSectionRepository.saveAll(teacher.getTeacherSectionList());
 
-             teacherResponse = TeacherResponse.builder()
+            teacherResponse = TeacherResponse.builder()
                     .teacherId(savedTeacher.getTeacherId())
                     .campusName(savedTeacher.getCampusName())
                     .employeeName(savedTeacher.getEmployeeName())
@@ -91,14 +103,14 @@ public class TeacherService {
                     .address(savedTeacher.getAddress())
                     .messageStatus("Success").build();
 
-            Utility.printDebugLogs("Teacher Response: "+ teacherResponse.toString());
+            Utility.printDebugLogs("Teacher Response: " + teacherResponse.toString());
             return teacherResponse;
 
         } catch (Exception e) {
-            Utility.printErrorLogs("Error: "+ e);
-             teacherResponse = TeacherResponse.builder()
+            Utility.printErrorLogs("Error: " + e);
+            teacherResponse = TeacherResponse.builder()
                     .messageStatus("Failure").build();
-            Utility.printErrorLogs("Teacher Response: "+ teacherResponse);
+            Utility.printErrorLogs("Teacher Response: " + teacherResponse);
             return teacherResponse;
         }
     }
@@ -205,7 +217,7 @@ public class TeacherService {
             Utility.printDebugLogs("Teacher updated successfully. Response: " + teacherResponse.toString());
             return teacherResponse;
 
-        }  catch (NotFoundException e) {
+        } catch (NotFoundException e) {
             Utility.printErrorLogs("Error updating teacher: " + e.getMessage());
             teacherResponse = TeacherResponse.builder()
                     .messageStatus(e.toString())
@@ -251,7 +263,7 @@ public class TeacherService {
 //        }
 //    }
 
-    public TeacherListResponse getAllTeachersByCampusName(String campusName,int page, int size) {
+    public TeacherListResponse getAllTeachersByCampusName(String campusName, int page, int size) {
         Utility.printDebugLogs("Get all teachers by campusName request: " + campusName);
         TeacherListResponse teacherListResponse = new TeacherListResponse();
 
@@ -267,7 +279,7 @@ public class TeacherService {
             Pageable pageable = PageRequest.of(page, size);
             List<Teacher> teachers = teacherRepository.findByCampusNamePage(campusName, pageable);
 
-            if(teachers.isEmpty() || teachers.size() < 0) {
+            if (teachers.isEmpty() || teachers.size() < 0) {
                 Utility.printErrorLogs("No record found of teachers for campus name: " + campusName);
                 teacherListResponse.setMessageStatus("Failure");
                 return teacherListResponse;
@@ -276,8 +288,8 @@ public class TeacherService {
             Utility.printDebugLogs("Teachers record " + teachers + " by campusName: " + campusName);
 
             teacherListResponse = TeacherListResponse.builder()
-                                    .teacherList(teachers)
-                                    .messageStatus("Success").build();
+                    .teacherList(teachers)
+                    .messageStatus("Success").build();
 
             Utility.printDebugLogs("Teacher list response " + teacherListResponse + " by campusName: " + campusName);
             return teacherListResponse;
@@ -296,31 +308,60 @@ public class TeacherService {
 
 
     public TeacherListResponse getAllTeachers(int page, int size) {
-        Utility.printDebugLogs("Get all teachers request");
-        TeacherListResponse teacherListResponse = null;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Teacher> teachersPage = teacherRepository.findAll(pageable);
+        List<Teacher> teachers = teachersPage.getContent();
 
-        try {
-            // Fetch all teachers
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Teacher> teachersPage = teacherRepository.findAll(pageable);
-            if (teachersPage.isEmpty()) {
-                throw new IllegalArgumentException("No teacher found");
-            }
-            teacherListResponse = TeacherListResponse.builder()
-                                    .teacherList(teachersPage.getContent())
-                                    .messageStatus("Success").build();
+        Map<Long, List<TeacherSection>> teacherSectionsMap = fetchTeacherSectionsMap();
+        Map<Long, List<Course>> teacherCoursesMap = fetchTeacherCoursesMap();
 
-            Utility.printDebugLogs("Fetched teachers "+teacherListResponse);
-            return teacherListResponse;
+        List<TeacherDTO> teacherDTOs = teachers.stream()
+                .map(teacher -> mapToTeacherDTO(teacher, teacherSectionsMap.get(teacher.getTeacherId()), teacherCoursesMap.get(teacher.getTeacherId())))
+                .collect(Collectors.toList());
 
-        } catch (Exception e) {
-            Utility.printErrorLogs("Unexpected error fetching all teachers: " + e.getMessage());
-            teacherListResponse = TeacherListResponse.builder()
-                    .messageStatus("Failure").build();
-            return teacherListResponse;
-        }
+        return TeacherListResponse.builder()
+                .teacherCompleteList(teacherDTOs)
+                .messageStatus("Success")
+                .build();
     }
 
+    private TeacherDTO mapToTeacherDTO(Teacher teacher, List<TeacherSection> sections, List<Course> courses) {
+        return TeacherDTO.builder()
+                .teacherId(teacher.getTeacherId())
+                .campusName(teacher.getCampusName())
+                .employeeName(teacher.getEmployeeName())
+                .email(teacher.getEmail())
+                .grade(teacher.getGrade())
+                .address(teacher.getAddress())
+                .dateOfBirth(teacher.getDateOfBirth())
+                .phoneNumber(teacher.getPhoneNumber())
+                .gender(teacher.getGender())
+                .joiningDate(teacher.getJoiningDate())
+                .userName(teacher.getUserName())
+                .sections(sections != null ? sections.stream()
+                        .map(TeacherSection::getSection)
+                        .collect(Collectors.toList()) : null)
+                .courses(courses != null ? courses.stream()
+                        .map(Course::getCourseName)
+                        .collect(Collectors.toList()) : null)
+                .build();
+    }
+
+    private Map<Long, List<TeacherSection>> fetchTeacherSectionsMap() {
+        return teacherSectionRepository.findAll().stream()
+                .collect(Collectors.groupingBy(TeacherSection::getTeacherId));
+    }
+
+    private Map<Long, List<Course>> fetchTeacherCoursesMap() {
+        List<TeacherCourse> allTeacherCourses = teacherCourseRepository.findAll();
+        List<Course> allCourses = courseRepository.findAll();
+        Map<Long, Course> courseMap = allCourses.stream()
+                .collect(Collectors.toMap(Course::getCourseId, course -> course));
+
+        return allTeacherCourses.stream()
+                .collect(Collectors.groupingBy(TeacherCourse::getTeacherId,
+                        Collectors.mapping(tc -> courseMap.get(tc.getCourseId()), Collectors.toList())));
+    }
 
     public TeacherWithSectionResponse getTeacherByEmail(String email) {
         Utility.printDebugLogs("Get teacher by Email request: " + email);
@@ -329,7 +370,7 @@ public class TeacherService {
         try {
             // Validate teacherId
             if (email == null || email.isEmpty()) {
-                Utility.printErrorLogs("Invalid teacher Email for fetching teacher: "+email);
+                Utility.printErrorLogs("Invalid teacher Email for fetching teacher: " + email);
                 teacherResponse.setMessageStatus("Failure");
                 return teacherResponse;
             }
@@ -384,7 +425,7 @@ public class TeacherService {
         }
 
         List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(teacherId);
-        if(teacherSections.isEmpty()) {
+        if (teacherSections.isEmpty()) {
             Utility.printDebugLogs("No sections allocated to teacher");
             teacherResponse.setMessageStatus("No sections allocated to teacher");
             return teacherResponse;
@@ -400,31 +441,24 @@ public class TeacherService {
         TeacherListResponse teacherResponse = new TeacherListResponse();
         // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
-        Page<TeacherProjection> listTeacher = null; 
-        if( courseName==null && grade==null && section==null ){
+        Page<TeacherProjection> listTeacher = null;
+        if (courseName == null && grade == null && section == null) {
             listTeacher = teacherRepository.findByCampusName(campusName, pageable);
-        }else if( courseName==null && grade==null && section!=null ){
+        } else if (courseName == null && grade == null && section != null) {
             listTeacher = teacherRepository.findByCampusNamesection(campusName, section, pageable);
-        }else if( courseName!=null && grade==null && section==null ){
-            listTeacher = teacherRepository.findByCampusNameCourse( campusName, courseName, pageable);
-        }
-        else if( courseName==null && grade!=null && section==null ){
-            listTeacher = teacherRepository.findByCampusNameGrade( campusName, grade, pageable);
-        }
-        else if( courseName==null && grade!=null && section!=null )
-        {
+        } else if (courseName != null && grade == null && section == null) {
+            listTeacher = teacherRepository.findByCampusNameCourse(campusName, courseName, pageable);
+        } else if (courseName == null && grade != null && section == null) {
+            listTeacher = teacherRepository.findByCampusNameGrade(campusName, grade, pageable);
+        } else if (courseName == null && grade != null && section != null) {
             listTeacher = teacherRepository.findByCampusNamesectionOrGrade(campusName, section, grade, pageable);
-        }
-        else if ( courseName!=null && grade==null && section!=null ){
+        } else if (courseName != null && grade == null && section != null) {
             listTeacher = teacherRepository.findByCampusNameCourseAndSection(campusName, courseName, section, pageable);
-        }
-        else if( courseName!=null && grade!=null && section==null ){
+        } else if (courseName != null && grade != null && section == null) {
             listTeacher = teacherRepository.findByCampusNameCourseAndGrade(campusName, courseName, grade, pageable);
+        } else {
+            listTeacher = teacherRepository.findByCampusNameCourseGradeSection(campusName, section, courseName, grade, pageable);
         }
-        else{
-            listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
-        }
-
 
 
         // List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
@@ -453,7 +487,7 @@ public class TeacherService {
             List<Teacher> teachers;
             try {
                 teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
-                System.out.println("TEACHERDATA:>> "+teachers.toString());
+                System.out.println("TEACHERDATA:>> " + teachers.toString());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -462,20 +496,20 @@ public class TeacherService {
 
         Thread thread = new Thread(runnable);
         thread.start(); // Start the thread
-        
-            TeacherResponse teacherListResponse = TeacherResponse.builder()
-                         .teacherId(null)
-                         .campusName(null)
-                         .employeeName(null)
-                         .email(null)
-                         .dateOfBirth(null)
-                         .gender(null)
-                         .joiningDate(null)
-                         .phoneNumber(null)
-                         .address(null)
-                        .messageStatus("Success")
-                        .build();
-            return teacherListResponse;
+
+        TeacherResponse teacherListResponse = TeacherResponse.builder()
+                .teacherId(null)
+                .campusName(null)
+                .employeeName(null)
+                .email(null)
+                .dateOfBirth(null)
+                .gender(null)
+                .joiningDate(null)
+                .phoneNumber(null)
+                .address(null)
+                .messageStatus("Success")
+                .build();
+        return teacherListResponse;
 
         // if(Utility.isCSV(file)){
 
