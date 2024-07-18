@@ -15,5 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class QuizListResponse {
     private List<Quiz> quizList;
+    private List<QuizResponse> quizListResponse;
+
     private String messageStatus;
 }

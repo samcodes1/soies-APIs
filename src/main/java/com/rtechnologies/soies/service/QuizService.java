@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
@@ -117,54 +118,56 @@ public class QuizService {
                 .build());
     }
 
-    public QuizResponse updateQuiz(QuizRequest quiz) {
-        Utility.printDebugLogs("Quiz update request: " + quiz.toString());
-        QuizResponse quizResponse;
+    public QuizResponse updateQuiz(QuizRequest quizRequest) {
+        Utility.printDebugLogs("Quiz update request: " + quizRequest.toString());
+
+        if (quizRequest == null) {
+            return QuizResponse.builder()
+                    .messageStatus("Corrupt data received")
+                    .build();
+        }
 
         try {
-            if (quiz == null) {
-                throw new IllegalArgumentException("Corrupt data received");
+            // Check for existing quiz
+            Optional<Quiz> existingQuizOptional = quizRepository.findById(quizRequest.getQuizId());
+            if (existingQuizOptional.isEmpty()) {
+                return QuizResponse.builder()
+                        .messageStatus("No Quiz found with ID: " + quizRequest.getQuizId())
+                        .build();
             }
 
-            // Check for quiz
-            Optional<Quiz> existingQuiz = quizRepository.findById(quiz.getQuizId());
-            if (existingQuiz.isEmpty()) {
-                throw new NotFoundException("No Quiz found with ID: " + quiz.getQuizId());
+            // Check for existing course
+            Optional<Course> courseOptional = courseRepository.findById(quizRequest.getCourseId());
+            if (courseOptional.isEmpty()) {
+                Utility.printDebugLogs("No course found with ID: " + quizRequest.getCourseId());
+                return QuizResponse.builder()
+                        .messageStatus("No course found with ID: " + quizRequest.getCourseId())
+                        .build();
             }
 
-            //Check for course
-            Optional<Course> course = courseRepository.findById(quiz.getCourseId());
-            if (course.isEmpty()) {
-                Utility.printDebugLogs("No course found with ID: " + quiz.getCourseId());
-                throw new NotFoundException("No course found with ID: " + quiz.getCourseId());
+            // Update the quiz
+            Quiz updatedQuiz = mapToQuiz(quizRequest);
+            updatedQuiz.setQuizId(existingQuizOptional.get().getQuizId()); // Retain the original quiz ID
+            quizRepository.save(updatedQuiz);
+
+            // Update the quiz questions
+            for (QuizQuestion question : quizRequest.getQuizQuestions()) {
+                question.setQuizId(updatedQuiz.getQuizId());
             }
+            quizQuestionRepository.saveAll(quizRequest.getQuizQuestions());
 
-            Quiz createdQuiz = mapToQuiz(quiz);
-            Utility.printDebugLogs("Quiz created successfully: " + createdQuiz);
-
-            for (int i = 0; i < quiz.getQuizQuestions().size(); i++) {
-                quiz.getQuizQuestions().get(i).setQuizId(createdQuiz.getQuizId());
-            }
-
-            quizQuestionRepository.saveAll(quiz.getQuizQuestions());
-
-            quizResponse = QuizResponse.builder()
-                    .quizId(createdQuiz.getQuizId())
-                    .quizTitle(createdQuiz.getQuizTitle())
-                    .description(createdQuiz.getDescription())
-                    .totalMarks(createdQuiz.getTotalMarks())
-                    .visibility(createdQuiz.isVisibility())
-                    .quizQuestions(quiz.getQuizQuestions())
+            QuizResponse quizResponse = QuizResponse.builder()
+                    .quizId(updatedQuiz.getQuizId())
+                    .quizTitle(updatedQuiz.getQuizTitle())
+                    .description(updatedQuiz.getDescription())
+                    .totalMarks(updatedQuiz.getTotalMarks())
+                    .visibility(updatedQuiz.isVisibility())
+                    .quizQuestions(quizRequest.getQuizQuestions())
                     .messageStatus("Success")
                     .build();
 
             Utility.printDebugLogs("Quiz update response: " + quizResponse);
             return quizResponse;
-        } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
-            return QuizResponse.builder()
-                    .messageStatus(e.toString())
-                    .build();
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
             return QuizResponse.builder()
@@ -172,6 +175,7 @@ public class QuizService {
                     .build();
         }
     }
+
 
     public QuizResponse deleteQuiz(Long quizId) {
         Utility.printDebugLogs("Quiz deletion request: " + quizId);
@@ -338,8 +342,6 @@ public class QuizService {
 
     public QuizListResponse getQuizzesByCourseId(Long courseId) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
-        QuizListResponse quizListResponse;
-
         List<Quiz> quizList = quizRepository.findByCourseId(courseId);
 
         if (quizList.isEmpty()) {
@@ -350,13 +352,31 @@ public class QuizService {
                     .build();
         }
 
-        quizListResponse = QuizListResponse.builder()
-                .quizList(quizList)
+        List<QuizResponse> quizResponses = quizList.stream()
+                .map(this::mapToQuizResponse)
+                .collect(Collectors.toList());
+
+        QuizListResponse quizListResponse = QuizListResponse.builder()
+                .quizListResponse(quizResponses)
                 .messageStatus("Success")
                 .build();
 
         Utility.printDebugLogs("Quiz list response: " + quizListResponse);
         return quizListResponse;
+    }
+
+    private QuizResponse mapToQuizResponse(Quiz quiz) {
+        List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quiz.getQuizId());
+
+        return QuizResponse.builder()
+                .quizId(quiz.getQuizId())
+                .quizTitle(quiz.getQuizTitle())
+                .description(quiz.getDescription())
+                .totalMarks(quiz.getTotalMarks())
+                .visibility(quiz.isVisibility())
+                .quizQuestions(quizQuestions)
+                .messageStatus("Success")
+                .build();
     }
 
     //Quiz submission APIs
