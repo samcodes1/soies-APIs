@@ -141,29 +141,41 @@ public class LectureService {
 
             Lecture existingLecture = optionalLecture.get();
 
-            // Update PowerPoint URL
-            String folder = "uploaded-lecture";
-            String publicId = folder + "/" + fileName;
-            Map<?, ?> data = cloudinary.uploader().upload(lecture.getPowerPointURL().getBytes(), ObjectUtils.asMap("public_id", publicId));
-            String powerPointUrl = data.get("url").toString();
+            // Update PowerPoint URL if provided
+            String powerPointUrl = existingLecture.getPowerPointURL();  // Default to existing value
+            if (lecture.getPowerPointURL() != null && !lecture.getPowerPointURL().isEmpty()) {
+                String folder = "uploaded-lecture";
+                String publicId = folder + "/" + fileName;
+                Map<?, ?> data = cloudinary.uploader().upload(lecture.getPowerPointURL().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                powerPointUrl = data.get("url").toString();
+            }
 
             // Update video URL if provided
             String videoUrl = existingLecture.getVideoURL();  // Default to existing value
-            if (lecture.getVideoURL() != null) {
+            if (lecture.getVideoURL() != null && !lecture.getVideoURL().isEmpty()) {
                 fileName = lecture.getLectureTitle().toLowerCase() + "-" + lecture.getCourseId() + "-" + "video";
-                publicId = folder + "/" + fileName;
-                data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
+                String folder = "uploaded-lecture";
+                String publicId = folder + "/" + fileName;
+                Map<?, ?> data = cloudinary.uploader().upload(lecture.getVideoURL().getBytes(), ObjectUtils.asMap("resource_type", "video", "public_id", publicId));
                 videoUrl = data.get("url").toString();
             }
 
-            // Save the updated lecture
-            existingLecture.setLectureTitle(lecture.getLectureTitle());
-            existingLecture.setDescription(lecture.getDescription());
+            // Update the lecture entity with provided fields
+            if (lecture.getLectureTitle() != null) {
+                existingLecture.setLectureTitle(lecture.getLectureTitle());
+            }
+            if (lecture.getDescription() != null) {
+                existingLecture.setDescription(lecture.getDescription());
+            }
+            if (lecture.getTotalViews() != 0) { // Assuming 0 is not a valid update value
+                existingLecture.setTotalViews(lecture.getTotalViews());
+            }
+            if (lecture.getPublishDate() != null) {
+                existingLecture.setPublishDate(lecture.getPublishDate());
+            }
+            existingLecture.setVisible(lecture.isVisible());
             existingLecture.setVideoURL(videoUrl);
             existingLecture.setPowerPointURL(powerPointUrl);
-            existingLecture.setTotalViews(lecture.getTotalViews());
-            existingLecture.setVisible(lecture.isVisible());
-            existingLecture.setPublishDate(lecture.getPublishDate());
 
             Lecture updatedLecture = lectureRepository.save(existingLecture);
             Utility.printDebugLogs("Lecture updated successfully: " + updatedLecture);
