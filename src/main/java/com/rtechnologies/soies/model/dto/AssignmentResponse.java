@@ -20,7 +20,7 @@ public class AssignmentResponse {
     private Teacher teacher;
     private String assignmentTitle;
     private String description;
-    private MultipartFile file;
+    private String file;
     private String dueDate;
     private String section;
     private int totalMarks;

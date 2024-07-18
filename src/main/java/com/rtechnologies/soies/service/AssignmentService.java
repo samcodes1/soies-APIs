@@ -116,6 +116,7 @@ public class AssignmentService {
         return assignmentResponse;
     }
 
+    @Transactional
     public AssignmentResponse updateAssignment(AssignmentRequest assignment) {
         Utility.printDebugLogs("Assignment update request: " + assignment.toString());
         AssignmentResponse assignmentResponse;
@@ -152,7 +153,7 @@ public class AssignmentService {
                 if (assignment.getFile() != null && !assignment.getFile().isEmpty()) {
                     String folder = "uploaded-assignments";
                     String publicId = folder + "/" + fileName;
-                    Map data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
+                    Map<?, ?> data = cloudinary.uploader().upload(assignment.getFile().getBytes(), ObjectUtils.asMap("public_id", publicId));
                     fileUrl = data.get("url").toString();
                 }
             } catch (IOException ioException) {
@@ -193,7 +194,7 @@ public class AssignmentService {
                     .teacher(teacherOptional.get())
                     .assignmentTitle(updatedAssignment.getAssignmentTitle())
                     .description(updatedAssignment.getDescription())
-                    .file(updatedAssignment.getFile())
+                    .file(fileUrl) // Provide the file URL
                     .dueDate(updatedAssignment.getDueDate())
                     .totalMarks(updatedAssignment.getTotalMarks())
                     .visibility(updatedAssignment.isVisibility())
