@@ -1,20 +1,16 @@
-package com.rtechnologies.soies.model;
+package com.rtechnologies.soies.model.dto;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
-
-@Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class OgaQuestion {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class OgaQuestionRequest {
     private Long id;
     private Long ogaId;
     private String question;
@@ -23,6 +19,5 @@ public class OgaQuestion {
     private String optionThree;
     private String optionFour;
     private String answer;
-
 
 }

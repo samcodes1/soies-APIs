@@ -86,8 +86,8 @@ public class StudentController {
     @GetMapping("/get-all-students-by-campus/{campusName}")
     public ResponseEntity<StudentListResponse> getAllStudentsByCampusName(
             @PathVariable String campusName,
-            @RequestParam(required=false, defaultValue = "0", name = "page") Integer page,
-            @RequestParam(required=false, defaultValue = "10", name = "size") Integer size
+            @RequestParam(required = false, defaultValue = "0", name = "page") Integer page,
+            @RequestParam(required = false, defaultValue = "10", name = "size") Integer size
     ) {
         StudentListResponse studentListResponse = studentService.getAllStudentsByCampusName(campusName, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
@@ -105,7 +105,7 @@ public class StudentController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        StudentListResponse studentListResponse = studentService.getAllStudents(page, size);
+        StudentListResponse studentListResponse = studentService.getAllStudentsWithPagination(page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }
@@ -118,12 +118,12 @@ public class StudentController {
     })
     @GetMapping("/get-students/{campusName}")
     public ResponseEntity<StudentListResponse> getAllStudentsByGradeCourseSection(
-        @PathVariable String campusName,
-        @RequestParam(required = false) String course,
-        @RequestParam(required = false) String grade,
-        @RequestParam(required = false) String section,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @PathVariable String campusName,
+            @RequestParam(required = false) String course,
+            @RequestParam(required = false) String grade,
+            @RequestParam(required = false) String section,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         StudentListResponse studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
@@ -136,5 +136,5 @@ public class StudentController {
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }
-    
+
 }

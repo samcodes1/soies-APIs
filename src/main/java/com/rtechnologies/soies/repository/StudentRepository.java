@@ -18,6 +18,9 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByRollNumber(String rollNum);
 
+    @Query("SELECT s FROM Student s LEFT JOIN FETCH s.studentAttendance WHERE s.rollNumber = :rollNumber")
+    Optional<Student> findByRollnumber(@Param("rollNumber") String rollNumber);
+
     void deleteByRollNumber(String rollNum);
 
     Page<Student> findAllByCampusName(String campusName, Pageable pageable);

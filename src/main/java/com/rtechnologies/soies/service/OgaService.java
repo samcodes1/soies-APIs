@@ -75,10 +75,6 @@ public class OgaService {
                     .totalMarks(createdOga.getTotalMarks())
                     .visibility(createdOga.isVisibility())
                     .ogaQuestions(ogaRequest.getOgaQuestions())
-                    .totalMarks(ogaRequest.getTotalMarks())
-                    .dueDate(ogaRequest.getDueDate())
-                    .term(ogaRequest.getTerm())
-                    .time(ogaRequest.getTime())
                     .messageStatus("Success")
                     .build();
 
@@ -125,29 +121,76 @@ public class OgaService {
                 throw new NotFoundException("No OGA found with ID: " + ogaRequest.getOgaId());
             }
 
-            //Check for course
+            // Check for course
             Optional<Course> course = courseRepository.findById(ogaRequest.getCourseId());
             if (course.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + ogaRequest.getCourseId());
                 throw new NotFoundException("No course found with ID: " + ogaRequest.getCourseId());
             }
 
+            // Map to OGA entity
             Oga updatedOga = mapToOga(ogaRequest);
+
+            // Process OGA questions
+            List<OgaQuestion> updatedQuestions = new ArrayList<>();
+            List<OgaQuestion> newQuestions = new ArrayList<>();
+
+            for (OgaQuestion newQuestion : ogaRequest.getOgaQuestions()) {
+                if (newQuestion.getId() != null) {
+                    // Check if the question already exists
+                    Optional<OgaQuestion> existingQuestion = ogaQuestionRepository.findById(newQuestion.getId());
+                    if (existingQuestion.isPresent()) {
+                        // Update existing question
+                        OgaQuestion questionToUpdate = existingQuestion.get();
+                        questionToUpdate.setQuestion(newQuestion.getQuestion());
+                        questionToUpdate.setOgaId(ogaRequest.getOgaId());
+                        questionToUpdate.setOptionOne(newQuestion.getOptionOne());
+                        questionToUpdate.setOptionTwo(newQuestion.getOptionTwo());
+                        questionToUpdate.setOptionThree(newQuestion.getOptionThree());
+                        questionToUpdate.setOptionFour(newQuestion.getOptionFour());
+                        questionToUpdate.setAnswer(newQuestion.getAnswer());
+                        updatedQuestions.add(questionToUpdate);
+                    } else {
+                        // Handle case where the question ID is not found in the database
+                        Utility.printDebugLogs("Question with ID " + newQuestion.getId() + " not found in the database.");
+                        // Decide if you want to add it as new or handle this as an error
+                    }
+                } else {
+                    // Add new question
+                    OgaQuestion questionToAdd = new OgaQuestion();
+                    questionToAdd.setQuestion(newQuestion.getQuestion());
+                    questionToAdd.setOgaId(ogaRequest.getOgaId());
+                    questionToAdd.setOptionOne(newQuestion.getOptionOne());
+                    questionToAdd.setOptionTwo(newQuestion.getOptionTwo());
+                    questionToAdd.setOptionThree(newQuestion.getOptionThree());
+                    questionToAdd.setOptionFour(newQuestion.getOptionFour());
+                    questionToAdd.setAnswer(newQuestion.getAnswer());
+                    newQuestions.add(questionToAdd);
+                }
+            }
+
+            // Save updated and new questions
+            List<OgaQuestion> savedNewQuestions = ogaQuestionRepository.saveAll(newQuestions);
+            ogaQuestionRepository.saveAll(updatedQuestions);
+
+            // Save updated OGA entity
+            ogaRepository.save(updatedOga);
+
             Utility.printDebugLogs("OGA updated successfully: " + updatedOga);
 
-            ogaQuestionRepository.saveAll(ogaRequest.getOgaQuestions());
-
+            // Build OGA response
             ogaResponse = OgaResponse.builder()
                     .ogaId(updatedOga.getOgaId())
                     .ogaTitle(updatedOga.getOgaTitle())
                     .description(updatedOga.getDescription())
                     .totalMarks(updatedOga.getTotalMarks())
                     .visibility(updatedOga.isVisibility())
-                    .ogaQuestions(ogaRequest.getOgaQuestions())
-                    .time(ogaRequest.getTime())
-                    .dueDate(ogaRequest.getDueDate())
-                    .totalMarks(ogaRequest.getTotalMarks())
-                    .term(ogaRequest.getTerm())
+                    .dueDate(updatedOga.getDueDate())
+                    .time(updatedOga.getTime())
+                    .term(updatedOga.getTerm())
+                    .ogaQuestions(new ArrayList<>(updatedQuestions) {{
+                        addAll(savedNewQuestions);
+                    }})
                     .messageStatus("Success")
                     .build();
 
@@ -166,6 +209,7 @@ public class OgaService {
         }
     }
 
+
     private Oga mapToOga(OgaRequest ogaRequest) {
         return ogaRepository.save(Oga.builder()
                 .ogaId(ogaRequest.getOgaId())
@@ -175,6 +219,8 @@ public class OgaService {
                 .dueDate(ogaRequest.getDueDate())
                 .totalMarks(ogaRequest.getTotalMarks())
                 .visibility(ogaRequest.isVisibility())
+                .term(ogaRequest.getTerm())
+                .time(ogaRequest.getTime())
                 .term(ogaRequest.getTerm())
                 .build());
     }

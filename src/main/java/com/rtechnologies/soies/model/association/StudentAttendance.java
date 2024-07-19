@@ -31,6 +31,6 @@ public class StudentAttendance {
     private int totalTimeSpentInMinutes; // Changed and made numerical for easier calculation
 
     @OneToOne
-    @JoinColumn(name = "student_id", referencedColumnName = "studentId")
+    @JoinColumn(name = "student_id")
     private Student student;
 }

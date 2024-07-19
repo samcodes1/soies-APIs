@@ -265,10 +265,11 @@ public class StudentService {
 
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<Student> studentPage;
+            Page<Student> studentPage = null;
 
+            // Determine the correct query to use based on the provided parameters
             if (course == null && grade == null && section == null) {
-                studentPage = studentRepository.findbycampusStudent(campusName, pageable);
+                studentPage = studentRepository.findbycampus(campusName, pageable);
             } else if (course != null && grade == null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourse(campusName, course, pageable);
             } else if (course != null && grade != null && section == null) {
@@ -285,29 +286,19 @@ public class StudentService {
                 studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
             }
 
-            List<StudentDTO> studentDTOList = studentPage.getContent().stream().map(student -> {
-                StudentAttendance attendance = attendanceRepository.findFirstByStudentRollNumOrderByDateDesc(student.getRollNumber());
-                StudentDTO studentDTO = StudentDTO.builder()
-                        .studentId(student.getStudentId())
-                        .rollNumber(student.getRollNumber())
-                        .studentName(student.getStudentName())
-                        .gender(student.getGender())
-                        .campusName(student.getCampusName())
-                        .grade(student.getGrade())
-                        .sectionName(student.getSectionName())
-                        .dateOfBirth(student.getDateOfBirth())
-                        .guardianName(student.getGuardianName())
-                        .guardianPhoneNumber(student.getGuardianPhoneNumber())
-                        .guardianEmail(student.getGuardianEmail())
-                        .address(student.getAddress())
-                        .city(student.getCity())
-                        .lastLoginTime(attendance != null ? attendance.getLastLoginTime() : null)
-                        .build();
-                return studentDTO;
-            }).collect(Collectors.toList());
+            // Fetch and set the latest StudentAttendance for each student
+            List<Student> studentsWithAttendance = studentPage.getContent().stream()
+                    .map(student -> {
+                        List<StudentAttendance> attendanceList = attendanceRepository.findLatestByStudentRollNum(student.getRollNumber());
+                        if (!attendanceList.isEmpty()) {
+                            student.setStudentAttendance(attendanceList.get(0)); // Set the latest entry
+                        }
+                        return student;
+                    })
+                    .collect(Collectors.toList());
 
             studentListResponse = StudentListResponse.builder()
-                    .students(studentDTOList)
+                    .studentPage(studentPage)
                     .messageStatus("Success")
                     .build();
 
@@ -327,7 +318,7 @@ public class StudentService {
     }
 
 
-    public StudentListResponse getAllStudents(int page, int size) {
+    public StudentListResponse getAllStudentsWithPagination(int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
         StudentListResponse studentListResponse;
 
@@ -339,8 +330,19 @@ public class StudentService {
                 throw new IllegalArgumentException("No students found");
             }
 
+            List<Student> studentsWithAttendance = studentPage.getContent().stream()
+                    .map(student -> {
+                        List<StudentAttendance> attendanceList = attendanceRepository.findLatestByStudentRollNum(student.getRollNumber());
+                        if (!attendanceList.isEmpty()) {
+                            student.setStudentAttendance(attendanceList.get(0)); // Set the latest entry
+                        }
+                        return student;
+                    })
+                    .collect(Collectors.toList());
+
             studentListResponse = StudentListResponse.builder()
-                    .studentList(studentPage.getContent())
+                    .studentList(studentsWithAttendance)
+                    .studentPage(studentPage)
                     .messageStatus("Success")
                     .build();
 
