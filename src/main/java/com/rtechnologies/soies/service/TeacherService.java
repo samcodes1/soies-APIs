@@ -50,6 +50,7 @@ public class TeacherService {
     @Autowired
     private ExcelParser excelParser;
 
+
     public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
         Utility.printDebugLogs("Teacher creation request: " + teacher.toString());
         System.out.println("Teacher creation request: " + teacher.toString());
@@ -486,7 +487,7 @@ public class TeacherService {
         Runnable runnable = () -> {
             List<Teacher> teachers;
             try {
-                teachers = excelParser.parseTeacherExcelFile(file.getInputStream());
+                teachers = excelParser.parseFile(file);
                 System.out.println("TEACHERDATA:>> " + teachers.toString());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
