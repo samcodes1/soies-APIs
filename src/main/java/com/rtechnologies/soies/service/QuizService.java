@@ -13,6 +13,7 @@ import org.webjars.NotFoundException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.ArrayList;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -148,11 +149,39 @@ public class QuizService {
             updatedQuiz.setQuizId(existingQuizOptional.get().getQuizId()); // Retain the original quiz ID
             quizRepository.save(updatedQuiz);
 
-            // Update the quiz questions
-            for (QuizQuestion question : quizRequest.getQuizQuestions()) {
-                question.setQuizId(updatedQuiz.getQuizId());
+            // Get existing questions for the quiz
+            List<QuizQuestion> existingQuestions = quizQuestionRepository.findByQuizId(updatedQuiz.getQuizId());
+
+            // Create a map of new and existing question IDs
+            Map<Long, QuizQuestion> existingQuestionsMap = existingQuestions.stream()
+                    .collect(Collectors.toMap(QuizQuestion::getId, Function.identity()));
+
+            // Process quiz questions
+            List<QuizQuestion> questionsToSave = new ArrayList<>();
+            for (QuizQuestion newQuestion : quizRequest.getQuizQuestions()) {
+                if (newQuestion.getId() != null && existingQuestionsMap.containsKey(newQuestion.getId())) {
+                    // Update existing question
+                    QuizQuestion existingQuestion = existingQuestionsMap.get(newQuestion.getId());
+                    existingQuestion.setQuestion(newQuestion.getQuestion());
+                    existingQuestion.setOptionOne(newQuestion.getOptionOne());
+                    existingQuestion.setOptionTwo(newQuestion.getOptionTwo());
+                    existingQuestion.setOptionThree(newQuestion.getOptionThree());
+                    existingQuestion.setOptionFour(newQuestion.getOptionFour());
+                    existingQuestion.setAnswer(newQuestion.getAnswer());
+                    questionsToSave.add(existingQuestion);
+                } else {
+                    // Add new question
+                    newQuestion.setQuizId(updatedQuiz.getQuizId());
+                    questionsToSave.add(newQuestion);
+                }
             }
-            quizQuestionRepository.saveAll(quizRequest.getQuizQuestions());
+
+            // Save updated and new questions
+            quizQuestionRepository.saveAll(questionsToSave);
+
+            // Delete questions that were not included in the update request
+            existingQuestions.removeAll(questionsToSave);
+            quizQuestionRepository.deleteAll(existingQuestions);
 
             QuizResponse quizResponse = QuizResponse.builder()
                     .quizId(updatedQuiz.getQuizId())
@@ -160,7 +189,11 @@ public class QuizService {
                     .description(updatedQuiz.getDescription())
                     .totalMarks(updatedQuiz.getTotalMarks())
                     .visibility(updatedQuiz.isVisibility())
-                    .quizQuestions(quizRequest.getQuizQuestions())
+                    .quizQuestions(questionsToSave)
+                    .dueDate(updatedQuiz.getDueDate())
+                    .term(updatedQuiz.getTerm())
+                    .time(updatedQuiz.getTime())
+                    .course(courseOptional.get())
                     .messageStatus("Success")
                     .build();
 
@@ -346,6 +379,7 @@ public class QuizService {
                 .term(quiz.getTerm())
                 .build();
     }
+
     public QuizListResponse getQuizzesByCourseId(Long courseId) {
         Utility.printDebugLogs("Get quizzes by course ID: " + courseId);
         List<Quiz> quizList = quizRepository.findByCourseId(courseId);

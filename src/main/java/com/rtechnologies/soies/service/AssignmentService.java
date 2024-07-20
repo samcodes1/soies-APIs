@@ -55,14 +55,7 @@ public class AssignmentService {
             throw new NotFoundException("Corrupt data received");
         }
 
-        //Check for teacher
-        Optional<Teacher> teacher = teacherRepository.findById(assignment.getTeacherId());
-        // if(teacher.isEmpty()) {
-        //     Utility.printDebugLogs("No teacher found with ID: " + assignment.getTeacherId());
-        //     throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
-        // }
-
-        //Check for course
+        // Check for course
         Optional<Course> course = courseRepository.findById(assignment.getCourseId());
         if (course.isEmpty()) {
             Utility.printDebugLogs("No course found with ID: " + assignment.getCourseId());
@@ -89,7 +82,7 @@ public class AssignmentService {
             finalAssignment.setDescription(assignment.getDescription());
             finalAssignment.setVisibility(true);
             finalAssignment.setCourseId(assignment.getCourseId());
-            finalAssignment.setTeacherId(assignment.getTeacherId());
+            finalAssignment.setTeacherId(assignment.getTeacherId());  // Set the teacherId directly
             finalAssignment.setTotalMarks(assignment.getTotalMarks());
             finalAssignment.setTerm(assignment.getTerm());
             finalAssignment.setDueDate(assignment.getDueDate());
@@ -104,7 +97,7 @@ public class AssignmentService {
         assignmentResponse = AssignmentResponse.builder()
                 .assignmentId(createdAssignment.getAssignmentId())
                 .course(course.get())
-                .teacher(teacher.orElse(new Teacher()))
+                .teacher(assignment.getTeacherId() != null ? teacherRepository.findById(assignment.getTeacherId()).orElse(null) : null)  // Handle teacher retrieval if teacherId is not null
                 .assignmentTitle(createdAssignment.getAssignmentTitle())
                 .description(createdAssignment.getDescription())
                 .file(createdAssignment.getFile())
@@ -119,6 +112,7 @@ public class AssignmentService {
         Utility.printDebugLogs("Assignment response: " + assignmentResponse);
         return assignmentResponse;
     }
+
 
     @Transactional
     public AssignmentResponse updateAssignment(AssignmentRequest assignment) {
@@ -139,9 +133,14 @@ public class AssignmentService {
             Assignment existingAssignment = assignmentOptional.get();
 
             // Check for teacher
-            Optional<Teacher> teacherOptional = teacherRepository.findById(assignment.getTeacherId());
-            if (teacherOptional.isEmpty()) {
-                throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
+            Teacher teacher = null;
+            if (assignment.getTeacherId() != null) {
+                Optional<Teacher> teacherOptional = teacherRepository.findById(assignment.getTeacherId());
+                if (teacherOptional.isPresent()) {
+                    teacher = teacherOptional.get();
+                } else {
+                    throw new NotFoundException("No teacher found with ID: " + assignment.getTeacherId());
+                }
             }
 
             // Check for course
@@ -186,7 +185,9 @@ public class AssignmentService {
             existingAssignment.setVisibility(assignment.isVisibility());
             existingAssignment.setFile(fileUrl);
             existingAssignment.setCourseId(assignment.getCourseId());
-            existingAssignment.setTeacherId(assignment.getTeacherId());
+            if (assignment.getTeacherId() != null) {
+                existingAssignment.setTeacherId(assignment.getTeacherId());
+            }
 
             Assignment updatedAssignment = assignmentRepository.save(existingAssignment);
 
@@ -195,7 +196,7 @@ public class AssignmentService {
             assignmentResponse = AssignmentResponse.builder()
                     .assignmentId(updatedAssignment.getAssignmentId())
                     .course(courseOptional.get())
-                    .teacher(teacherOptional.get())
+                    .teacher(teacher)
                     .assignmentTitle(updatedAssignment.getAssignmentTitle())
                     .description(updatedAssignment.getDescription())
                     .file(fileUrl) // Provide the file URL

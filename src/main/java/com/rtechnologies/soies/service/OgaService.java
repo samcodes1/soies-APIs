@@ -17,12 +17,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.webjars.NotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OgaService {
@@ -106,6 +108,7 @@ public class OgaService {
                 .build());
     }
 
+    @Transactional
     public OgaResponse updateOga(OgaRequest ogaRequest) {
         Utility.printDebugLogs("OGA update request: " + ogaRequest.toString());
         OgaResponse ogaResponse;
@@ -128,12 +131,18 @@ public class OgaService {
                 throw new NotFoundException("No course found with ID: " + ogaRequest.getCourseId());
             }
 
+            // Retrieve existing questions for the OGA
+            List<OgaQuestion> existingQuestions = ogaQuestionRepository.findByOgaId(ogaRequest.getOgaId());
+
             // Map to OGA entity
             Oga updatedOga = mapToOga(ogaRequest);
 
             // Process OGA questions
             List<OgaQuestion> updatedQuestions = new ArrayList<>();
             List<OgaQuestion> newQuestions = new ArrayList<>();
+            List<Long> incomingQuestionIds = ogaRequest.getOgaQuestions().stream()
+                    .map(OgaQuestion::getId)
+                    .collect(Collectors.toList());
 
             for (OgaQuestion newQuestion : ogaRequest.getOgaQuestions()) {
                 if (newQuestion.getId() != null) {
@@ -153,7 +162,6 @@ public class OgaService {
                     } else {
                         // Handle case where the question ID is not found in the database
                         Utility.printDebugLogs("Question with ID " + newQuestion.getId() + " not found in the database.");
-                        // Decide if you want to add it as new or handle this as an error
                     }
                 } else {
                     // Add new question
@@ -168,6 +176,12 @@ public class OgaService {
                     newQuestions.add(questionToAdd);
                 }
             }
+
+            // Identify and remove old questions not in the update request
+            List<OgaQuestion> questionsToRemove = existingQuestions.stream()
+                    .filter(question -> !incomingQuestionIds.contains(question.getId()))
+                    .collect(Collectors.toList());
+            ogaQuestionRepository.deleteAll(questionsToRemove);
 
             // Save updated and new questions
             List<OgaQuestion> savedNewQuestions = ogaQuestionRepository.saveAll(newQuestions);

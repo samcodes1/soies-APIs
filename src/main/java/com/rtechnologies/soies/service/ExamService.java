@@ -14,10 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ExamService {
@@ -122,51 +121,103 @@ public class ExamService {
                 .build());
     }
 
-    public ExamResponse updateExam(ExamRequest exam) {
-        Utility.printDebugLogs("Exam update request: " + exam.toString());
+    public ExamResponse updateExam(ExamRequest examRequest) {
+        Utility.printDebugLogs("Exam update request: " + examRequest.toString());
         ExamResponse examResponse;
 
         try {
-            if (exam == null) {
+            if (examRequest == null) {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            // Check for exam
-            Optional<Exam> existingExam = examRepository.findById(exam.getExamId());
-            if (existingExam.isEmpty()) {
-                throw new NotFoundException("No Exam found with ID: " + exam.getExamId());
+            // Check for existing exam
+            Optional<Exam> existingExamOptional = examRepository.findById(examRequest.getExamId());
+            if (existingExamOptional.isEmpty()) {
+                throw new NotFoundException("No Exam found with ID: " + examRequest.getExamId());
             }
 
-
-            // Check for course
-            Optional<Course> course = courseRepository.findById(exam.getCourseId());
-            if (course.isEmpty()) {
-                Utility.printDebugLogs("No course found with ID: " + exam.getCourseId());
-                throw new NotFoundException("No course found with ID: " + exam.getCourseId());
+            // Check for existing course
+            Optional<Course> courseOptional = courseRepository.findById(examRequest.getCourseId());
+            if (courseOptional.isEmpty()) {
+                Utility.printDebugLogs("No course found with ID: " + examRequest.getCourseId());
+                throw new NotFoundException("No course found with ID: " + examRequest.getCourseId());
             }
 
-            Exam updatedExam = mapToQuiz(exam);
+            // Update the exam entity
+            Exam updatedExam = mapToExam(examRequest);
+            updatedExam.setExamId(existingExamOptional.get().getExamId()); // Retain the original exam ID
+            examRepository.save(updatedExam);
 
-            for (int i = 0; i < exam.getExamQuestions().size(); i++) {
-                exam.getExamQuestions().get(i).setExamId(updatedExam.getExamId());
+            // Get existing questions
+            List<ExamQuestion> existingQuestions = examQuestionRepository.findByExamId(updatedExam.getExamId());
+
+            // Separate existing questions that are to be kept
+            Set<Long> updatedQuestionIds = examRequest.getExamQuestions().stream()
+                    .map(ExamQuestion::getId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+
+            // Determine which existing questions are to be deleted
+            List<ExamQuestion> questionsToDelete = existingQuestions.stream()
+                    .filter(question -> !updatedQuestionIds.contains(question.getId()))
+                    .collect(Collectors.toList());
+
+            // Delete the old questions
+            if (!questionsToDelete.isEmpty()) {
+                examQuestionRepository.deleteAll(questionsToDelete);
             }
 
-            examQuestionRepository.saveAll(exam.getExamQuestions());
-            Utility.printDebugLogs("Exam updated successfully: " + updatedExam);
+            // Process updated questions
+            List<ExamQuestion> newQuestions = new ArrayList<>();
+            List<ExamQuestion> savedUpdatedQuestions = new ArrayList<>();
+            for (ExamQuestion question : examRequest.getExamQuestions()) {
+                if (question.getId() != null) {
+                    // Update existing questions
+                    Optional<ExamQuestion> existingQuestion = examQuestionRepository.findById(question.getId());
+                    if (existingQuestion.isPresent()) {
+                        ExamQuestion questionToUpdate = existingQuestion.get();
+                        questionToUpdate.setQuestion(question.getQuestion());
+                        questionToUpdate.setOptionOne(question.getOptionOne());
+                        questionToUpdate.setOptionTwo(question.getOptionTwo());
+                        questionToUpdate.setOptionThree(question.getOptionThree());
+                        questionToUpdate.setOptionFour(question.getOptionFour());
+                        questionToUpdate.setAnswer(question.getAnswer());
+                        questionToUpdate.setExamId(updatedExam.getExamId());
+                        savedUpdatedQuestions.add(examQuestionRepository.save(questionToUpdate));
+                    }
+                } else {
+                    // Add new questions
+                    ExamQuestion questionToAdd = new ExamQuestion();
+                    questionToAdd.setQuestion(question.getQuestion());
+                    questionToAdd.setOptionOne(question.getOptionOne());
+                    questionToAdd.setOptionTwo(question.getOptionTwo());
+                    questionToAdd.setOptionThree(question.getOptionThree());
+                    questionToAdd.setOptionFour(question.getOptionFour());
+                    questionToAdd.setAnswer(question.getAnswer());
+                    questionToAdd.setExamId(updatedExam.getExamId());
+                    newQuestions.add(questionToAdd);
+                }
+            }
 
+            // Save new questions
+            List<ExamQuestion> savedNewQuestions = examQuestionRepository.saveAll(newQuestions);
+
+            // Build response
             examResponse = ExamResponse.builder()
                     .examId(updatedExam.getExamId())
                     .examTitle(updatedExam.getExamTitle())
                     .description(updatedExam.getDescription())
                     .totalMarks(updatedExam.getTotalMarks())
                     .visibility(updatedExam.isVisibility())
-                    .course(course.get())
-                    .examQuestions(exam.getExamQuestions())
-                    .visibility(exam.isVisibility())
-                    .description(exam.getDescription())
-                    .time(exam.getTime())
-                    .totalMarks(exam.getTotalMarks())
-                    .dueDate(exam.getDueDate())
+                    .course(courseOptional.get()) // Include course details
+                    .examQuestions(new ArrayList<>(savedUpdatedQuestions) {{
+                        addAll(savedNewQuestions);
+                    }})
+                    .visibility(updatedExam.isVisibility())
+                    .description(updatedExam.getDescription())
+                    .time(updatedExam.getTime())
+                    .totalMarks(updatedExam.getTotalMarks())
+                    .dueDate(updatedExam.getDueDate())
                     .messageStatus("Success")
                     .build();
 
@@ -184,6 +235,21 @@ public class ExamService {
                     .build();
         }
     }
+
+    private Exam mapToExam(ExamRequest examRequest) {
+        return Exam.builder()
+                .examId(examRequest.getExamId()) // Retain the existing exam ID
+                .courseId(examRequest.getCourseId())
+                .examTitle(examRequest.getExamTitle())
+                .description(examRequest.getDescription())
+                .dueDate(examRequest.getDueDate())
+                .time(examRequest.getTime())
+                .totalMarks(examRequest.getTotalMarks())
+                .term(examRequest.getTerm())
+                .visibility(examRequest.isVisibility())
+                .build();
+    }
+
 
     public ExamResponse deleteExam(Long examId) {
         Utility.printDebugLogs("Exam deletion request: " + examId);

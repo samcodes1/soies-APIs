@@ -43,7 +43,7 @@ public class AssignmentController {
         System.out.println("In the request: " );
         AssignmentRequest assignmentRequest = AssignmentRequest.builder()
                 .courseId(courseId)
-                .teacherId(teacherId==null?-1:teacherId)
+                .teacherId(teacherId)
                 .assignmentTitle(assignmentTitle)
                 .file(file)
                 .description(description)
