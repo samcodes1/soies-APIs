@@ -369,6 +369,7 @@ public class ExamService {
                     .description(exam.getDescription())
                     .time(exam.getTime())
                     .totalMarks(exam.getTotalMarks())
+                    .term(exam.getTerm())
                     .messageStatus("Success")
                     .build();
 

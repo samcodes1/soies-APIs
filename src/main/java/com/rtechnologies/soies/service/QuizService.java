@@ -415,6 +415,9 @@ public class QuizService {
                 .totalMarks(quiz.getTotalMarks())
                 .visibility(quiz.isVisibility())
                 .quizQuestions(quizQuestions)
+                .dueDate(quiz.getDueDate())
+                .term(quiz.getTerm())
+                .time(quiz.getTime())
                 .messageStatus("Success")
                 .build();
     }

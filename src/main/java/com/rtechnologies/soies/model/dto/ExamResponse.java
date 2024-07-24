@@ -31,4 +31,5 @@ public class ExamResponse {
     private boolean visibility;
     private String messageStatus;
     private Page<Exam> examListingPage;
+    private String term;
 }

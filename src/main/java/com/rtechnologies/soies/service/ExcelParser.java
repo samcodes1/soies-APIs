@@ -4,10 +4,12 @@ import java.io.*;
 import java.util.List;
 
 import javax.transaction.Transactional;
+import java.util.stream.Collectors;
 
-import com.opencsv.exceptions.CsvValidationException;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
+import java.util.*;
+
+
+import com.opencsv.exceptions.CsvException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -81,231 +83,212 @@ public class ExcelParser {
         return students;
     }
 
-    public List<Teacher> parseFile(MultipartFile file) throws IOException {
+
+    @Transactional
+    public List<Teacher> parseTeacherFile(MultipartFile file) throws IOException, CsvException {
         String fileName = file.getOriginalFilename();
-        if (fileName != null && fileName.toLowerCase().endsWith(".csv")) {
-            return parseCsvFile(file.getInputStream());
-        } else if (fileName != null && fileName.toLowerCase().endsWith(".xlsx")) {
-            return parseExcelFile(file.getInputStream());
-        } else {
-            throw new IllegalArgumentException("Unsupported file type. Only CSV and Excel files are supported.");
-        }
-    }
-
-    private List<Teacher> parseCsvFile(InputStream is) throws IOException {
         List<Teacher> teachers = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            String line;
-            String[] headers = reader.readLine().split(","); // Read headers
 
-            // Initialize column indices
-            int usernameIdx = -1, passwordIdx = -1, firstnameIdx = -1, lastnameIdx = -1, emailIdx = -1, gradesAssignedIdx = -1, campusNameIdx = -1;
-
-            // Identify column indices
-            for (int i = 0; i < headers.length; i++) {
-                String headerValue = headers[i].trim().toLowerCase();
-                switch (headerValue) {
-                    case "username":
-                        usernameIdx = i;
-                        break;
-                    case "password":
-                        passwordIdx = i;
-                        break;
-                    case "firstname":
-                        firstnameIdx = i;
-                        break;
-                    case "lastname":
-                        lastnameIdx = i;
-                        break;
-                    case "email":
-                        emailIdx = i;
-                        break;
-                    case "grades assigned":
-                        gradesAssignedIdx = i;
-                        break;
-                    case "campus":
-                        campusNameIdx = i;
-                        break;
-                    default:
-                        // Handle unexpected headers if needed
-                        break;
-                }
-            }
-
-            // Ensure all necessary columns are found
-            if (usernameIdx == -1 || passwordIdx == -1 || firstnameIdx == -1 || lastnameIdx == -1 || emailIdx == -1 || gradesAssignedIdx == -1 || campusNameIdx == -1) {
-                throw new IllegalStateException("Required columns are missing in the CSV file.");
-            }
-
-            // Process data rows
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split(","); // Split by comma
-
-                String username = getValue(values, usernameIdx);
-                String password = getValue(values, passwordIdx);
-                String firstname = getValue(values, firstnameIdx);
-                String lastname = getValue(values, lastnameIdx);
-                String email = getValue(values, emailIdx);
-                String gradesAssigned = getValue(values, gradesAssignedIdx);
-                String campusName = getValue(values, campusNameIdx);
-
-                // Process the row data
-                processTeacherData(username, password, firstname, lastname, email, gradesAssigned, campusName, teachers);
-            }
+        if (fileName != null && fileName.endsWith(".csv")) {
+            teachers = parseCSV(file.getInputStream());
+        } else if (fileName != null && (fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
+            teachers = parseExcel(file.getInputStream());
+        } else {
+            System.err.println("Unsupported file type: " + fileName);
         }
+
         return teachers;
     }
 
-    private List<Teacher> parseExcelFile(InputStream is) throws IOException {
+    private List<Teacher> parseCSV(InputStream is) throws IOException, CsvException {
+        List<Teacher> teachers = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        CSVReader csvReader = new CSVReader(reader);
+        List<String[]> rows = csvReader.readAll();
+        System.out.println("TEACHERS:> Number of rows in the CSV: " + rows.size());
+
+        if (rows.size() < 2) {
+            System.err.println("CSV file does not have enough data");
+            return teachers;
+        }
+
+        // Extract headers
+        String[] headers = rows.get(0);
+        Map<String, Integer> headerIndexMap = new HashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            headerIndexMap.put(headers[i].trim().toLowerCase(), i);
+        }
+
+        for (int i = 1; i < rows.size(); i++) { // Skip header row
+            String[] row = rows.get(i);
+            System.out.println("Processing row: " + (i + 1));
+
+            // Ensure row has the expected number of columns
+            if (row.length < headers.length) {
+                System.err.println("Row " + (i + 1) + " does not have enough columns, skipping this row.");
+                continue;
+            }
+
+            Teacher teacher = createTeacherFromRow(row, headerIndexMap);
+            processTeacher(teacher, headerIndexMap, row);
+        }
+        csvReader.close();
+        reader.close();
+        return teachers;
+    }
+
+    private List<Teacher> parseExcel(InputStream is) throws IOException {
         List<Teacher> teachers = new ArrayList<>();
         Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
 
-        // Initialize column indices
-        int usernameIdx = -1, passwordIdx = -1, firstnameIdx = -1, lastnameIdx = -1, emailIdx = -1, gradesAssignedIdx = -1, campusNameIdx = -1;
-
-        // Read header row
-        Row headerRow = sheet.getRow(0);
-        if (headerRow != null) {
-            for (Cell cell : headerRow) {
-                String headerValue = cell.getStringCellValue().trim().toLowerCase();
-                switch (headerValue) {
-                    case "username":
-                        usernameIdx = cell.getColumnIndex();
-                        break;
-                    case "password":
-                        passwordIdx = cell.getColumnIndex();
-                        break;
-                    case "firstname":
-                        firstnameIdx = cell.getColumnIndex();
-                        break;
-                    case "lastname":
-                        lastnameIdx = cell.getColumnIndex();
-                        break;
-                    case "email":
-                        emailIdx = cell.getColumnIndex();
-                        break;
-                    case "grades assigned":
-                        gradesAssignedIdx = cell.getColumnIndex();
-                        break;
-                    case "campus":
-                        campusNameIdx = cell.getColumnIndex();
-                        break;
-                    default:
-                        // Handle unexpected headers if needed
-                        break;
-                }
-            }
+        if (!rowIterator.hasNext()) {
+            System.err.println("Excel file does not have enough data");
+            return teachers;
         }
 
-        // Ensure all necessary columns are found
-        if (usernameIdx == -1 || passwordIdx == -1 || firstnameIdx == -1 || lastnameIdx == -1 || emailIdx == -1 || gradesAssignedIdx == -1 || campusNameIdx == -1) {
-            throw new IllegalStateException("Required columns are missing in the Excel file.");
-        }
+        Row headerRow = rowIterator.next();
+        List<String> headers = new ArrayList<>();
+        headerRow.forEach(cell -> headers.add(cell.getStringCellValue().trim().toLowerCase()));
+        Map<String, Integer> headerIndexMap = headers.stream().collect(Collectors.toMap(h -> h, headers::indexOf));
 
-        // Process data rows
-        for (Row row : sheet) {
-            if (row.getRowNum() == 0) {
-                continue; // Skip header row
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            String[] rowData = new String[headers.size()];
+            for (int i = 0; i < headers.size(); i++) {
+                Cell cell = row.getCell(i);
+                rowData[i] = cell == null ? "" : cell.toString();
             }
 
-            String username = getCellValue(row, usernameIdx);
-            String password = getCellValue(row, passwordIdx);
-            String firstname = getCellValue(row, firstnameIdx);
-            String lastname = getCellValue(row, lastnameIdx);
-            String email = getCellValue(row, emailIdx);
-            String gradesAssigned = getCellValue(row, gradesAssignedIdx);
-            String campusName = getCellValue(row, campusNameIdx);
-
-            // Process the row data
-            processTeacherData(username, password, firstname, lastname, email, gradesAssigned, campusName, teachers);
+            System.out.println("Processing row: " + (row.getRowNum() + 1));
+            Teacher teacher = createTeacherFromRow(rowData, headerIndexMap);
+            processTeacher(teacher, headerIndexMap, rowData);
         }
 
         workbook.close();
         return teachers;
     }
 
-    private String getValue(String[] values, int index) {
-        return index >= 0 && index < values.length ? values[index].trim() : "";
+    private Teacher createTeacherFromRow(String[] row, Map<String, Integer> headerIndexMap) {
+        Teacher teacher = new Teacher();
+        teacher.setUserName(getValue(row, headerIndexMap, "username").toLowerCase());
+        teacher.setPassword(new BCryptPasswordEncoder().encode(getValue(row, headerIndexMap, "password")));
+        teacher.setEmployeeName(getValue(row, headerIndexMap, "firstname") + " " + getValue(row, headerIndexMap, "lastname"));
+        teacher.setEmail(getValue(row, headerIndexMap, "email").toLowerCase());
+        teacher.setDateOfBirth(getValue(row, headerIndexMap, "dateofbirth"));
+        teacher.setGender(getValue(row, headerIndexMap, "gender"));
+        teacher.setJoiningDate(getValue(row, headerIndexMap, "joiningdate"));
+        teacher.setPhoneNumber(getValue(row, headerIndexMap, "phonenumber"));
+        teacher.setAddress(getValue(row, headerIndexMap, "address"));
+        teacher.setCampusName(getValue(row, headerIndexMap, "campus"));
+        teacher.setGrade(getValue(row, headerIndexMap, "grades assigned"));
+        return teacher;
     }
 
-    private String getCellValue(Row row, int columnIndex) {
-        Cell cell = row.getCell(columnIndex);
-        return cell != null ? cell.getStringCellValue().trim() : "";
+    private void processTeacher(Teacher teacher, Map<String, Integer> headerIndexMap, String[] row) {
+        String gradesAssigned = getValue(row, headerIndexMap, "grades assigned");
+        System.err.println("Grades Assigned: " + gradesAssigned);
+        System.err.println("Campus Name: " + teacher.getCampusName());
+
+        Long campusId = getOrCreateCampus(teacher.getCampusName());
+
+        // Split grades and sections
+        String[] gradesSections = gradesAssigned.split("\\),");
+        for (String gradeSection : gradesSections) {
+            gradeSection = gradeSection.trim();
+            if (!gradeSection.endsWith(")")) {
+                gradeSection += ")";
+            }
+            System.out.println("Processing grade-section: " + gradeSection);
+
+            if (!gradeSection.contains("(") || !gradeSection.contains(")")) {
+                System.err.println("Invalid grade-section format: " + gradeSection);
+                continue;
+            }
+            String[] parts = gradeSection.split("\\(", 2); // Split into grade and sections
+            if (parts.length < 2) {
+                System.err.println("Invalid grade-section split: " + gradeSection);
+                continue;
+            }
+            String grade = parts[0].trim();
+            String sectionsPart = parts[1].replace(")", "").trim();
+            String[] sections = sectionsPart.split(",");
+            for (String section : sections) {
+                section = section.trim();
+                System.out.println("Processing section: " + section);
+                try {
+                    Long sectionId = getOrCreateSection(campusId, section, grade);
+                    Long teacherId = getOrCreateTeacher(teacher, teacher.getEmail());
+
+                    // Save Teacher-Campus-Section-Grade association
+                    saveTeacherCampusSectionGradeAssociation(teacherId, sectionId);
+                } catch (Exception e) {
+                    System.err.println("Error processing section: " + section);
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
-    private void processTeacherData(String username, String password, String firstname, String lastname, String email, String gradesAssigned, String campusName, List<Teacher> teachers) {
-        // Check for campus existence
-        Optional<Campus> campusOptional = campusRepositoryObj.findByCampusName(campusName);
+    private String getValue(String[] row, Map<String, Integer> headerIndexMap, String headerName) {
+        Integer index = headerIndexMap.get(headerName.toLowerCase());
+        return (index != null && index < row.length) ? row[index] : "";
+    }
+
+    private Long getOrCreateCampus(String campusName) {
+        Optional<Campus> campusData = campusRepositoryObj.findByCampusName(campusName);
         Long campusId;
-        if (campusOptional.isEmpty()) {
+        if (!campusData.isPresent()) {
             Campus campus = Campus.builder().campusName(campusName).build();
             campus = campusRepositoryObj.save(campus);
             campusId = campus.getId();
+            System.err.println("Campus does not exist, created new campus with ID: " + campusId);
         } else {
-            campusId = campusOptional.get().getId();
+            campusId = campusData.get().getId();
+            System.err.println("Campus exists with ID: " + campusId);
         }
+        return campusId;
+    }
 
-        // Parsing grades
-        List<Section> sections = parseSections(gradesAssigned, campusId);
+    private Long getOrCreateSection(Long campusId, String sectionName, String grade) {
+        Optional<Section> sectionData = sectionRepositoryObj.findByCampusIdAndSectionNameIgnoreCaseAndGrade(campusId, sectionName, grade);
+        Long sectionId;
+        if (!sectionData.isPresent()) {
+            Section newSection = Section.builder().campusId(campusId).grade(grade).sectionName(sectionName).build();
+            newSection = sectionRepositoryObj.save(newSection);
+            sectionId = newSection.getId();
+            System.err.println("Section does not exist, created new section with ID: " + sectionId);
+        } else {
+            sectionId = sectionData.get().getId();
+            System.err.println("Section exists with ID: " + sectionId);
+        }
+        return sectionId;
+    }
 
-        // Create teacher object
-        Teacher teacher = new Teacher();
-        teacher.setUserName(username.toLowerCase());
-        teacher.setPassword(new BCryptPasswordEncoder().encode(password));
-        teacher.setEmployeeName(firstname + " " + lastname);
-        teacher.setEmail(email.toLowerCase());
-
-        // Save teacher and its associations
-        Optional<Teacher> existingTeacher = teacherRepositoryobj.findByEmail(email.toLowerCase());
+    private Long getOrCreateTeacher(Teacher teacher, String email) {
+        Optional<Teacher> teacherData = teacherRepositoryobj.findByEmail(email);
         Long teacherId;
-        if (existingTeacher.isEmpty()) {
-            Teacher savedTeacher = teacherRepositoryobj.save(teacher);
-            teacherId = savedTeacher.getTeacherId();
+        if (!teacherData.isPresent()) {
+            Teacher newTeacher = teacherRepositoryobj.save(teacher);
+            teacherId = newTeacher.getTeacherId();
+            System.err.println("Teacher does not exist, created new teacher with ID: " + teacherId);
         } else {
-            teacherId = existingTeacher.get().getTeacherId();
+            teacherId = teacherData.get().getTeacherId();
+            System.err.println("Teacher already exists with ID: " + teacherId);
         }
-
-        // Save associations with sections
-        for (Section section : sections) {
-            Optional<TeacherCampusSectionGradeBranch> existingAssociation = TeacherCampusSectionGradeBranchRepoObj.findByTeacheIdFkAndSectionIdFk(teacherId, section.getId());
-            if (existingAssociation.isEmpty()) {
-                TeacherCampusSectionGradeBranchRepoObj.save(TeacherCampusSectionGradeBranch.builder()
-                        .teacheIdFk(teacherId)
-                        .sectionIdFk(section.getId())
-                        .build());
-            }
-        }
-
-        teachers.add(teacher); // Add teacher to the list
+        return teacherId;
     }
 
-    private List<Section> parseSections(String gradesAssigned, Long campusId) {
-        List<Section> sections = new ArrayList<>();
-        // Implement logic to parse the gradesAssigned field and create or find Section entities
-        // For example:
-        String[] gradeSections = gradesAssigned.split(","); // Adjust delimiter if needed
-        for (String gradeSection : gradeSections) {
-            String[] parts = gradeSection.split("\\("); // Example split
-            String grade = parts[0].trim();
-            String section = parts.length > 1 ? parts[1].replace(")", "").trim() : "";
-
-            Optional<Section> sectionOptional = sectionRepositoryObj.findByCampusIdAndSectionNameIgnoreCaseAndGrade(campusId, section, grade);
-            if (sectionOptional.isEmpty()) {
-                Section newSection = Section.builder()
-                        .campusId(campusId)
-                        .grade(grade)
-                        .sectionName(section)
-                        .build();
-                Section savedSection = sectionRepositoryObj.save(newSection);
-                sections.add(savedSection);
-            } else {
-                sections.add(sectionOptional.get());
-            }
+    private void saveTeacherCampusSectionGradeAssociation(Long teacherId, Long sectionId) {
+        Optional<TeacherCampusSectionGradeBranch> existingAssociation = TeacherCampusSectionGradeBranchRepoObj.findByTeacheIdFkAndSectionIdFk(teacherId, sectionId);
+        if (!existingAssociation.isPresent()) {
+            TeacherCampusSectionGradeBranchRepoObj.save(TeacherCampusSectionGradeBranch.builder().teacheIdFk(teacherId).sectionIdFk(sectionId).build());
+            System.err.println("Added new section to teacher with ID: " + teacherId);
+        } else {
+            System.err.println("Teacher already has this section assigned.");
         }
-        return sections;
     }
-
 
     public List<Student> csvParserStudent(MultipartFile file) {
         List<Student> students = new ArrayList<>();

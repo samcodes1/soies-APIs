@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.service;
 
+import com.opencsv.exceptions.CsvException;
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
@@ -49,7 +50,6 @@ public class TeacherService {
 
     @Autowired
     private ExcelParser excelParser;
-
 
     public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
         Utility.printDebugLogs("Teacher creation request: " + teacher.toString());
@@ -487,11 +487,13 @@ public class TeacherService {
         Runnable runnable = () -> {
             List<Teacher> teachers;
             try {
-                teachers = excelParser.parseFile(file);
+                teachers = excelParser.parseTeacherFile(file);
                 System.out.println("TEACHERDATA:>> " + teachers.toString());
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+            } catch (CsvException e) {
+                throw new RuntimeException(e);
             }
         };
 
