@@ -1,6 +1,6 @@
 package com.rtechnologies.soies.controller;
 
-import com.rtechnologies.soies.model.Assignment;
+
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.service.AssignmentService;
 import io.swagger.annotations.ApiOperation;
@@ -11,8 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.util.Date;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 
 @RestController
 @RequestMapping("/api/assignments")
@@ -29,18 +31,18 @@ public class AssignmentController {
     })
     @PostMapping("/create")
     public ResponseEntity<AssignmentResponse> createAssignment(
-                                                                @RequestParam("file") MultipartFile file,
-                                                                @RequestParam("courseId") long courseId,
-                                                                @RequestParam(name = "teacherId", required=false) Long teacherId,
-                                                                @RequestParam("assignmentTitle") String assignmentTitle,
-                                                                @RequestParam(name = "description", required=false) String description,
-                                                                @RequestParam("term") String term,
-                                                                @RequestParam("section") String section,
-                                                                @RequestParam("totalMarks") int totalMarks,
-                                                                @RequestParam("visibility") boolean visibility,
-                                                                @RequestParam(name = "dueDate", required=false) String dueDate) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("courseId") long courseId,
+            @RequestParam(name = "teacherId", required = false) Long teacherId,
+            @RequestParam("assignmentTitle") String assignmentTitle,
+            @RequestParam(name = "description", required = false) String description,
+            @RequestParam("term") String term,
+            @RequestParam("section") String section,
+            @RequestParam("totalMarks") int totalMarks,
+            @RequestParam("visibility") boolean visibility,
+            @RequestParam(name = "dueDate", required = false) String dueDate) {
 
-        System.out.println("In the request: " );
+        System.out.println("In the request: ");
         AssignmentRequest assignmentRequest = AssignmentRequest.builder()
                 .courseId(courseId)
                 .teacherId(teacherId)
@@ -73,12 +75,18 @@ public class AssignmentController {
             @RequestParam("submittedFile") MultipartFile submittedFile,
             @RequestParam("comments") String comments) {
 
+        LocalDateTime now = LocalDateTime.now();
+
+        // Convert LocalDateTime to String
+        String submissionDate = convertLocalDateTimeToString(now);
+
         AssignmentSubmissionRequest submissionRequest = AssignmentSubmissionRequest.builder()
                 .assignmentId(assignmentId)
                 .studentId(studentId)
                 .submittedFile(submittedFile)
                 .comments(comments)
                 .obtainedMarks(0)
+                .submissionDate(submissionDate) // Pass the submission date)
                 .build();
 
         AssignmentSubmissionResponse response = assignmentService.submitAssignment(submissionRequest);
@@ -128,7 +136,7 @@ public class AssignmentController {
     public ResponseEntity<AssignmentSubmissionResponse> getAssignmentSubmissions(
             @PathVariable Long assignmentId,
             @PathVariable String studentRollNumber
-            ) {
+    ) {
         AssignmentSubmissionResponse studentListResponse = assignmentService.getAssignmentSubmissionById(assignmentId, studentRollNumber);
         return ResponseEntity.status(200)
                 .body(studentListResponse);
@@ -147,6 +155,7 @@ public class AssignmentController {
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }
+
     @ApiOperation(value = "Delete an assignment", response = AssignmentResponse.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Assignment deleted successfully"),
@@ -196,7 +205,7 @@ public class AssignmentController {
     public ResponseEntity<AssignmentListResponse> getAssignmentsByCourseId(@PathVariable Long courseId,
                                                                            @PathVariable String section,
                                                                            @PathVariable String studentRollNum) {
-        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId,section, studentRollNum);
+        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId, section, studentRollNum);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
     }
@@ -210,8 +219,13 @@ public class AssignmentController {
     @GetMapping("/getByCourse/{courseId}/{section}")
     public ResponseEntity<AssignmentListResponse> getAssignmentsByCourseId(@PathVariable Long courseId,
                                                                            @PathVariable String section) {
-        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId,section);
+        AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId, section);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(response);
+    }
+
+    private String convertLocalDateTimeToString(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dateTime.format(formatter);
     }
 }

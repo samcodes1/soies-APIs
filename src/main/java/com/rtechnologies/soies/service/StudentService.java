@@ -2,14 +2,13 @@ package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.StudentAttendance;
-import com.rtechnologies.soies.model.dto.StudentDTO;
-import com.rtechnologies.soies.model.dto.StudentListResponse;
-import com.rtechnologies.soies.model.dto.StudentResponse;
+import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.StudentAttendanceRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -259,46 +258,63 @@ public class StudentService {
     }
 
 
-    public StudentListResponse getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section, int page, int size) {
+    public StudentListResponseDTO getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section, int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
-        StudentListResponse studentListResponse;
+        StudentListResponseDTO studentListResponse;
 
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<Student> studentPage = null;
 
             // Determine the correct query to use based on the provided parameters
-            if (course == null && grade == null && section == null) {
+            if (campusName != null && course == null && grade == null && section == null) {
                 studentPage = studentRepository.findbycampus(campusName, pageable);
-            } else if (course != null && grade == null && section == null) {
+            } else if (campusName != null && course != null && grade == null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourse(campusName, course, pageable);
-            } else if (course != null && grade != null && section == null) {
+            } else if (campusName != null && course != null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourseAndGrade(campusName, course, grade, pageable);
-            } else if (course != null && grade != null && section != null) {
+            } else if (campusName != null && course != null && grade != null && section != null) {
                 studentPage = studentRepository.findbycampusAndCourseAndGradeAndSection(campusName, course, grade, section, pageable);
-            } else if (course == null && grade != null && section != null) {
+            } else if (campusName != null && course == null && grade != null && section != null) {
                 studentPage = studentRepository.findbycampusAndGradeAndSection(campusName, grade, section, pageable);
-            } else if (course == null && grade == null && section != null) {
+            } else if (campusName != null && course == null && grade == null && section != null) {
                 studentPage = studentRepository.findbycampusAndSection(campusName, section, pageable);
-            } else if (course == null && grade != null && section == null) {
+            } else if (campusName != null && course == null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndGrade(campusName, grade, pageable);
-            } else {
+            } else if (campusName != null && course != null && grade != null && section != null) {
                 studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
+            } else {
+                throw new IllegalArgumentException("Invalid parameters");
+            }
+
+            if (studentPage.isEmpty()) {
+                throw new IllegalArgumentException("No students found");
             }
 
             // Fetch and set the latest StudentAttendance for each student
-            List<Student> studentsWithAttendance = studentPage.getContent().stream()
+            List<StudentDTO> studentsWithAttendance = studentPage.getContent().stream()
                     .map(student -> {
+                        StudentDTO studentDTO = mapToStudentDTO(student);
                         List<StudentAttendance> attendanceList = attendanceRepository.findLatestByStudentRollNum(student.getRollNumber());
                         if (!attendanceList.isEmpty()) {
-                            student.setStudentAttendance(attendanceList.get(0)); // Set the latest entry
+                            studentDTO.setStudentAttendance(mapToStudentAttendanceDTO(attendanceList.get(0))); // Set the latest entry
+                        } else {
+                            StudentAttendanceDTO defaultAttendance = new StudentAttendanceDTO();
+                            defaultAttendance.setStatus("Absent");
+                            defaultAttendance.setDate(null); // Example of setting current date
+                            defaultAttendance.setLastLoginTime(null); // Example of setting default time
+                            defaultAttendance.setTotalTimeSpentInMinutes(0);
+                            studentDTO.setStudentAttendance(defaultAttendance); // Set default values
                         }
-                        return student;
+                        return studentDTO;
                     })
                     .collect(Collectors.toList());
 
-            studentListResponse = StudentListResponse.builder()
-                    .studentPage(studentPage)
+            // Create a new Page object with updated students
+            Page<StudentDTO> updatedStudentPage = new PageImpl<>(studentsWithAttendance, pageable, studentPage.getTotalElements());
+
+            studentListResponse = StudentListResponseDTO.builder()
+                    .studentPage(updatedStudentPage)
                     .messageStatus("Success")
                     .build();
 
@@ -306,15 +322,44 @@ public class StudentService {
             return studentListResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
-            return StudentListResponse.builder()
+            return StudentListResponseDTO.builder()
                     .messageStatus(e.toString())
                     .build();
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
-            return StudentListResponse.builder()
+            return StudentListResponseDTO.builder()
                     .messageStatus("Failure")
                     .build();
         }
+    }
+    private StudentDTO mapToStudentDTO(Student student) {
+        StudentDTO studentDTO = new StudentDTO();
+        studentDTO.setStudentId(student.getStudentId());
+        studentDTO.setRollNumber(student.getRollNumber());
+        studentDTO.setPassword(student.getPassword());
+        studentDTO.setStudentName(student.getStudentName());
+        studentDTO.setGender(student.getGender());
+        studentDTO.setCampusName(student.getCampusName());
+        studentDTO.setGrade(student.getGrade());
+        studentDTO.setSectionName(student.getSectionName());
+        studentDTO.setDateOfBirth(student.getDateOfBirth());
+        studentDTO.setGuardianName(student.getGuardianName());
+        studentDTO.setGuardianPhoneNumber(student.getGuardianPhoneNumber());
+        studentDTO.setGuardianEmail(student.getGuardianEmail());
+        studentDTO.setAddress(student.getAddress());
+        studentDTO.setCity(student.getCity());
+        return studentDTO;
+    }
+
+    private StudentAttendanceDTO mapToStudentAttendanceDTO(StudentAttendance studentAttendance) {
+        StudentAttendanceDTO studentAttendanceDTO = new StudentAttendanceDTO();
+        studentAttendanceDTO.setId(studentAttendance.getId());
+        studentAttendanceDTO.setStudentRollNum(studentAttendance.getStudentRollNum());
+        studentAttendanceDTO.setStatus(studentAttendance.getStatus());
+        studentAttendanceDTO.setDate(studentAttendance.getDate());
+        studentAttendanceDTO.setLastLoginTime(studentAttendance.getLastLoginTime());
+        studentAttendanceDTO.setTotalTimeSpentInMinutes(studentAttendance.getTotalTimeSpentInMinutes());
+        return studentAttendanceDTO;
     }
 
 

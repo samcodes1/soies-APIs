@@ -1,20 +1,18 @@
 package com.rtechnologies.soies.model.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-
-@Data
+@Getter
+@Setter
 @Builder
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-public class TeacherDTO {
-
+@AllArgsConstructor
+public class TeacherSectionListDTO {
     private Long teacherId;
+    private String teacherName;
     private String campusName;
     private String employeeName;
     private String email;
@@ -23,14 +21,10 @@ public class TeacherDTO {
     private String joiningDate;
     private String phoneNumber;
     private String address;
-    private String userName;
+    private String section;
     private String grade;
-    private List<String> sections;
-    private List<String> courses;
+    private String course;
+    private String credits;
     private List<TeacherSectionDTO> teacherSectionList;
 
-    // Add additional fields for courses if needed
-
-    // Constructors, getters, setters, and toString methods can be added as needed
 }
-

@@ -162,4 +162,9 @@ public class Utility {
                                      || fileName.toLowerCase().endsWith(".xlsx")
                                      || fileName.toLowerCase().endsWith(".xlsm"));
     }
+
+    private String convertLocalDateTimeToString(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dateTime.format(formatter);
+    }
 }

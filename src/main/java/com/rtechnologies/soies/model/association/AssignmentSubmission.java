@@ -29,7 +29,9 @@ public class AssignmentSubmission {
     private String comments;
     private double obtainedMarks;
     private String obtainedGrade;
-    private String date;
+    private String dueDate;
     private String term;
+    private int totalMarks; // Total marks for the assignment
+
 }
 

@@ -22,6 +22,8 @@ public class TeacherListResponse {
     private List<Teacher> teacherList;
     private List<TeacherDTO> teacherCompleteList;
     List<TeacherProjection> teacherJoinData;
-    Page<TeacherProjection> teacherJoinDataPage;
+    Page<TeacherDTO> teacherJoinDataPage;
+    private List<TeacherSectionDTO> teacherSectionList; // Add this field
+
     private String messageStatus;
 }

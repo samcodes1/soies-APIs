@@ -15,6 +15,7 @@ import com.rtechnologies.soies.utilities.Utility;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,10 +26,8 @@ import org.webjars.NotFoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -438,11 +437,13 @@ public class TeacherService {
         return teacherResponse;
     }
 
+
     public TeacherListResponse getTeachersByCourseGradeSection(String campusName, String courseName, String grade, String section, int page, int size) {
         TeacherListResponse teacherResponse = new TeacherListResponse();
-        // Fetch teacher by ID
         Pageable pageable = PageRequest.of(page, size);
-        Page<TeacherProjection> listTeacher = null;
+        Page<TeacherProjection> listTeacher;
+
+        // Determine the correct query to use based on the provided parameters
         if (courseName == null && grade == null && section == null) {
             listTeacher = teacherRepository.findByCampusName(campusName, pageable);
         } else if (courseName == null && grade == null && section != null) {
@@ -461,26 +462,63 @@ public class TeacherService {
             listTeacher = teacherRepository.findByCampusNameCourseGradeSection(campusName, section, courseName, grade, pageable);
         }
 
+        // Process the list of teachers and their grades
+        List<TeacherProjection> teachers = listTeacher.getContent();
+        List<TeacherDTO> teacherDTOList = new ArrayList<>();
 
-        // List<Teacher> listTeacher = teacherRepository.findByCampusNameCourseGradeSection( campusName, section, courseName, grade, pageable);
-        // if (listTeacher==null || listTeacher.isEmpty()) {
-        //     Utility.printDebugLogs("Teacher not found");
-        //     teacherResponse.setMessageStatus("Teacher not found ");
-        //     return teacherResponse;
-        // }
+        for (TeacherProjection teacher : teachers) {
+            String gradeData = teacher.getGrade();
+            List<TeacherSectionDTO> teacherSectionList = new ArrayList<>();
 
-        // List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(teacherId);
-        // if(teacherSections.isEmpty()) {
-        //     Utility.printDebugLogs("No sections allocated to teacher");
-        //     teacherResponse.setMessageStatus("No sections allocated to teacher");
-        //     return teacherResponse;
-        // }
+            if (gradeData != null && !gradeData.isEmpty()) {
+                String[] gradeEntries = gradeData.split("(?=grade)");
 
-        teacherResponse.setTeacherJoinDataPage(listTeacher);
+                for (String entry : gradeEntries) {
+                    String[] parts = entry.split("\\(");
+                    if (parts.length == 2) {
+                        String gradeName = parts[0].trim();
+                        String sections = parts[1].replace(")", "").trim();
+                        String[] sectionNames = sections.split(",");
+
+                        for (String sectionName : sectionNames) {
+                            TeacherSectionDTO sectionDTO = new TeacherSectionDTO();
+                            sectionDTO.setGrade(gradeName);
+                            sectionDTO.setSection(sectionName.trim());
+                            teacherSectionList.add(sectionDTO);
+                        }
+                    }
+                }
+            }
+
+            TeacherDTO dto = TeacherDTO.builder()
+                    .teacherId(teacher.getTeacher_id()) // Ensure this is correctly fetched
+                    .campusName(teacher.getCampus_Name())
+                    .employeeName(teacher.getEmployee_Name())
+                    .email(teacher.getEmail())
+                    .dateOfBirth(teacher.getDate_Of_Birth())
+                    .gender(teacher.getGender())
+                    .joiningDate(teacher.getJoining_date())
+                    .phoneNumber(teacher.getPhone_number())
+                    .address(teacher.getAddress())
+                    .userName(teacher.getTeacherName())
+                    .gender(teacher.getGender())
+                    .grade(teacher.getGrade()) // Include grade as well
+                    .teacherSectionList(teacherSectionList) // Set the teacherSectionList
+                    .build();
+
+            teacherDTOList.add(dto);
+        }
+
+        // Convert the list of TeacherDTO to a Page for consistency
+        Page<TeacherDTO> teacherDTOPage = new PageImpl<>(teacherDTOList, pageable, listTeacher.getTotalElements());
+
+        // Set the response
+        teacherResponse.setTeacherJoinDataPage(teacherDTOPage); // Set paginated teacher data
         teacherResponse.setMessageStatus("Success");
 
         return teacherResponse;
     }
+
 
     @Transactional
     public TeacherResponse saveTrachersFromFile(MultipartFile file) throws IOException {

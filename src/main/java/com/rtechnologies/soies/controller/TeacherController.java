@@ -81,8 +81,8 @@ public class TeacherController {
     })
     @GetMapping("/by-campus/{campusName}")
     public ResponseEntity<TeacherListResponse> getAllTeachersByCampusName(@PathVariable String campusName,
-    @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "10") int size) {
+                                                                          @RequestParam(defaultValue = "0") int page,
+                                                                          @RequestParam(defaultValue = "10") int size) {
         TeacherListResponse teacherListResponse = teacherService.getAllTeachersByCampusName(campusName, page, size);
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherListResponse);
@@ -96,8 +96,8 @@ public class TeacherController {
     })
     @GetMapping
     public ResponseEntity<TeacherListResponse> getAllTeachers(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         TeacherListResponse teacherListResponse = teacherService.getAllTeachers(page, size);
         return ResponseEntity.status(teacherListResponse.getMessageStatus().equals("Success") ? 200 : 500)
@@ -141,12 +141,12 @@ public class TeacherController {
     })
     @GetMapping("/get-teachers/{campusName}")
     public ResponseEntity<TeacherListResponse> getTeachersByCourseGradeSection(
-        @PathVariable String campusName,
-        @RequestParam(required = false) String course,
-        @RequestParam(required = false) String grade,
-        @RequestParam(required = false) String section,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @PathVariable String campusName,
+            @RequestParam(required = false) String course,
+            @RequestParam(required = false) String grade,
+            @RequestParam(required = false) String section,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         TeacherListResponse teacherResponse = teacherService.getTeachersByCourseGradeSection(campusName, course, grade, section, page, size);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
@@ -156,9 +156,9 @@ public class TeacherController {
     @PostMapping("/upload-teacher-excel-data")
     public ResponseEntity<TeacherResponse> teacherCsvFileRead(@RequestParam("file") MultipartFile file) throws IOException {
         TeacherResponse teacherResponse = teacherService.saveTrachersFromFile(file);
-        
+
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 201 : 500)
                 .body(teacherResponse);
     }
-    
+
 }

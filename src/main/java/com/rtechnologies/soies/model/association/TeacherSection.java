@@ -22,4 +22,6 @@ public class TeacherSection {
     private Long teacherId;
     private String section;
     private String grade;
+
+
 }

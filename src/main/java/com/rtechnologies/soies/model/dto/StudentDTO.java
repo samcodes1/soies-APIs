@@ -14,6 +14,7 @@ import java.time.LocalTime;
 public class StudentDTO {
     private Long studentId;
     private String rollNumber;
+    private String password;
     private String studentName;
     private String gender;
     private String campusName;
@@ -25,5 +26,6 @@ public class StudentDTO {
     private String guardianEmail;
     private String address;
     private String city;
-    private LocalTime lastLoginTime;
+    private StudentAttendanceDTO studentAttendance;
+    // Getters and Setters
 }

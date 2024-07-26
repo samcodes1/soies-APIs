@@ -513,9 +513,26 @@ public class AssignmentService {
         AssignmentSubmissionListResponse assignmentSubmissionListResponse;
 
         try {
-            Page<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentId(assignmentId, PageRequest.of(page, size));
-            // List<AssignmentSubmission> assignmentList = assignmentSubmissionsPage.getContent();
+            // Retrieve assignment details
+            Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
+            if (assignmentOptional.isEmpty()) {
+                Utility.printDebugLogs("No assignment found with ID: " + assignmentId);
+                throw new NotFoundException("No assignment found with ID: " + assignmentId);
+            }
 
+
+            // Retrieve submissions
+            Page<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository.findByAssignmentId(assignmentId, PageRequest.of(page, size));
+
+            // Update each AssignmentSubmission with totalMarks, courseId, and dueDate
+            assignmentSubmissionsPage.forEach(submission -> {
+                submission.setTotalMarks(assignmentOptional.get().getTotalMarks());
+                submission.setCourseId(assignmentOptional.get().getCourseId());
+                submission.setDueDate(assignmentOptional.get().getDueDate());
+                submission.setTerm(assignmentOptional.get().getTerm());
+            });
+
+            // Build response
             assignmentSubmissionListResponse = AssignmentSubmissionListResponse.builder()
                     .assignmentSubmissionResponsePage(assignmentSubmissionsPage)
                     .messageStatus("Success")

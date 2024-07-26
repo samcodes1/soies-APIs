@@ -2,6 +2,7 @@ package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.dto.StudentListResponse;
+import com.rtechnologies.soies.model.dto.StudentListResponseDTO;
 import com.rtechnologies.soies.model.dto.StudentResponse;
 import com.rtechnologies.soies.service.StudentService;
 import com.rtechnologies.soies.utilities.Utility;
@@ -117,7 +118,7 @@ public class StudentController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/get-students/{campusName}")
-    public ResponseEntity<StudentListResponse> getAllStudentsByGradeCourseSection(
+    public ResponseEntity<StudentListResponseDTO> getAllStudentsByGradeCourseSection(
             @PathVariable String campusName,
             @RequestParam(required = false) String course,
             @RequestParam(required = false) String grade,
@@ -125,7 +126,7 @@ public class StudentController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        StudentListResponse studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section, page, size);
+        StudentListResponseDTO studentListResponse = studentService.getAllStudentsByGradeCourseSection(campusName, course, grade, section, page, size);
         return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(studentListResponse);
     }
