@@ -11,4 +11,7 @@ public interface CampusRepository extends JpaRepository<Campus, Long> {
     Optional<Campus> findByCampusName(String campusName);
 
     Optional<Campus> findByCampusNameIgnoreCase(String campusName);
+
+    Long countByCampusName(String campusName);
+
 }

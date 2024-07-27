@@ -73,20 +73,16 @@ public class TeacherService {
             // Set the hashed password to the teacher object
             teacher.setPassword(hashedPassword);
 
-            Teacher savingTeacher = mapToTeacher(teacher);
+            // Format grade field based on teacherSectionList
+            String formattedGrade = formatGradeSection(teacher.getTeacherSectionList());
+
+            Teacher savingTeacher = mapToTeacher(teacher, formattedGrade);
             // Save the teacher with the hashed password
             Teacher savedTeacher = teacherRepository.save(savingTeacher);
             Utility.printDebugLogs("Saved teacher: " + savedTeacher.toString());
 
-
-            // for(TeacherSection teacherSection : teacher.getTeacherSectionList()) {
-            //     teacherSection.setTeacherId(savedTeacher.getTeacherId());
-            // }
-
-            int length = teacher.getTeacherSectionList().size();
-
-            for (int i = 0; i < length; i++) {
-                teacher.getTeacherSectionList().get(i).setTeacherId(savedTeacher.getTeacherId());
+            for (TeacherSection teacherSection : teacher.getTeacherSectionList()) {
+                teacherSection.setTeacherId(savedTeacher.getTeacherId());
             }
 
             teacherSectionRepository.saveAll(teacher.getTeacherSectionList());
@@ -115,7 +111,35 @@ public class TeacherService {
         }
     }
 
-    public static Teacher mapToTeacher(CreateTeacherDTO createTeacherDTO) {
+    private String formatGradeSection(List<TeacherSection> sections) {
+        // Map to collect sections by grade
+        Map<String, List<String>> gradeToSectionsMap = new LinkedHashMap<>();
+
+        for (TeacherSection section : sections) {
+            String grade = section.getGrade();
+            String sectionName = section.getSection();
+
+            gradeToSectionsMap
+                    .computeIfAbsent(grade, k -> new ArrayList<>())
+                    .add(sectionName);
+        }
+
+        // Build the formatted string
+        StringBuilder formattedGrade = new StringBuilder();
+        for (Map.Entry<String, List<String>> entry : gradeToSectionsMap.entrySet()) {
+            String grade = entry.getKey();
+            List<String> sectionNames = entry.getValue();
+            formattedGrade.append(grade).append("(")
+                    .append(String.join(",", sectionNames))
+                    .append(") , ");
+        }
+
+        // Remove the trailing comma and space
+        return formattedGrade.toString().replaceAll(", $", "");
+    }
+
+
+    public static Teacher mapToTeacher(CreateTeacherDTO createTeacherDTO, String formattedGrade) {
         return Teacher.builder()
                 .campusName(createTeacherDTO.getCampusName())
                 .employeeName(createTeacherDTO.getEmployeeName())
@@ -126,7 +150,7 @@ public class TeacherService {
                 .joiningDate(createTeacherDTO.getJoiningDate())
                 .phoneNumber(createTeacherDTO.getPhoneNumber())
                 .address(createTeacherDTO.getAddress())
-                // You may need to handle teacherSectionList mapping here if required
+                .grade(formattedGrade) // Set the formatted grade
                 .build();
     }
 
@@ -179,7 +203,7 @@ public class TeacherService {
     }
 
 
-    public TeacherResponse updateTeacher(Teacher teacher) {
+    public TeacherResponse updateTeacher(UpdateTeacherDTO teacher) {
         Utility.printDebugLogs("Teacher update request: " + teacher.toString());
         TeacherResponse teacherResponse;
 
@@ -191,14 +215,53 @@ public class TeacherService {
             }
 
             // Check if the teacher with the specified ID exists
-            Optional<Teacher> existingTeacher = teacherRepository.findById(teacher.getTeacherId());
-            if (existingTeacher.isEmpty()) {
+            Optional<Teacher> existingTeacherOptional = teacherRepository.findById(teacher.getTeacherId());
+            if (existingTeacherOptional.isEmpty()) {
                 Utility.printDebugLogs("Teacher not found with ID: " + teacher.getTeacherId());
                 throw new NotFoundException("Teacher not found with ID: " + teacher.getTeacherId());
             }
 
-            // Update the teacher details
-            Teacher updatedTeacher = teacherRepository.save(teacher);
+            Teacher existingTeacher = existingTeacherOptional.get();
+
+            // Update the teacher's details
+            existingTeacher.setCampusName(teacher.getCampusName());
+            existingTeacher.setEmployeeName(teacher.getEmployeeName());
+            existingTeacher.setEmail(teacher.getEmail());
+            existingTeacher.setDateOfBirth(teacher.getDateOfBirth());
+            existingTeacher.setGender(teacher.getGender());
+            existingTeacher.setJoiningDate(teacher.getJoiningDate());
+            existingTeacher.setPhoneNumber(teacher.getPhoneNumber());
+            existingTeacher.setAddress(teacher.getAddress());
+
+            // Format grade field as required
+            String formattedGrade = formatGradeSection(teacher.getTeacherSectionList());
+            existingTeacher.setGrade(formattedGrade);
+
+            // Save the updated teacher
+            Teacher updatedTeacher = teacherRepository.save(existingTeacher);
+
+            // Retrieve existing TeacherSections
+            List<TeacherSection> existingSections = teacherSectionRepository.findByTeacherId(updatedTeacher.getTeacherId());
+
+            // Create a map of existing sections by their IDs for quick lookup
+            Map<Long, TeacherSection> existingSectionsMap = existingSections.stream()
+                    .collect(Collectors.toMap(TeacherSection::getId, section -> section));
+
+            // Update existing sections or add new sections
+            for (TeacherSection newSection : teacher.getTeacherSectionList()) {
+                if (newSection.getId() != null && existingSectionsMap.containsKey(newSection.getId())) {
+                    // Update existing section
+                    TeacherSection existingSection = existingSectionsMap.get(newSection.getId());
+                    existingSection.setSection(newSection.getSection());
+                    existingSection.setGrade(newSection.getGrade());
+                    existingSection.setTeacherId(updatedTeacher.getTeacherId());
+                    teacherSectionRepository.save(existingSection);
+                } else {
+                    // Add new section
+                    newSection.setTeacherId(updatedTeacher.getTeacherId());
+                    teacherSectionRepository.save(newSection);
+                }
+            }
 
             // Build the response object
             teacherResponse = TeacherResponse.builder()
@@ -211,6 +274,7 @@ public class TeacherService {
                     .joiningDate(updatedTeacher.getJoiningDate())
                     .phoneNumber(updatedTeacher.getPhoneNumber())
                     .address(updatedTeacher.getAddress())
+
                     .messageStatus("Success")
                     .build();
 
@@ -220,7 +284,7 @@ public class TeacherService {
         } catch (NotFoundException e) {
             Utility.printErrorLogs("Error updating teacher: " + e.getMessage());
             teacherResponse = TeacherResponse.builder()
-                    .messageStatus(e.toString())
+                    .messageStatus("Teacher not found: " + e.getMessage())
                     .build();
             Utility.printErrorLogs("Teacher Response: " + teacherResponse.toString());
             return teacherResponse;
@@ -228,7 +292,7 @@ public class TeacherService {
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs("Error updating teacher: " + e.getMessage());
             teacherResponse = TeacherResponse.builder()
-                    .messageStatus(e.toString())
+                    .messageStatus("Invalid input: " + e.getMessage())
                     .build();
             Utility.printErrorLogs("Teacher Response: " + teacherResponse.toString());
             return teacherResponse;
@@ -328,15 +392,15 @@ public class TeacherService {
     private TeacherDTO mapToTeacherDTO(Teacher teacher, List<TeacherSection> sections, List<Course> courses) {
         return TeacherDTO.builder()
                 .teacherId(teacher.getTeacherId())
-                .campusName(teacher.getCampusName())
-                .employeeName(teacher.getEmployeeName())
+                .Campus_Name(teacher.getCampusName())
+                .Employee_Name(teacher.getEmployeeName())
                 .email(teacher.getEmail())
                 .grade(teacher.getGrade())
                 .address(teacher.getAddress())
-                .dateOfBirth(teacher.getDateOfBirth())
-                .phoneNumber(teacher.getPhoneNumber())
+                .Date_of_Birth(teacher.getDateOfBirth())
+                .Phone_Number(teacher.getPhoneNumber())
                 .gender(teacher.getGender())
-                .joiningDate(teacher.getJoiningDate())
+                .Joining_Date(teacher.getJoiningDate())
                 .userName(teacher.getUserName())
                 .sections(sections != null ? sections.stream()
                         .map(TeacherSection::getSection)
@@ -471,7 +535,7 @@ public class TeacherService {
             List<TeacherSectionDTO> teacherSectionList = new ArrayList<>();
 
             if (gradeData != null && !gradeData.isEmpty()) {
-                String[] gradeEntries = gradeData.split("(?=grade)");
+                String[] gradeEntries = gradeData.split("(?i)(?=Grade)"); // Use "(?i)" for case-insensitive matching
 
                 for (String entry : gradeEntries) {
                     String[] parts = entry.split("\\(");
@@ -492,13 +556,13 @@ public class TeacherService {
 
             TeacherDTO dto = TeacherDTO.builder()
                     .teacherId(teacher.getTeacher_id()) // Ensure this is correctly fetched
-                    .campusName(teacher.getCampus_Name())
-                    .employeeName(teacher.getEmployee_Name())
+                    .Campus_Name(teacher.getCampus_Name())
+                    .Employee_Name(teacher.getEmployee_Name())
                     .email(teacher.getEmail())
-                    .dateOfBirth(teacher.getDate_Of_Birth())
+                    .Date_of_Birth(teacher.getDate_Of_Birth())
                     .gender(teacher.getGender())
-                    .joiningDate(teacher.getJoining_date())
-                    .phoneNumber(teacher.getPhone_number())
+                    .Joining_Date(teacher.getJoining_date())
+                    .Phone_Number(teacher.getPhone_number())
                     .address(teacher.getAddress())
                     .userName(teacher.getTeacherName())
                     .gender(teacher.getGender())

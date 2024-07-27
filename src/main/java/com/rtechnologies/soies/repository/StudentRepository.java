@@ -17,6 +17,8 @@ import java.util.Optional;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByRollNumber(String rollNum);
+    Long countByCampusName(String campusName);
+
 
     @Query("SELECT s FROM Student s LEFT JOIN FETCH s.studentAttendance WHERE s.rollNumber = :rollNumber")
     Optional<Student> findByRollnumber(@Param("rollNumber") String rollNumber);

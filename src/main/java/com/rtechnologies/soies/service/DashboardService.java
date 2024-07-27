@@ -47,7 +47,7 @@ public class DashboardService {
         DashboardResponse finalResponse = new DashboardResponse();
         Optional<Teacher> teacher = teacherRepository.findByEmail(teacherEmail);
 
-        if(!teacher.isPresent()) {
+        if (!teacher.isPresent()) {
             Utility.printDebugLogs("Teacher not found with email: " + teacherEmail);
             finalResponse.setMessageStatus("Teacher not found with email");
             throw new NotFoundException("Teacher not found with email");
@@ -59,34 +59,47 @@ public class DashboardService {
 
     public DashboardResponse getDashboardDataStats(String campus) throws JsonProcessingException, InterruptedException, ExecutionException {
         DashboardResponse finalResponse = new DashboardResponse();
-        CompletableFuture<Long> countTeacherAsynCall = CompletableFuture.supplyAsync(() -> teacherRepository.count());
-        // Long numberOfTeacher = ;
-        CompletableFuture<Long> countStudentAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.count());
-        // Long numberOfStudents = ;
-        CompletableFuture<Long> countCampusAsynCall = CompletableFuture.supplyAsync(() -> campusRepository.count());
-        // Long numberOfCampuses = ;
-        CompletableFuture<List<DashboardStatsDto>> countStudentPercentageAsynCall = null;
 
-        if(campus ==null || campus.isEmpty()){
+        CompletableFuture<Long> countTeacherAsynCall = CompletableFuture.supplyAsync(() -> teacherRepository.count());
+        CompletableFuture<Long> countStudentAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.count());
+        CompletableFuture<Long> countCampusAsynCall = CompletableFuture.supplyAsync(() -> campusRepository.count());
+
+        CompletableFuture<List<DashboardStatsDto>> countStudentPercentageAsynCall;
+        CompletableFuture<Long> countTeachersByCampus = CompletableFuture.completedFuture(0L);
+        CompletableFuture<Long> countStudentsByCampus = CompletableFuture.completedFuture(0L);
+        CompletableFuture<Long> countCampusesByCampus = CompletableFuture.completedFuture(0L);
+
+        if (campus == null || campus.isEmpty()) {
             countStudentPercentageAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.findPopulationPercentageInEachGrade());
-        }else{
+        } else {
             countStudentPercentageAsynCall = CompletableFuture.supplyAsync(() -> studentRepository.findPopulationPercentageInEachGradeCampusFilter(campus));
+            countTeachersByCampus = CompletableFuture.supplyAsync(() -> teacherRepository.countByCampusName(campus));
+            countStudentsByCampus = CompletableFuture.supplyAsync(() -> studentRepository.countByCampusName(campus));
+            countCampusesByCampus = CompletableFuture.supplyAsync(() -> campusRepository.countByCampusName(campus));
         }
 
-        System.out.println(Utility.objectToJSON(countStudentPercentageAsynCall.get()));
         Map<String, Object> stats = new HashMap<>();
-        stats.put("numberOfTeachers", countTeacherAsynCall.get());
-        stats.put("numberOfStudents", countStudentAsynCall.get());
-        stats.put("numberOfCampuses", countCampusAsynCall.get());
+
+        if (campus == null || campus.isEmpty()) {
+            stats.put("numberOfTeachers", countTeacherAsynCall.get());
+            stats.put("numberOfStudents", countStudentAsynCall.get());
+            stats.put("numberOfCampuses", countCampusAsynCall.get());
+        } else {
+            stats.put("numberOfTeachers", countTeachersByCampus.get());
+            stats.put("numberOfStudents", countStudentsByCampus.get());
+            stats.put("numberOfCampuses", countCampusesByCampus.get());
+        }
+
         stats.put("studentsPopulationStatsInGrades", countStudentPercentageAsynCall.get());
         finalResponse.setData(stats);
+
         return finalResponse;
     }
 
-    public DashboardResponse getTotalCourses(DashboardResponse dashboardResponse, long teacherId){
+    public DashboardResponse getTotalCourses(DashboardResponse dashboardResponse, long teacherId) {
         List<TeacherCourse> courses = teacherCourseRepository.findAllByTeacherId(teacherId);
         List<Course> courseList = new ArrayList<>();
-        for(TeacherCourse teacherCourse : courses) {
+        for (TeacherCourse teacherCourse : courses) {
             courseList.add(courseRepository.findById(teacherCourse.getCourseId()).get());
         }
         int courseSize = courses.size();
@@ -139,10 +152,11 @@ public class DashboardService {
         return totalStudents;
     }
 
-    private int studentCountByCourse(Course course){
+    private int studentCountByCourse(Course course) {
         List<StudentCourse> studentCourses = studentCourseRepository.findAllByCourseId(course.getCourseId());
         return studentCourses.size();
     }
+
     private double calculatePercentage(int count, int total) {
         if (total == 0) {
             return 0.0;

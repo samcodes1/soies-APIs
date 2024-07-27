@@ -17,6 +17,9 @@ import java.util.Optional;
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     Optional<Teacher> findByEmail(String email);
 
+    Long countByCampusName(String campusName);
+
+
     @Query("SELECT ts FROM TeacherSection ts")
     List<TeacherSection> findAllTeacherSections();
 

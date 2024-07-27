@@ -15,13 +15,13 @@ import java.util.List;
 public class TeacherDTO {
 
     private Long teacherId;
-    private String campusName;
-    private String employeeName;
+    private String Campus_Name;
+    private String Employee_Name;
     private String email;
-    private String dateOfBirth;
+    private String Date_of_Birth;
     private String gender;
-    private String joiningDate;
-    private String phoneNumber;
+    private String Joining_Date;
+    private String Phone_Number;
     private String address;
     private String userName;
     private String grade;

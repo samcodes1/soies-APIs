@@ -66,7 +66,7 @@ public class TeacherController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @PutMapping
-    public ResponseEntity<TeacherResponse> updateTeacher(@RequestBody Teacher teacher) {
+    public ResponseEntity<TeacherResponse> updateTeacher(@RequestBody UpdateTeacherDTO teacher) {
         TeacherResponse teacherResponse = teacherService.updateTeacher(teacher);
         return ResponseEntity.status(teacherResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(teacherResponse);
