@@ -14,14 +14,14 @@ import java.util.List;
 @NoArgsConstructor
 public class TeacherDTO {
 
-    private Long teacherId;
+    private Long teacher_Id;
     private String Campus_Name;
     private String Employee_Name;
     private String email;
-    private String Date_of_Birth;
+    private String Date_Of_Birth;
     private String gender;
-    private String Joining_Date;
-    private String Phone_Number;
+    private String Joining_date;
+    private String Phone_number;
     private String address;
     private String userName;
     private String grade;

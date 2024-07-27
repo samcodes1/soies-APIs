@@ -391,16 +391,16 @@ public class TeacherService {
 
     private TeacherDTO mapToTeacherDTO(Teacher teacher, List<TeacherSection> sections, List<Course> courses) {
         return TeacherDTO.builder()
-                .teacherId(teacher.getTeacherId())
+                .teacher_Id(teacher.getTeacherId())
                 .Campus_Name(teacher.getCampusName())
                 .Employee_Name(teacher.getEmployeeName())
                 .email(teacher.getEmail())
                 .grade(teacher.getGrade())
                 .address(teacher.getAddress())
-                .Date_of_Birth(teacher.getDateOfBirth())
-                .Phone_Number(teacher.getPhoneNumber())
+                .Date_Of_Birth(teacher.getDateOfBirth())
+                .Phone_number(teacher.getPhoneNumber())
                 .gender(teacher.getGender())
-                .Joining_Date(teacher.getJoiningDate())
+                .Joining_date(teacher.getJoiningDate())
                 .userName(teacher.getUserName())
                 .sections(sections != null ? sections.stream()
                         .map(TeacherSection::getSection)
@@ -555,14 +555,14 @@ public class TeacherService {
             }
 
             TeacherDTO dto = TeacherDTO.builder()
-                    .teacherId(teacher.getTeacher_id()) // Ensure this is correctly fetched
+                    .teacher_Id(teacher.getTeacher_id()) // Ensure this is correctly fetched
                     .Campus_Name(teacher.getCampus_Name())
                     .Employee_Name(teacher.getEmployee_Name())
                     .email(teacher.getEmail())
-                    .Date_of_Birth(teacher.getDate_Of_Birth())
+                    .Date_Of_Birth(teacher.getDate_Of_Birth())
                     .gender(teacher.getGender())
-                    .Joining_Date(teacher.getJoining_date())
-                    .Phone_Number(teacher.getPhone_number())
+                    .Joining_date(teacher.getJoining_date())
+                    .Phone_number(teacher.getPhone_number())
                     .address(teacher.getAddress())
                     .userName(teacher.getTeacherName())
                     .gender(teacher.getGender())
