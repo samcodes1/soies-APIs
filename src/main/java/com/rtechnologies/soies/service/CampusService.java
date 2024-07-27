@@ -18,35 +18,45 @@ public class CampusService {
     @Autowired
     private SectionRepository sectionRepository;
 
-    public Campus createCampus(Campus campus){
+    public Campus createCampus(Campus campus) {
         Optional<Campus> campusOptional = campusRepository.findByCampusNameIgnoreCase(campus.getCampusName());
 
-        if(campusOptional.isPresent()) {
+        if (campusOptional.isPresent()) {
             throw new RuntimeException("Campus already exists");
         }
 
         return campusRepository.save(campus);
     }
 
-    public Campus updateCampus(Long campusId, Campus updateRequest){
+
+    public void deleteSection(Long sectionId) {
+        Optional<Section> sectionOptional = sectionRepository.findById(sectionId);
+
+        if (!sectionOptional.isPresent()) {
+            throw new RuntimeException("Section not found");
+        }
+
+        sectionRepository.deleteById(sectionId);
+    }
+    public Campus updateCampus(Long campusId, Campus updateRequest) {
         Optional<Campus> campusOptional = campusRepository.findById(campusId);
 
-        if(!campusOptional.isPresent()) {
+        if (!campusOptional.isPresent()) {
             throw new RuntimeException("Campus does not exists");
         }
 
-        Campus entityCampus=campusOptional.get();
+        Campus entityCampus = campusOptional.get();
 
         entityCampus.setCampusName(updateRequest.getCampusName());
 
         return campusRepository.save(entityCampus);
     }
 
-    public List<Campus> getAllCampuses(Long id){
-        if(id==null){
+    public List<Campus> getAllCampuses(Long id) {
+        if (id == null) {
             return campusRepository.findAll();
         }
-        
+
         List<Campus> data = new java.util.ArrayList<>();
         data.add(campusRepository.findById(id).get());
         return data;
@@ -72,17 +82,17 @@ public class CampusService {
         return sectionRepository.save(section);
     }
 
-    public Section updateSection(Long id, Section request){
+    public Section updateSection(Long id, Section request) {
         Optional<Section> sectiontRes = sectionRepository.findById(id);
 
-        if(!sectiontRes.isPresent()) {
+        if (!sectiontRes.isPresent()) {
             throw new RuntimeException("Section does not exists");
         }
         request.setId(id);
         return sectionRepository.save(request);
     }
 
-    public Campus deleteCampuses(Long id){
+    public Campus deleteCampuses(Long id) {
         campusRepository.deleteById(id);
         return new Campus();
     }

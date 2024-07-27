@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -53,8 +55,8 @@ public class CampusController {
             @ApiResponse(code = 404, message = "Campus not found")
     })
     public ResponseEntity<List<Section>> getSectionsByCampusNameAndGrade(@PathVariable Long campusId, @PathVariable String grade) {
-            List<Section> sections = campusService.getSectionsByCampusNameAndGrade(campusId, grade);
-            return ResponseEntity.ok(sections);
+        List<Section> sections = campusService.getSectionsByCampusNameAndGrade(campusId, grade);
+        return ResponseEntity.ok(sections);
     }
 
     @PostMapping("/{campusId}/sections")
@@ -134,4 +136,25 @@ public class CampusController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+
+    @DeleteMapping("/sections/{sectionId}")
+    @ApiOperation(value = "Delete a section by ID", response = String.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully deleted section"),
+            @ApiResponse(code = 400, message = "Section not found")
+    })
+    public ResponseEntity<Map<String, String>> deleteSection(@PathVariable Long sectionId) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            campusService.deleteSection(sectionId);
+            response.put("status", "200");
+            response.put("message", "Successfully deleted section");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (RuntimeException ex) {
+            response.put("status", "400");
+            response.put("message", "Section not found");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+    }
+
 }

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -288,7 +289,12 @@ public class StudentService {
             }
 
             if (studentPage.isEmpty()) {
-                throw new IllegalArgumentException("No students found");
+                studentListResponse = StudentListResponseDTO.builder()
+                        .studentPage(new PageImpl<>(Collections.emptyList(), pageable, 0))
+                        .messageStatus("Success")
+                        .build();
+                Utility.printDebugLogs("Student list response: " + studentListResponse);
+                return studentListResponse;
             }
 
             // Fetch and set the latest StudentAttendance for each student
@@ -323,15 +329,18 @@ public class StudentService {
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return StudentListResponseDTO.builder()
-                    .messageStatus(e.toString())
+                    .studentPage(new PageImpl<>(Collections.emptyList(), PageRequest.of(page, size), 0))
+                    .messageStatus("Success")
                     .build();
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
             return StudentListResponseDTO.builder()
+                    .studentPage(new PageImpl<>(Collections.emptyList(), PageRequest.of(page, size), 0))
                     .messageStatus("Failure")
                     .build();
         }
     }
+
     private StudentDTO mapToStudentDTO(Student student) {
         StudentDTO studentDTO = new StudentDTO();
         studentDTO.setStudentId(student.getStudentId());
