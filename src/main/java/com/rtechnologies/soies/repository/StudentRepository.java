@@ -42,14 +42,10 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
             nativeQuery = true)
     Page<Student> findByGradeAndSectionNameAndStudentCourses(String campusName, String grade, String sectionName, String course, Pageable page);
 
-    @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id " +
-            "INNER JOIN course c ON sc.course_id = c.course_id WHERE " +
-            "s.campus_name = ?1 ",
-            countQuery = "SELECT COUNT(*) FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id " +
-                    "INNER JOIN course c ON sc.course_id = c.course_id WHERE " +
-                    "s.campus_name = ?1 ",
+    @Query(value = "SELECT * FROM student WHERE campus_name=?1",
+            countQuery = "SELECT COUNT(*) FROM student WHERE campus_name=?1",
             nativeQuery = true)
-    Page<Student> findbycampus(String campusName, Pageable page);
+    Page<Student> findbycampus(String campusName, Pageable pageable);
 
     @Query(value = "SELECT s.* FROM student s INNER JOIN student_course sc ON s.student_id = sc.student_id " +
             "INNER JOIN course c ON sc.course_id = c.course_id WHERE " +

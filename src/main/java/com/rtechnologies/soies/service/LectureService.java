@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -77,7 +78,6 @@ public class LectureService {
                 }
                 System.out.println("Done 3");
                 Lecture lecture1 = new Lecture();
-
                 lecture1.setLectureTitle(lecture.getLectureTitle());
                 lecture1.setPowerPointURL(fileUrl);
                 lecture1.setDescription(lecture.getDescription());
@@ -85,7 +85,14 @@ public class LectureService {
                 lecture1.setCourseId(lecture.getCourseId());
                 lecture1.setTotalViews(0);
                 lecture1.setVideoURL(videoUrl);
-                lecture1.setPublishDate(lecture.getPublishDate());
+
+                // Set the publish date to current date if not provided
+                if (lecture.getPublishDate() == null) {
+                    lecture1.setPublishDate(Date.valueOf(LocalDate.now().toString())); // Set the publish date to the current date
+                } else {
+                    lecture1.setPublishDate(lecture.getPublishDate());
+                }
+
                 createdLecture = lectureRepository.save(lecture1);
 
             } catch (IOException ioException) {
