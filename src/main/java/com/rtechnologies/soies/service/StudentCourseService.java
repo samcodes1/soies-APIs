@@ -14,6 +14,7 @@ import org.webjars.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentCourseService {
@@ -52,5 +53,14 @@ public class StudentCourseService {
             studentCourseRepository.save(studentCourse);
         }
         return null;
+    }
+
+
+    public List<Course> getCoursesByStudentId(Long studentId) {
+        List<StudentCourse> studentCourses = studentCourseRepository.findByStudentId(studentId);
+        List<Long> courseIds = studentCourses.stream()
+                .map(StudentCourse::getCourseId)
+                .collect(Collectors.toList());
+        return courseRepository.findAllById(courseIds);
     }
 }
