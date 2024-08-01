@@ -253,35 +253,43 @@ public class CourseService {
         }
     }
 
-    public CourseListResponse getCoursesByTeacherEmail(String teacherEmail) {
-        Utility.printDebugLogs("Get courses by teacher ID request: " + teacherEmail);
+    public CourseListResponse getCoursesByTeacherId(Long teacherId) {
+        Utility.printDebugLogs("Get courses by teacher ID request: " + teacherId);
         CourseListResponse courseListResponse = new CourseListResponse();
-        Optional<Teacher> teacher = teacherRepository.findByEmail(teacherEmail);
-        try {
-            // Validate teacherEmail
-            if (teacherEmail == null || teacherEmail.isEmpty()) {
-                Utility.printErrorLogs("Invalid teacherId for fetching courses");
-                courseListResponse.setMessageStatus("Failure");
-                return courseListResponse;
-            }
 
+        // Validate teacherId
+        if (teacherId == null) {
+            Utility.printErrorLogs("Invalid teacherId for fetching courses");
+            courseListResponse.setMessageStatus("Failure");
+            return courseListResponse;
+        }
+
+        Optional<Teacher> teacher = teacherRepository.findById(teacherId);
+        if (!teacher.isPresent()) {
+            Utility.printErrorLogs("Teacher not found with ID: " + teacherId);
+            courseListResponse.setMessageStatus("Failure");
+            return courseListResponse;
+        }
+
+        try {
             // Fetch courses by teacher ID
-            List<TeacherCourse> courses = teacherCourseRepository.findAllByTeacherId(teacher.get().getTeacherId());
+            List<TeacherCourse> teacherCourses = teacherCourseRepository.findAllByTeacherId(teacherId);
 
             List<Course> courseList = new ArrayList<>();
-            for(TeacherCourse teacherCourse : courses) {
-                courseList.add(courseRepository.findById(teacherCourse.getCourseId()).get());
+            for (TeacherCourse teacherCourse : teacherCourses) {
+                Optional<Course> course = courseRepository.findById(teacherCourse.getCourseId());
+                course.ifPresent(courseList::add);  // Add course if it exists
             }
 
-            if (!courses.isEmpty()) {
+            if (!courseList.isEmpty()) {
                 courseListResponse = CourseListResponse.builder()
                         .courseList(courseList)
                         .messageStatus("Success")
                         .build();
-                Utility.printDebugLogs("Fetched courses by teacher ID: " + teacher.get().getTeacherId());
+                Utility.printDebugLogs("Fetched courses by teacher ID: " + teacherId);
             } else {
                 courseListResponse.setMessageStatus("Failure");
-                Utility.printDebugLogs("No courses found for teacher ID: " + teacher.get().getTeacherId());
+                Utility.printDebugLogs("No courses found for teacher ID: " + teacherId);
             }
 
             Utility.printDebugLogs("Response: " + courseListResponse);
@@ -293,5 +301,6 @@ public class CourseService {
             return courseListResponse;
         }
     }
+
 
 }

@@ -100,7 +100,7 @@ public class CourseController {
                 .body(courseResponse);
     }
 
-    @ApiOperation(value = "Get Courses by Teacher Email")
+    @ApiOperation(value = "Get Courses by Teacher ID")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved courses", response = CourseListResponse.class),
             @ApiResponse(code = 400, message = "Bad Request"),
@@ -108,8 +108,8 @@ public class CourseController {
             @ApiResponse(code = 500, message = "Internal Server Error")
     })
     @GetMapping("/teacher")
-    public ResponseEntity<CourseListResponse> getCoursesByTeacherId(@RequestParam("teacherEmail") String teacherEmail) {
-        CourseListResponse courseListResponse = courseService.getCoursesByTeacherEmail(teacherEmail);
+    public ResponseEntity<CourseListResponse> getCoursesByTeacherId(@RequestParam("teacherId") Long teacherId) {
+        CourseListResponse courseListResponse = courseService.getCoursesByTeacherId(teacherId);
         return ResponseEntity.status(courseListResponse.getMessageStatus().equals("Success") ? 200 : 500)
                 .body(courseListResponse);
     }
