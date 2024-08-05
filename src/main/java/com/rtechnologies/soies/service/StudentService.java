@@ -2,8 +2,10 @@ package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.StudentAttendance;
+import com.rtechnologies.soies.model.association.StudentCourse;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.StudentAttendanceRepository;
+import com.rtechnologies.soies.repository.StudentCourseRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,9 @@ public class StudentService {
 
     @Autowired
     StudentAttendanceRepository attendanceRepository;
+
+    @Autowired
+    StudentCourseRepository studentCourseRepository;
 
     public StudentResponse createStudent(Student student) {
         Utility.printDebugLogs("Student creation request: " + student.toString());
@@ -151,6 +156,13 @@ public class StudentService {
                 throw new IllegalArgumentException("No student found with Roll Number: " + rollNumber);
             }
 
+            // Delete associated courses
+            List<StudentCourse> studentCourses = studentCourseRepository.findAllByStudentId(existingStudent.get().getStudentId());
+            if (!studentCourses.isEmpty()) {
+                studentCourseRepository.deleteAll(studentCourses);
+            }
+
+            // Delete student
             studentRepository.deleteByRollNumber(rollNumber);
             Utility.printDebugLogs("Student deleted successfully: " + existingStudent.get());
 
@@ -174,6 +186,7 @@ public class StudentService {
                     .build();
         }
     }
+
 
     public StudentResponse getStudentByRollNumber(String rollNumber) {
         Utility.printDebugLogs("Get student by Roll Number: " + rollNumber);

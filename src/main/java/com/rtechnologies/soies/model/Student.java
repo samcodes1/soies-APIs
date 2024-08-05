@@ -35,6 +35,6 @@ public class Student {
     private String address;
     private String city;
 
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.EAGER,orphanRemoval = true)
     private StudentAttendance studentAttendance;
 }
