@@ -5,6 +5,7 @@ import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.StudentCourse;
 import com.rtechnologies.soies.model.dto.CreateStudentCourse;
+import com.rtechnologies.soies.model.dto.StudentCourseListResponse;
 import com.rtechnologies.soies.repository.CourseRepository;
 import com.rtechnologies.soies.repository.StudentCourseRepository;
 import com.rtechnologies.soies.repository.StudentRepository;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -56,11 +58,32 @@ public class StudentCourseService {
     }
 
 
-    public List<Course> getCoursesByStudentId(Long studentId) {
-        List<StudentCourse> studentCourses = studentCourseRepository.findByStudentId(studentId);
-        List<Long> courseIds = studentCourses.stream()
-                .map(StudentCourse::getCourseId)
-                .collect(Collectors.toList());
-        return courseRepository.findAllById(courseIds);
+    public StudentCourseListResponse getCoursesByStudentId(Long studentId) {
+        StudentCourseListResponse courseListResponse = new StudentCourseListResponse();
+
+        try {
+            // Fetch student-course mappings
+            List<StudentCourse> studentCourses = studentCourseRepository.findByStudentId(studentId);
+
+            if (studentCourses.isEmpty()) {
+                // No courses found for the student
+                courseListResponse.setCourseList(Collections.emptyList());
+                courseListResponse.setMessageStatus("No courses found for the student");
+            } else {
+                // Extract course IDs and fetch course details
+                List<Long> courseIds = studentCourses.stream()
+                        .map(StudentCourse::getCourseId)
+                        .collect(Collectors.toList());
+
+                List<Course> courses = courseRepository.findAllById(courseIds);
+                courseListResponse.setCourseList(courses);
+                courseListResponse.setMessageStatus("Success");
+            }
+        } catch (Exception e) {
+            courseListResponse.setCourseList(Collections.emptyList());
+            courseListResponse.setMessageStatus("Failure: " + e.getMessage());
+        }
+
+        return courseListResponse;
     }
 }

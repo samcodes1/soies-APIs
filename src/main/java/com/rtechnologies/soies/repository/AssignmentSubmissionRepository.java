@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,7 +20,7 @@ public interface AssignmentSubmissionRepository extends JpaRepository<Assignment
 
     List<AssignmentSubmission> findByStudentRollNumber(String studentRollNumber);
 
-    Page<AssignmentSubmission> findByStudentRollNumberAndTerm(String studentRollNumber, String term, Pageable pageable);
-
+    @Query("SELECT a FROM AssignmentSubmission a WHERE a.studentRollNumber = :studentRollNumber AND a.term = :term")
+    Page<AssignmentSubmission> findByStudentRollNumberAndTerm(@Param("studentRollNumber") String studentRollNumber, @Param("term") String term, Pageable pageable);
     Page<AssignmentSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
 }

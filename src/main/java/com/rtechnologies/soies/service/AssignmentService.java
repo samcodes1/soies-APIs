@@ -474,6 +474,7 @@ public class AssignmentService {
                 finalAssignment.setComments("pending");
                 finalAssignment.setObtainedMarks(-1);
                 finalAssignment.setObtainedGrade("pending");
+                finalAssignment.setTerm(assignmentOptional.get().getTerm());
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");

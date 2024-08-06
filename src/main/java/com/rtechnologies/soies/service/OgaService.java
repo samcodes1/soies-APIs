@@ -1,8 +1,6 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.*;
-import com.rtechnologies.soies.model.association.QuizStudentAnswer;
-import com.rtechnologies.soies.model.association.QuizSubmission;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.association.OgaStudentAnswer;
@@ -354,6 +352,9 @@ public class OgaService {
 
     public String submitOga(OgaSubmissionRequest ogaSubmissionRequest) {
         OgaSubmission ogaSubmission = new OgaSubmission();
+
+        Optional<Oga> oga = ogaRepository.findById(ogaSubmissionRequest.getOgaId());
+        System.out.println("oga term " + oga.get().getTerm());
         List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaSubmissionRequest.getOgaId());
 
         if (ogaQuestions.isEmpty()) {
@@ -389,6 +390,8 @@ public class OgaService {
         double percentage = (double) gainedMarks / totalMarks * 100;
         ogaSubmission.setGainedMarks(gainedMarks);
         ogaSubmission.setPercentage(percentage);
+        ogaSubmission.setTerm(oga.get().getTerm());
+
 
         ogaSubmissionRepository.save(ogaSubmission);
 

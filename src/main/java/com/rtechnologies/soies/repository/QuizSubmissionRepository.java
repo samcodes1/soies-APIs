@@ -5,14 +5,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
 public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, Long> {
-    List<QuizSubmission> findByQuizId(Long quizId);
-
+    @Query("SELECT qs FROM QuizSubmission qs WHERE qs.quizId = :quizId")
+    List<QuizSubmission> findByQuizId(@Param("quizId") Long quizId);
     List<QuizSubmission> findByStudentRollNumber(String studentRollNumber);
 
     Page<QuizSubmission> findByStudentRollNumberAndTerm(String studentRollNumber, String term, Pageable pageable);

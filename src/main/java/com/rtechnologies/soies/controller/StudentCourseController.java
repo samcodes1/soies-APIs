@@ -3,6 +3,7 @@ package com.rtechnologies.soies.controller;
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.association.StudentCourse;
+import com.rtechnologies.soies.model.dto.StudentCourseListResponse;
 import com.rtechnologies.soies.model.dto.StudentResponse;
 import com.rtechnologies.soies.service.StudentCourseService;
 import io.swagger.annotations.ApiOperation;
@@ -34,8 +35,8 @@ public class StudentCourseController {
     }
 
     @GetMapping("/courses/student/{studentId}")
-    public ResponseEntity<List<Course>> getCoursesByStudentId(@PathVariable Long studentId) {
-        List<Course> courses = studentCourseService.getCoursesByStudentId(studentId);
-        return ResponseEntity.ok(courses);
+    public ResponseEntity<StudentCourseListResponse> getCoursesByStudentId(@PathVariable Long studentId) {
+        StudentCourseListResponse response = studentCourseService.getCoursesByStudentId(studentId);
+        return ResponseEntity.ok(response);
     }
 }

@@ -460,6 +460,7 @@ public class QuizService {
         double percentage = (double) gainedMarks / totalMarks * 100;
         quizSubmission.setGainedMarks(gainedMarks);
         quizSubmission.setPercentage(percentage);
+        quizSubmission.setTerm(quizSubmission.getTerm());
 
         quizSubmissionRepository.save(quizSubmission);
 
@@ -467,23 +468,39 @@ public class QuizService {
     }
 
     public QuizSubmissionListResponse getAllQuizSubmission(Long quizId) {
-        List<QuizSubmission> submittedQuizzes = quizSubmissionRepository.findByQuizId(quizId);
+        // Prepare the response object
         QuizSubmissionListResponse quizSubmissionResponse = new QuizSubmissionListResponse();
-        if (submittedQuizzes.isEmpty()) {
-            throw new NotFoundException("No quiz found with ID: " + quizId);
-        }
 
-        List<QuizSubmissionResponse> quizSubmissionResponses = new ArrayList<>();
-        for (int i = 0; i < submittedQuizzes.size(); i++) {
-            quizSubmissionResponses.add(mapToQuizSubmissionResponse(submittedQuizzes.get(i)));
-        }
+        try {
+            // Fetch all quiz submissions for the given quizId
+            List<QuizSubmission> submittedQuizzes = quizSubmissionRepository.findByQuizId(quizId);
 
-        quizSubmissionResponse.setQuizSubmissionList(quizSubmissionResponses);
-        quizSubmissionResponse.setMessageStatus("Success");
+            // Check if any submissions were found
+            if (submittedQuizzes.isEmpty()) {
+                Utility.printDebugLogs("No submissions found for quiz ID: " + quizId);
+                quizSubmissionResponse.setQuizSubmissionList(Collections.emptyList()); // Return an empty list
+                quizSubmissionResponse.setMessageStatus("Success");
+                return quizSubmissionResponse;
+            }
+
+            // Map each QuizSubmission to QuizSubmissionResponse
+            List<QuizSubmissionResponse> quizSubmissionResponses = submittedQuizzes.stream()
+                    .map(this::mapToQuizSubmissionResponse)
+                    .collect(Collectors.toList());
+
+            // Set the response fields
+            quizSubmissionResponse.setQuizSubmissionList(quizSubmissionResponses);
+            quizSubmissionResponse.setMessageStatus("Success");
+
+        } catch (Exception e) {
+            // Handle any unexpected exceptions
+            Utility.printErrorLogs("Error fetching quiz submissions: " + e.getMessage());
+            quizSubmissionResponse.setQuizSubmissionList(Collections.emptyList());
+            quizSubmissionResponse.setMessageStatus("Failure");
+        }
 
         return quizSubmissionResponse;
     }
-
     public QuizSubmissionResponse mapToQuizSubmissionResponse(QuizSubmission quizSubmission) {
         Optional<Student> student = studentRepository.findByRollNumber(quizSubmission.getStudentRollNumber());
         return QuizSubmissionResponse.builder()

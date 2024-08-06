@@ -1,7 +1,7 @@
 package com.rtechnologies.soies.model.dto;
 
+
 import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.association.TeacherCourse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TeacherCourseListResponse {
+public class StudentCourseListResponse {
     private List<Course> courseList;
     private String messageStatus;
 }
