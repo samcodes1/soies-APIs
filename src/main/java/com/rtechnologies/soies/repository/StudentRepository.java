@@ -18,7 +18,9 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByRollNumber(String rollNum);
     Long countByCampusName(String campusName);
-    List<Student> findByGradeAndSectionName(String grade, String sectionName);
+
+    Page<Student> findByGradeAndSectionName(String grade, String section, Pageable pageable);
+
 
 
 

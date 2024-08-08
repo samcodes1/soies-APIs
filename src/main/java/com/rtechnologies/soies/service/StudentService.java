@@ -514,11 +514,17 @@ public class StudentService {
         return courseRepository.findCoursesByGrade(grade);
     }
 
-    public Map<String, Object> getStudentDetails(String term, String grade, String section) {
-        // Fetch students based on the optional parameters
-        List<Student> students = (grade == null && section == null) ?
-                studentRepository.findAll() :
-                studentRepository.findByGradeAndSectionName(grade, section);
+    public Map<String, Object> getStudentDetails(String term, String grade, String section, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Student> studentPage;
+        if (grade == null && section == null) {
+            studentPage = studentRepository.findAll(pageable);
+        } else {
+            studentPage = studentRepository.findByGradeAndSectionName(grade, section, pageable);
+        }
+
+        List<Student> students = studentPage.getContent();
 
         if (students == null) {
             students = Collections.emptyList();
@@ -578,7 +584,6 @@ public class StudentService {
             studentDetails.put("studentName", student.getStudentName());
             studentDetails.put("rollNumber", student.getRollNumber());
 
-            // Get average quiz, OGA, assignment, and exam marks from the maps
             double avgQuizMarks = avgQuizMarksMap.getOrDefault(student.getRollNumber(), 0.0);
             double avgOgaMarks = avgOgaMarksMap.getOrDefault(student.getRollNumber(), 0.0);
             double avgAssignmentMarks = avgAssignmentMarksMap.getOrDefault(student.getRollNumber(), 0.0);
@@ -592,10 +597,14 @@ public class StudentService {
             return studentDetails;
         }).collect(Collectors.toList());
 
-        // Wrap the result in a top-level "studentDetails" key
         Map<String, Object> response = new HashMap<>();
         response.put("studentDetails", studentDetailsList);
+        response.put("totalPages", studentPage.getTotalPages());
+        response.put("totalElements", studentPage.getTotalElements());
+        response.put("currentPage", studentPage.getNumber());
+        response.put("pageSize", studentPage.getSize());
 
         return response;
     }
 }
+

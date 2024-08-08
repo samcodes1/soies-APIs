@@ -11,6 +11,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,11 +141,19 @@ public class StudentController {
     }
 
     @GetMapping("/students/details")
-    public Map<String, Object> getStudentDetails(
+    public ResponseEntity<Map<String, Object>> getStudentDetails(
             @RequestParam String term,
             @RequestParam String grade,
-            @RequestParam String section) {
-        return studentService.getStudentDetails(term, grade, section);
+            @RequestParam String section,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = studentService.getStudentDetails(term, grade, section, page, size);
+
+        if (response.get("studentDetails") instanceof List && ((List<?>) response.get("studentDetails")).isEmpty()) {
+            return ResponseEntity.ok(Collections.singletonMap("studentDetails", Collections.emptyList()));
+        }
+
+        return ResponseEntity.ok(response);
     }
 }
 
