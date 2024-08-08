@@ -206,8 +206,9 @@ public class AssignmentController {
                                                                            @PathVariable String section,
                                                                            @PathVariable String studentRollNum) {
         AssignmentListResponse response = assignmentService.getAssignmentsByCourseId(courseId, section, studentRollNum);
-        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
-                .body(response);
+
+        // Always return 200 OK for success
+        return ResponseEntity.ok(response);
     }
 
     @ApiOperation(value = "Get assignments by course ID and section", response = AssignmentListResponse.class)

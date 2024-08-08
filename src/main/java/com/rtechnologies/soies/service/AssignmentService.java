@@ -340,48 +340,45 @@ public class AssignmentService {
         try {
             List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSection(courseId, section);
             List<Assignment> finalList = new ArrayList<>();
+
             if (assignmentList.isEmpty()) {
                 Utility.printDebugLogs("No assignments found for course ID: " + courseId);
-                throw new NotFoundException("No assignments found for course ID: " + courseId);
-            }
+                // Return an empty list with a success messageStatus
+                assignmentListResponse = AssignmentListResponse.builder()
+                        .assignmentList(new ArrayList<>()) // Empty list
+                        .messageStatus("Success") // Success status
+                        .build();
+            } else {
+                List<AssignmentSubmission> assignmentSubmissionList =
+                        assignmentSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-            List<AssignmentSubmission> assignmentSubmissionList =
-                    assignmentSubmissionRepository.findByStudentRollNumber(studentRollNum);
-            finalList = assignmentList;
-            if (!assignmentSubmissionList.isEmpty()) {
-                for (int i = 0; i < assignmentSubmissionList.size(); i++) {
-                    for (Assignment assignment : assignmentList) {
-                        if (Objects.equals(assignment.getAssignmentId(), assignmentSubmissionList.get(i).getAssignmentId())) {
-                            finalList.remove(assignment);
-                            break;
-                        }
+                finalList.addAll(assignmentList);
+
+                if (!assignmentSubmissionList.isEmpty()) {
+                    for (AssignmentSubmission submission : assignmentSubmissionList) {
+                        finalList.removeIf(assignment -> Objects.equals(assignment.getAssignmentId(), submission.getAssignmentId()));
                     }
-
                 }
 
                 assignmentListResponse = AssignmentListResponse.builder()
                         .assignmentList(finalList)
-                        .messageStatus("Success")
-                        .build();
-            } else {
-                assignmentListResponse = AssignmentListResponse.builder()
-                        .assignmentList(assignmentList)
-                        .messageStatus("Success")
+                        .messageStatus("Success") // Success status
                         .build();
             }
-
 
             Utility.printDebugLogs("Assignment list response: " + assignmentListResponse);
             return assignmentListResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentListResponse.builder()
-                    .messageStatus(e.toString())
+                    .assignmentList(new ArrayList<>()) // Empty list in case of error
+                    .messageStatus("Invalid input: " + e.getMessage())
                     .build();
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentListResponse.builder()
-                    .messageStatus("Failure")
+                    .assignmentList(new ArrayList<>()) // Empty list in case of error
+                    .messageStatus("Failure: " + e.getMessage())
                     .build();
         }
     }

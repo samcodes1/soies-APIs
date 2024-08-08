@@ -18,6 +18,8 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Optional<Student> findByRollNumber(String rollNum);
     Long countByCampusName(String campusName);
+    List<Student> findByGradeAndSectionName(String grade, String sectionName);
+
 
 
     @Query("SELECT s FROM Student s LEFT JOIN FETCH s.studentAttendance WHERE s.rollNumber = :rollNumber")

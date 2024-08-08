@@ -1,12 +1,10 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Student;
-import com.rtechnologies.soies.model.association.StudentAttendance;
-import com.rtechnologies.soies.model.association.StudentCourse;
+import com.rtechnologies.soies.model.association.*;
 import com.rtechnologies.soies.model.dto.*;
-import com.rtechnologies.soies.repository.StudentAttendanceRepository;
-import com.rtechnologies.soies.repository.StudentCourseRepository;
-import com.rtechnologies.soies.repository.StudentRepository;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,10 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
+import java.util.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -40,6 +36,21 @@ public class StudentService {
 
     @Autowired
     StudentCourseRepository studentCourseRepository;
+
+    @Autowired
+    CourseRepository courseRepository;
+
+    @Autowired
+    QuizSubmissionRepository quizSubmissionRepository;
+
+    @Autowired
+    OgaSubmissionRepository ogaSubmissionRepository;
+
+    @Autowired
+    ExamSubmissionRepository examSubmissionRepository;
+
+    @Autowired
+    AssignmentSubmissionRepository assignmentSubmissionRepository;
 
     public StudentResponse createStudent(Student student) {
         Utility.printDebugLogs("Student creation request: " + student.toString());
@@ -61,6 +72,23 @@ public class StudentService {
             student.setPassword(hashedPassword);
             Student createdStudent = studentRepository.save(student);
             Utility.printDebugLogs("Student created successfully: " + createdStudent);
+
+            // Fetch courses for the student's grade
+            String studentGrade = createdStudent.getGrade();
+            List<Course> courses = getCoursesForGrade(studentGrade);
+
+            // Create StudentCourse relationships
+            List<StudentCourse> studentCourses = new ArrayList<>();
+            for (Course course : courses) {
+                StudentCourse studentCourse = StudentCourse.builder()
+                        .studentId(createdStudent.getStudentId())
+                        .courseId(course.getCourseId())
+                        .build();
+                studentCourses.add(studentCourse);
+            }
+
+            // Save student-course relationships
+            studentCourseRepository.saveAll(studentCourses);
 
             studentResponse = StudentResponse.builder()
                     .studentId(createdStudent.getStudentId())
@@ -431,37 +459,143 @@ public class StudentService {
     @Transactional
     public StudentListResponse saveStudentsFromFile(MultipartFile file) throws IOException {
         List<Student> students = null;
-        if (Utility.isCSV(file)) {
-            // System.out.println();
-            students = excelParser.csvParserStudent(file);
-            List<Student> duplicates = new ArrayList<>();
+        List<StudentCourse> studentCourses = new ArrayList<>();
+
+        try {
+            if (Utility.isCSV(file)) {
+                students = excelParser.csvParserStudent(file);
+            } else if (Utility.isExcel(file)) {
+                students = excelParser.parseStudentExcelFile(file.getInputStream());
+            } else {
+                throw new IllegalArgumentException("Wrong file received!");
+            }
+
             List<Student> newStudents = new ArrayList<>();
+            List<Student> duplicates = new ArrayList<>();
+
             for (Student student : students) {
                 Optional<Student> existingStudent = studentRepository.findByRollNumber(student.getRollNumber());
                 if (existingStudent.isPresent()) {
                     duplicates.add(student);
                 } else {
                     newStudents.add(student);
+                    studentRepository.saveAll(newStudents);
+                    // Fetch courses for the student's grade
+                    String studentGrade = student.getGrade();
+                    List<Course> courses = getCoursesForGrade(studentGrade);
+
+                    // Create StudentCourse relationships
+                    for (Course course : courses) {
+                        StudentCourse studentCourse = StudentCourse.builder()
+                                .studentId(student.getStudentId())
+                                .courseId(course.getCourseId())
+                                .build();
+                        studentCourses.add(studentCourse);
+                    }
                 }
             }
 
-            // Save new students
-            studentRepository.saveAll(newStudents);
-            // studentRepository.saveAll(students);
-            StudentListResponse studentListResponse = StudentListResponse.builder()
+
+            studentCourseRepository.saveAll(studentCourses);
+
+            return StudentListResponse.builder()
                     .studentList(duplicates)
                     .messageStatus("Success")
                     .build();
-            return studentListResponse;
-        } else if (Utility.isExcel(file)) {
-            students = excelParser.parseStudentExcelFile(file.getInputStream());
-            studentRepository.saveAll(students);
-            StudentListResponse studentListResponse = StudentListResponse.builder()
-                    .studentList(null)
-                    .messageStatus("Success")
-                    .build();
-            return studentListResponse;
+        } catch (Exception e) {
+            // Log detailed error
+            Utility.printErrorLogs("Error while saving students from file: " + e.getMessage());
+            throw e; // Rethrow or handle as needed
         }
-        throw new IllegalArgumentException("Wrong file received!");
+    }
+
+    private List<Course> getCoursesForGrade(String grade) {
+        // Fetch courses by grade from the repository
+        return courseRepository.findCoursesByGrade(grade);
+    }
+
+    public Map<String, Object> getStudentDetails(String term, String grade, String section) {
+        // Fetch students based on the optional parameters
+        List<Student> students = (grade == null && section == null) ?
+                studentRepository.findAll() :
+                studentRepository.findByGradeAndSectionName(grade, section);
+
+        if (students == null) {
+            students = Collections.emptyList();
+        }
+
+        // Fetch all quiz submissions for the students
+        List<QuizSubmission> allQuizSubmissions = students.stream()
+                .flatMap(student -> quizSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
+                .collect(Collectors.toList());
+
+        // Fetch all OGA submissions for the students
+        List<OgaSubmission> allOgaSubmissions = students.stream()
+                .flatMap(student -> ogaSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
+                .collect(Collectors.toList());
+
+        // Fetch all assignment submissions for the students
+        List<AssignmentSubmission> allAssignmentSubmissions = students.stream()
+                .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
+                .collect(Collectors.toList());
+
+        // Fetch all exam submissions for the students
+        List<ExamSubmission> allExamSubmissions = students.stream()
+                .flatMap(student -> examSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
+                .collect(Collectors.toList());
+
+        // Calculate average quiz marks
+        Map<String, Double> avgQuizMarksMap = allQuizSubmissions.stream()
+                .collect(Collectors.groupingBy(
+                        QuizSubmission::getStudentRollNumber,
+                        Collectors.averagingInt(QuizSubmission::getGainedMarks)
+                ));
+
+        // Calculate average OGA marks
+        Map<String, Double> avgOgaMarksMap = allOgaSubmissions.stream()
+                .collect(Collectors.groupingBy(
+                        OgaSubmission::getStudentRollNumber,
+                        Collectors.averagingInt(OgaSubmission::getGainedMarks)
+                ));
+
+        // Calculate average assignment marks
+        Map<String, Double> avgAssignmentMarksMap = allAssignmentSubmissions.stream()
+                .collect(Collectors.groupingBy(
+                        AssignmentSubmission::getStudentRollNumber,
+                        Collectors.averagingDouble(AssignmentSubmission::getObtainedMarks)
+                ));
+
+        // Calculate average exam marks
+        Map<String, Double> avgExamMarksMap = allExamSubmissions.stream()
+                .collect(Collectors.groupingBy(
+                        ExamSubmission::getStudentRollNumber,
+                        Collectors.averagingInt(ExamSubmission::getGainedMarks)
+                ));
+
+        // Aggregate the data
+        List<Map<String, Object>> studentDetailsList = students.stream().map(student -> {
+            Map<String, Object> studentDetails = new HashMap<>();
+            studentDetails.put("studentName", student.getStudentName());
+            studentDetails.put("rollNumber", student.getRollNumber());
+
+            // Get average quiz, OGA, assignment, and exam marks from the maps
+            double avgQuizMarks = avgQuizMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+            double avgOgaMarks = avgOgaMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+            double avgAssignmentMarks = avgAssignmentMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+            double avgExamMarks = avgExamMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+
+            studentDetails.put("avgQuizGainedMarks", avgQuizMarks);
+            studentDetails.put("avgOgaGainedMarks", avgOgaMarks);
+            studentDetails.put("avgAssignmentGainedMarks", avgAssignmentMarks);
+            studentDetails.put("avgExamGainedMarks", avgExamMarks);
+
+            return studentDetails;
+        }).collect(Collectors.toList());
+
+        // Wrap the result in a top-level "studentDetails" key
+        Map<String, Object> response = new HashMap<>();
+        response.put("studentDetails", studentDetailsList);
+
+        return response;
     }
 }

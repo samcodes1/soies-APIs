@@ -10,6 +10,10 @@ import java.util.*;
 
 
 import com.opencsv.exceptions.CsvException;
+import com.rtechnologies.soies.model.*;
+import com.rtechnologies.soies.model.association.TeacherCourse;
+import com.rtechnologies.soies.model.association.TeacherSection;
+import com.rtechnologies.soies.repository.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -19,15 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.opencsv.CSVReader;
-import com.rtechnologies.soies.model.Campus;
-import com.rtechnologies.soies.model.Section;
-import com.rtechnologies.soies.model.Student;
-import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.TeacherCampusSectionGradeBranch;
-import com.rtechnologies.soies.repository.CampusRepository;
-import com.rtechnologies.soies.repository.SectionRepository;
-import com.rtechnologies.soies.repository.TeacherCampusSectionGradeBranchRepo;
-import com.rtechnologies.soies.repository.TeacherRepository;
 
 import java.util.Optional;
 import java.util.ArrayList;
@@ -49,6 +45,14 @@ public class ExcelParser {
 
     @Autowired
     TeacherRepository teacherRepositoryobj;
+
+    @Autowired
+    CourseRepository courseRepository;
+    @Autowired
+    TeacherSectionRepository teacherSectionRepository;
+
+    @Autowired
+    TeacherCourseRepository teacherCourseRepository;
 
     public List<Student> parseStudentExcelFile(InputStream is) throws IOException {
         List<Student> students = new ArrayList<>();
@@ -223,6 +227,16 @@ public class ExcelParser {
 
                     // Save Teacher-Campus-Section-Grade association
                     saveTeacherCampusSectionGradeAssociation(teacherId, sectionId);
+
+                    // Process and assign courses to the teacher
+                    List<Course> courses = getCoursesForGrade(grade);
+                    for (Course course : courses) {
+                        Long courseId = getOrCreateCourse(course.getCourseName(), grade);
+                        saveTeacherCourseAssociation(teacherId, courseId);
+                    }
+
+                    // Save Teacher-Section association
+//                    saveTeacherSectionAssociation(teacherId, sectionId);
                 } catch (Exception e) {
                     System.err.println("Error processing section: " + section);
                     e.printStackTrace();
@@ -230,7 +244,45 @@ public class ExcelParser {
             }
         }
     }
+    private Long getOrCreateCourse(String courseName, String grade) {
+        Optional<Course> courseData = courseRepository.findByCourseNameIgnoreCaseAndGrade(courseName, grade);
+        Long courseId;
+        if (!courseData.isPresent()) {
+            Course newCourse = Course.builder().courseName(courseName).grade(grade).build();
+            newCourse = courseRepository.save(newCourse);
+            courseId = newCourse.getCourseId();
+            System.err.println("Course does not exist, created new course with ID: " + courseId);
+        } else {
+            courseId = courseData.get().getCourseId();
+            System.err.println("Course exists with ID: " + courseId);
+        }
+        return courseId;
+    }
 
+    private void saveTeacherCourseAssociation(Long teacherId, Long courseId) {
+        Optional<TeacherCourse> existingAssociation = teacherCourseRepository.findByTeacherIdAndCourseId(teacherId, courseId);
+        if (!existingAssociation.isPresent()) {
+            teacherCourseRepository.save(TeacherCourse.builder().teacherId(teacherId).courseId(courseId).build());
+            System.err.println("Added new course to teacher with ID: " + teacherId);
+        } else {
+            System.err.println("Teacher already has this course assigned.");
+        }
+    }
+
+//    private void saveTeacherSectionAssociation(Long teacherId, Long sectionId) {
+//        Optional<TeacherSection> existingAssociation = teacherSectionRepository.findByTeacherIdAndSectionId(teacherId, sectionId);
+//        if (!existingAssociation.isPresent()) {
+//            teacherSectionRepository.save(TeacherSection.builder().teacherId(teacherId).sectionId(sectionId).build());
+//            System.err.println("Added new section to teacher with ID: " + teacherId);
+//        } else {
+//            System.err.println("Teacher already has this section assigned.");
+//        }
+//    }
+
+    private List<Course> getCoursesForGrade(String grade) {
+        // Fetch courses by grade from the repository
+        return courseRepository.findCoursesByGrade(grade);
+    }
     private String getValue(String[] row, Map<String, Integer> headerIndexMap, String headerName) {
         Integer index = headerIndexMap.get(headerName.toLowerCase());
         return (index != null && index < row.length) ? row[index] : "";

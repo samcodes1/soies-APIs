@@ -19,4 +19,6 @@ public interface OgaSubmissionRepository extends JpaRepository<OgaSubmission, Lo
     Page<OgaSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
 
     List<OgaSubmission> findByOgaId(Long ogaId);
+    List<OgaSubmission> findByCourseIdAndStudentRollNumber(Long courseId, String studentRollNumber);
+
 }

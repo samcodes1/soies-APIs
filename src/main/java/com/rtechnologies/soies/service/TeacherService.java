@@ -50,42 +50,51 @@ public class TeacherService {
     @Autowired
     private ExcelParser excelParser;
 
-    public TeacherResponse createTeacher(CreateTeacherDTO teacher) {
-        Utility.printDebugLogs("Teacher creation request: " + teacher.toString());
-        System.out.println("Teacher creation request: " + teacher.toString());
+    public TeacherResponse createTeacher(CreateTeacherDTO teacherDTO) {
+        Utility.printDebugLogs("Teacher creation request: " + teacherDTO.toString());
+        System.out.println("Teacher creation request: " + teacherDTO.toString());
         TeacherResponse teacherResponse = null;
+
         try {
-            if (teacher == null) {
-                Utility.printDebugLogs("Teacher object is null: " + teacher.toString());
-                throw new IllegalArgumentException("Corrupt data receive");
+            if (teacherDTO == null) {
+                Utility.printDebugLogs("Teacher object is null");
+                throw new IllegalArgumentException("Corrupt data received");
             }
 
-            Optional<Teacher> teacherOptional = teacherRepository.findByEmail(teacher.getEmail());
+            Optional<Teacher> teacherOptional = teacherRepository.findByEmail(teacherDTO.getEmail());
             if (teacherOptional.isPresent()) {
-                Utility.printErrorLogs("Teacher already exists with following email: "
-                        + teacher.getEmail());
+                Utility.printErrorLogs("Teacher already exists with email: " + teacherDTO.getEmail());
                 throw new IllegalArgumentException("Account already exists");
             }
 
             // Hash the password using BCryptPasswordEncoder
-            String hashedPassword = new BCryptPasswordEncoder().encode(teacher.getPassword());
-
-            // Set the hashed password to the teacher object
-            teacher.setPassword(hashedPassword);
+            String hashedPassword = new BCryptPasswordEncoder().encode(teacherDTO.getPassword());
+            teacherDTO.setPassword(hashedPassword);
 
             // Format grade field based on teacherSectionList
-            String formattedGrade = formatGradeSection(teacher.getTeacherSectionList());
+            String formattedGrade = formatGradeSection(teacherDTO.getTeacherSectionList());
 
-            Teacher savingTeacher = mapToTeacher(teacher, formattedGrade);
-            // Save the teacher with the hashed password
+            // Map DTO to Teacher entity
+            Teacher savingTeacher = mapToTeacher(teacherDTO, formattedGrade);
             Teacher savedTeacher = teacherRepository.save(savingTeacher);
             Utility.printDebugLogs("Saved teacher: " + savedTeacher.toString());
 
-            for (TeacherSection teacherSection : teacher.getTeacherSectionList()) {
+            // Save TeacherSection details
+            for (TeacherSection teacherSection : teacherDTO.getTeacherSectionList()) {
                 teacherSection.setTeacherId(savedTeacher.getTeacherId());
             }
+            teacherSectionRepository.saveAll(teacherDTO.getTeacherSectionList());
 
-            teacherSectionRepository.saveAll(teacher.getTeacherSectionList());
+            // Check and assign courses based on the grade
+            for (TeacherSection teacherSection : teacherDTO.getTeacherSectionList()) {
+                String grade = teacherSection.getGrade();
+                List<Course> courses = getCoursesForGrade(grade);
+
+                for (Course course : courses) {
+                    Long courseId = course.getCourseId();
+                    saveTeacherCourseAssociation(savedTeacher.getTeacherId(), courseId);
+                }
+            }
 
             teacherResponse = TeacherResponse.builder()
                     .teacherId(savedTeacher.getTeacherId())
@@ -97,7 +106,8 @@ public class TeacherService {
                     .joiningDate(savedTeacher.getJoiningDate())
                     .phoneNumber(savedTeacher.getPhoneNumber())
                     .address(savedTeacher.getAddress())
-                    .messageStatus("Success").build();
+                    .messageStatus("Success")
+                    .build();
 
             Utility.printDebugLogs("Teacher Response: " + teacherResponse.toString());
             return teacherResponse;
@@ -105,10 +115,38 @@ public class TeacherService {
         } catch (Exception e) {
             Utility.printErrorLogs("Error: " + e);
             teacherResponse = TeacherResponse.builder()
-                    .messageStatus("Failure").build();
+                    .messageStatus("Failure")
+                    .build();
             Utility.printErrorLogs("Teacher Response: " + teacherResponse);
             return teacherResponse;
         }
+    }
+    private void saveTeacherCourseAssociation(Long teacherId, Long courseId) {
+        Optional<TeacherCourse> existingAssociation = teacherCourseRepository.findByTeacherIdAndCourseId(teacherId, courseId);
+        if (!existingAssociation.isPresent()) {
+            teacherCourseRepository.save(TeacherCourse.builder().teacherId(teacherId).courseId(courseId).build());
+            System.err.println("Added new course to teacher with ID: " + teacherId);
+        } else {
+            System.err.println("Teacher already has this course assigned.");
+        }
+    }
+    private Long getOrCreateCourse(String courseName, String grade) {
+        Optional<Course> courseData = courseRepository.findByCourseNameIgnoreCaseAndGrade(courseName, grade);
+        Long courseId;
+        if (!courseData.isPresent()) {
+            Course newCourse = Course.builder().courseName(courseName).grade(grade).build();
+            newCourse = courseRepository.save(newCourse);
+            courseId = newCourse.getCourseId();
+            System.err.println("Course does not exist, created new course with ID: " + courseId);
+        } else {
+            courseId = courseData.get().getCourseId();
+            System.err.println("Course exists with ID: " + courseId);
+        }
+        return courseId;
+    }
+    private List<Course> getCoursesForGrade(String grade) {
+        // Fetch courses by grade from the repository
+        return courseRepository.findCoursesByGrade(grade);
     }
 
     private String formatGradeSection(List<TeacherSection> sections) {

@@ -5,13 +5,13 @@ import com.rtechnologies.soies.model.dto.StudentListResponse;
 import com.rtechnologies.soies.model.dto.StudentListResponseDTO;
 import com.rtechnologies.soies.model.dto.StudentResponse;
 import com.rtechnologies.soies.service.StudentService;
-import com.rtechnologies.soies.utilities.Utility;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -138,4 +138,12 @@ public class StudentController {
                 .body(response);
     }
 
+    @GetMapping("/students/details")
+    public Map<String, Object> getStudentDetails(
+            @RequestParam String term,
+            @RequestParam String grade,
+            @RequestParam String section) {
+        return studentService.getStudentDetails(term, grade, section);
+    }
 }
+
