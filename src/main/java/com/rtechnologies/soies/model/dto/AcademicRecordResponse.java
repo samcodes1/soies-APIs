@@ -16,9 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AcademicRecordResponse {
-    private List<AssignmentSubmission> assignmentSubmissions;
-    private List<ExamSubmission> examSubmissions;
-    private List<QuizSubmission> quizSubmissions;
-    private List<OgaSubmission> ogaSubmissions;
+    private List<AssignmentSubmissionDTO> assignmentSubmissions;
+    private List<ExamSubmissionDTO> examSubmissions;
+    private List<QuizSubmissionDTO> quizSubmissions;
+    private List<OgaSubmissionDTO> ogaSubmissions;
     private String messageStatus;
 }
