@@ -11,4 +11,5 @@ public interface TeacherCampusSectionGradeBranchRepo  extends JpaRepository<Teac
     Optional<TeacherCampusSectionGradeBranch> findByTeacheIdFkAndSectionIdFk(Long teacherid, Long sectionid);
     List<TeacherCampusSectionGradeBranch> findByTeacheIdFk(Long teacherId);
 
+
 }

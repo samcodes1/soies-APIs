@@ -2,15 +2,14 @@ package com.rtechnologies.soies.service;
 
 import com.opencsv.exceptions.CsvException;
 import com.rtechnologies.soies.model.Course;
+import com.rtechnologies.soies.model.Section;
 import com.rtechnologies.soies.model.Student;
 import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.association.TeacherCampusSectionGradeBranch;
 import com.rtechnologies.soies.model.association.TeacherCourse;
 import com.rtechnologies.soies.model.association.TeacherSection;
 import com.rtechnologies.soies.model.dto.*;
-import com.rtechnologies.soies.repository.CourseRepository;
-import com.rtechnologies.soies.repository.TeacherCourseRepository;
-import com.rtechnologies.soies.repository.TeacherRepository;
-import com.rtechnologies.soies.repository.TeacherSectionRepository;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.aspectj.weaver.ast.Not;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +48,12 @@ public class TeacherService {
 
     @Autowired
     private ExcelParser excelParser;
+    @Autowired
+    private TeacherCampusSectionGradeBranchRepo teacherCampusSectionGradeBranchRepo;
+
+    @Autowired
+    private SectionRepository sectionRepository;
+
 
     public TeacherResponse createTeacher(CreateTeacherDTO teacherDTO) {
         Utility.printDebugLogs("Teacher creation request: " + teacherDTO.toString());
@@ -121,6 +126,7 @@ public class TeacherService {
             return teacherResponse;
         }
     }
+
     private void saveTeacherCourseAssociation(Long teacherId, Long courseId) {
         Optional<TeacherCourse> existingAssociation = teacherCourseRepository.findByTeacherIdAndCourseId(teacherId, courseId);
         if (!existingAssociation.isPresent()) {
@@ -130,6 +136,7 @@ public class TeacherService {
             System.err.println("Teacher already has this course assigned.");
         }
     }
+
     private Long getOrCreateCourse(String courseName, String grade) {
         Optional<Course> courseData = courseRepository.findByCourseNameIgnoreCaseAndGrade(courseName, grade);
         Long courseId;
@@ -144,6 +151,7 @@ public class TeacherService {
         }
         return courseId;
     }
+
     private List<Course> getCoursesForGrade(String grade) {
         // Fetch courses by grade from the repository
         return courseRepository.findCoursesByGrade(grade);
@@ -470,14 +478,14 @@ public class TeacherService {
         TeacherWithSectionResponse teacherResponse = new TeacherWithSectionResponse();
 
         try {
-            // Validate teacherId
+            // Validate email
             if (email == null || email.isEmpty()) {
                 Utility.printErrorLogs("Invalid teacher Email for fetching teacher: " + email);
                 teacherResponse.setMessageStatus("Failure");
                 return teacherResponse;
             }
 
-            // Fetch teacher by ID
+            // Fetch teacher by email
             Optional<Teacher> optionalTeacher = teacherRepository.findByEmail(email);
             if (optionalTeacher.isEmpty()) {
                 Utility.printDebugLogs("Teacher not found with Email: " + email);
@@ -485,8 +493,28 @@ public class TeacherService {
                 return teacherResponse;
             }
 
-            List<TeacherSection> teacherSections = teacherSectionRepository.findByTeacherId(optionalTeacher.get().getTeacherId());
             Teacher teacher = optionalTeacher.get();
+
+            // Fetch teacher-section associations
+            List<TeacherCampusSectionGradeBranch> teacherSections = teacherCampusSectionGradeBranchRepo.findByTeacheIdFk(teacher.getTeacherId());
+
+            // Extract section IDs from teacher-section associations
+            List<Long> sectionIds = teacherSections.stream()
+                    .map(TeacherCampusSectionGradeBranch::getSectionIdFk)
+                    .collect(Collectors.toList());
+
+            // Fetch section details using section IDs
+            List<Section> sections = sectionRepository.findByIdIn(sectionIds);
+
+            // Map section details to TeacherSection objects
+            List<TeacherSection> teacherSectionList = sections.stream()
+                    .map(section -> TeacherSection.builder()
+                            .teacherId(teacher.getTeacherId())
+                            .section(section.getSectionName())  // Section name
+                            .grade(section.getGrade())   // Grade
+                            .build())
+                    .collect(Collectors.toList());
+
             teacherResponse = TeacherWithSectionResponse.builder()
                     .teacherId(teacher.getTeacherId())
                     .campusName(teacher.getCampusName())
@@ -497,20 +525,20 @@ public class TeacherService {
                     .joiningDate(teacher.getJoiningDate())
                     .phoneNumber(teacher.getPhoneNumber())
                     .address(teacher.getAddress())
-                    .teacherSections(teacherSections)
+                    .teacherSections(teacherSectionList) // Use the TeacherSection list here
                     .messageStatus("Success")
                     .build();
 
-            Utility.printDebugLogs("Get teacher by ID response: " + teacherResponse);
+            Utility.printDebugLogs("Get teacher by Email response: " + teacherResponse);
             return teacherResponse;
 
         } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs("Error fetching teacher by ID: " + e.getMessage());
+            Utility.printErrorLogs("Error fetching teacher by Email: " + e.getMessage());
             teacherResponse.setMessageStatus(e.toString());
             return teacherResponse;
 
         } catch (Exception e) {
-            Utility.printErrorLogs("Unexpected error fetching teacher by ID: " + e.getMessage());
+            Utility.printErrorLogs("Unexpected error fetching teacher by Email: " + e.getMessage());
             teacherResponse.setMessageStatus("Failure");
             return teacherResponse;
         }

@@ -235,7 +235,7 @@ public class ExcelParser {
                         saveTeacherCourseAssociation(teacherId, courseId);
                     }
 
-                    // Save Teacher-Section association
+//                     Save Teacher-Section association
 //                    saveTeacherSectionAssociation(teacherId, sectionId);
                 } catch (Exception e) {
                     System.err.println("Error processing section: " + section);
@@ -269,10 +269,10 @@ public class ExcelParser {
         }
     }
 
-//    private void saveTeacherSectionAssociation(Long teacherId, Long sectionId) {
-//        Optional<TeacherSection> existingAssociation = teacherSectionRepository.findByTeacherIdAndSectionId(teacherId, sectionId);
+//    private void saveTeacherSectionAssociation(Long teacherId, String section, String grade) {
+//        Optional<TeacherSection> existingAssociation = teacherSectionRepository.findByTeacherIdAndSectionAndGrade(teacherId, section, grade);
 //        if (!existingAssociation.isPresent()) {
-//            teacherSectionRepository.save(TeacherSection.builder().teacherId(teacherId).sectionId(sectionId).build());
+//            teacherSectionRepository.save(TeacherSection.builder().teacherId(teacherId).section(section).grade(grade).build());
 //            System.err.println("Added new section to teacher with ID: " + teacherId);
 //        } else {
 //            System.err.println("Teacher already has this section assigned.");

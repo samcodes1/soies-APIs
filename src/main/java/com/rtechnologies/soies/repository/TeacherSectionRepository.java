@@ -11,6 +11,9 @@ import java.util.Optional;
 public interface TeacherSectionRepository extends JpaRepository<TeacherSection,Long> {
     List<TeacherSection> findByTeacherId(Long teacherId);
 //    Optional<TeacherSection> findByTeacherIdAndSectionId(Long teacherId, Long id);
+Optional<TeacherSection> findByTeacherIdAndSectionAndGrade(Long teacherId, String section, String grade);
+
+
 
 
 }
