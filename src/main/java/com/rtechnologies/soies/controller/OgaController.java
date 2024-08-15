@@ -37,8 +37,8 @@ public class OgaController {
     })
     @GetMapping
     public ResponseEntity<OgaResponse> ogaPaginationListing(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         OgaResponse response = ogaService.getPageListing(page, size);
         return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
@@ -94,9 +94,8 @@ public class OgaController {
     @GetMapping("/get-by-course/{courseId}/{studentRollNumber}")
     public ResponseEntity<OgaListResponse> getOgasByCourseId(@PathVariable Long courseId,
                                                              @PathVariable String studentRollNumber) {
-        OgaListResponse response = ogaService.getOgasByCourseId(courseId,studentRollNumber);
-        return ResponseEntity.status(response.getMessageStatus().equals("Success") ? 200 : 500)
-                .body(response);
+        OgaListResponse response = ogaService.getOgasByCourseId(courseId, studentRollNumber);
+        return ResponseEntity.ok(response);
     }
 
     @ApiOperation(value = "Submit an OGA", response = String.class)
@@ -107,8 +106,8 @@ public class OgaController {
     })
     @PostMapping("/submit")
     public ResponseEntity<String> submitOga(@RequestBody OgaSubmissionRequest ogaSubmissionRequest) {
-            String response = ogaService.submitOga(ogaSubmissionRequest);
-            return ResponseEntity.ok(response);
+        String response = ogaService.submitOga(ogaSubmissionRequest);
+        return ResponseEntity.ok(response);
     }
 
     @ApiOperation(value = "Get all submissions for a specific OGA", response = OgaSubmissionListResponse.class)
@@ -119,8 +118,8 @@ public class OgaController {
     })
     @GetMapping("/submissions/{ogaId}")
     public ResponseEntity<OgaSubmissionListResponse> getAllOgaSubmission(@PathVariable Long ogaId) {
-            OgaSubmissionListResponse response = ogaService.getAllOgaSubmission(ogaId);
-            return ResponseEntity.ok(response);
+        OgaSubmissionListResponse response = ogaService.getAllOgaSubmission(ogaId);
+        return ResponseEntity.ok(response);
     }
 
     @ApiOperation(value = "Get all For OGA by Course ID", response = OgaSubmissionListResponse.class)
@@ -131,11 +130,11 @@ public class OgaController {
     })
     @GetMapping("/get-oga/{courseid}")
     public ResponseEntity<OgaResponse> getAllOgaByCourseId(
-        @PathVariable Long courseid,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @PathVariable Long courseid,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
         OgaResponse response = ogaService.getAllOgaByCourseid(courseid, page, size);
-            return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 }
