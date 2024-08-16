@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.controller;
 
+import com.rtechnologies.soies.exception.SectionAlreadyExistsException;
 import com.rtechnologies.soies.model.Campus;
 import com.rtechnologies.soies.model.Section;
 import com.rtechnologies.soies.service.CampusService;
@@ -65,13 +66,17 @@ public class CampusController {
             @ApiResponse(code = 201, message = "Successfully created section"),
             @ApiResponse(code = 400, message = "Section already exists")
     })
-    public ResponseEntity<Section> createSection(@PathVariable Long campusId, @RequestBody Section section) {
+    public ResponseEntity<String> createSection(@PathVariable Long campusId, @RequestBody Section section) {
         try {
             section.setCampusId(campusId); // Set the campus ID from path
             Section savedSection = campusService.createSection(section);
-            return new ResponseEntity<>(savedSection, HttpStatus.CREATED);
+            return new ResponseEntity<>("Section created successfully.", HttpStatus.CREATED);
+        } catch (SectionAlreadyExistsException ex) {
+            // Return a more specific error message and status code
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            // Handle other runtime exceptions
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 

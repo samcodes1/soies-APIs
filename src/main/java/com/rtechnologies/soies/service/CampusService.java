@@ -1,5 +1,6 @@
 package com.rtechnologies.soies.service;
 
+import com.rtechnologies.soies.exception.SectionAlreadyExistsException;
 import com.rtechnologies.soies.model.Campus;
 import com.rtechnologies.soies.model.Section;
 import com.rtechnologies.soies.repository.CampusRepository;
@@ -71,17 +72,18 @@ public class CampusService {
     public Section createSection(Section section) {
         // Check if the section with the same name, campus ID, and grade already exists
         sectionRepository.findByCampusIdAndSectionNameIgnoreCaseAndGrade(section.getCampusId(), section.getSectionName(), section.getGrade())
-                .ifPresent(s -> {
-                    throw new RuntimeException("Section with name " + section.getSectionName() +
-                            " already exists for campus ID " + section.getCampusId() +
-                            " and grade " + section.getGrade());
+                .ifPresent(existingSection -> {
+                    throw new SectionAlreadyExistsException("Section with name '" + section.getSectionName() +
+                            "' already exists for campus ID " + section.getCampusId() +
+                            " and grade '" + section.getGrade() + "'.");
                 });
+
         // Normalize the grade to lower case to maintain consistency
         section.setGrade(section.getGrade().toLowerCase());
+
         // Save the new section
         return sectionRepository.save(section);
     }
-
     public Section updateSection(Long id, Section request) {
         Optional<Section> sectiontRes = sectionRepository.findById(id);
 
