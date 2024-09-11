@@ -65,7 +65,8 @@ public class StudentService {
             // Check for existing student
             Optional<Student> existingStudent = studentRepository.findByRollNumber(student.getRollNumber());
             if (existingStudent.isPresent()) {
-                throw new IllegalArgumentException("Student with Roll Number " + student.getRollNumber() + " already exists");
+                throw new IllegalArgumentException(
+                        "Student with Roll Number " + student.getRollNumber() + " already exists");
             }
 
             String hashedPassword = new BCryptPasswordEncoder().encode(student.getPassword());
@@ -185,7 +186,8 @@ public class StudentService {
             }
 
             // Delete associated courses
-            List<StudentCourse> studentCourses = studentCourseRepository.findAllByStudentId(existingStudent.get().getStudentId());
+            List<StudentCourse> studentCourses = studentCourseRepository
+                    .findAllByStudentId(existingStudent.get().getStudentId());
             if (!studentCourses.isEmpty()) {
                 studentCourseRepository.deleteAll(studentCourses);
             }
@@ -214,7 +216,6 @@ public class StudentService {
                     .build();
         }
     }
-
 
     public StudentResponse getStudentByRollNumber(String rollNumber) {
         Utility.printDebugLogs("Get student by Roll Number: " + rollNumber);
@@ -270,7 +271,8 @@ public class StudentService {
             Page<Student> studentPage = studentRepository.findAllByCampusName(campusName, pageable);
 
             if (studentPage.isEmpty()) {
-                // throw new IllegalArgumentException("No students found for campus: " + campusName);
+                // throw new IllegalArgumentException("No students found for campus: " +
+                // campusName);
                 List<Student> emptyList = new ArrayList<>();
                 studentListResponse = StudentListResponse.builder()
                         .studentList(emptyList)
@@ -299,8 +301,8 @@ public class StudentService {
         }
     }
 
-
-    public StudentListResponseDTO getAllStudentsByGradeCourseSection(String campusName, String course, String grade, String section, int page, int size) {
+    public StudentListResponseDTO getAllStudentsByGradeCourseSection(String campusName, String course, String grade,
+            String section, int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
         StudentListResponseDTO studentListResponse;
 
@@ -316,7 +318,8 @@ public class StudentService {
             } else if (campusName != null && course != null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndCourseAndGrade(campusName, course, grade, pageable);
             } else if (campusName != null && course != null && grade != null && section != null) {
-                studentPage = studentRepository.findbycampusAndCourseAndGradeAndSection(campusName, course, grade, section, pageable);
+                studentPage = studentRepository.findbycampusAndCourseAndGradeAndSection(campusName, course, grade,
+                        section, pageable);
             } else if (campusName != null && course == null && grade != null && section != null) {
                 studentPage = studentRepository.findbycampusAndGradeAndSection(campusName, grade, section, pageable);
             } else if (campusName != null && course == null && grade == null && section != null) {
@@ -324,7 +327,8 @@ public class StudentService {
             } else if (campusName != null && course == null && grade != null && section == null) {
                 studentPage = studentRepository.findbycampusAndGrade(campusName, grade, pageable);
             } else if (campusName != null && course != null && grade != null && section != null) {
-                studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section, course, pageable);
+                studentPage = studentRepository.findByGradeAndSectionNameAndStudentCourses(campusName, grade, section,
+                        course, pageable);
             } else {
                 throw new IllegalArgumentException("Invalid parameters");
             }
@@ -342,9 +346,13 @@ public class StudentService {
             List<StudentDTO> studentsWithAttendance = studentPage.getContent().stream()
                     .map(student -> {
                         StudentDTO studentDTO = mapToStudentDTO(student);
-                        List<StudentAttendance> attendanceList = attendanceRepository.findLatestByStudentRollNum(student.getRollNumber());
+                        List<StudentAttendance> attendanceList = attendanceRepository
+                                .findLatestByStudentRollNum(student.getRollNumber());
                         if (!attendanceList.isEmpty()) {
-                            studentDTO.setStudentAttendance(mapToStudentAttendanceDTO(attendanceList.get(0))); // Set the latest entry
+                            studentDTO.setStudentAttendance(mapToStudentAttendanceDTO(attendanceList.get(0))); // Set
+                                                                                                               // the
+                                                                                                               // latest
+                                                                                                               // entry
                         } else {
                             StudentAttendanceDTO defaultAttendance = new StudentAttendanceDTO();
                             defaultAttendance.setStatus("Absent");
@@ -358,7 +366,8 @@ public class StudentService {
                     .collect(Collectors.toList());
 
             // Create a new Page object with updated students
-            Page<StudentDTO> updatedStudentPage = new PageImpl<>(studentsWithAttendance, pageable, studentPage.getTotalElements());
+            Page<StudentDTO> updatedStudentPage = new PageImpl<>(studentsWithAttendance, pageable,
+                    studentPage.getTotalElements());
 
             studentListResponse = StudentListResponseDTO.builder()
                     .studentPage(updatedStudentPage)
@@ -412,7 +421,6 @@ public class StudentService {
         return studentAttendanceDTO;
     }
 
-
     public StudentListResponse getAllStudentsWithPagination(int page, int size) {
         Utility.printDebugLogs("Get all students with pagination");
         StudentListResponse studentListResponse;
@@ -427,7 +435,8 @@ public class StudentService {
 
             List<Student> studentsWithAttendance = studentPage.getContent().stream()
                     .map(student -> {
-                        List<StudentAttendance> attendanceList = attendanceRepository.findLatestByStudentRollNum(student.getRollNumber());
+                        List<StudentAttendance> attendanceList = attendanceRepository
+                                .findLatestByStudentRollNum(student.getRollNumber());
                         if (!attendanceList.isEmpty()) {
                             student.setStudentAttendance(attendanceList.get(0)); // Set the latest entry
                         }
@@ -495,7 +504,6 @@ public class StudentService {
                 }
             }
 
-
             studentCourseRepository.saveAll(studentCourses);
 
             return StudentListResponse.builder()
@@ -542,7 +550,8 @@ public class StudentService {
 
         // Fetch all assignment submissions for the students
         List<AssignmentSubmission> allAssignmentSubmissions = students.stream()
-                .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
+                .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumber(student.getRollNumber())
+                        .stream())
                 .collect(Collectors.toList());
 
         // Fetch all exam submissions for the students
@@ -554,29 +563,25 @@ public class StudentService {
         Map<String, Double> avgQuizMarksMap = allQuizSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         QuizSubmission::getStudentRollNumber,
-                        Collectors.averagingInt(QuizSubmission::getGainedMarks)
-                ));
+                        Collectors.averagingInt(QuizSubmission::getGainedMarks)));
 
         // Calculate average OGA marks
         Map<String, Double> avgOgaMarksMap = allOgaSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         OgaSubmission::getStudentRollNumber,
-                        Collectors.averagingInt(OgaSubmission::getGainedMarks)
-                ));
+                        Collectors.averagingInt(OgaSubmission::getGainedMarks)));
 
         // Calculate average assignment marks
         Map<String, Double> avgAssignmentMarksMap = allAssignmentSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         AssignmentSubmission::getStudentRollNumber,
-                        Collectors.averagingDouble(AssignmentSubmission::getObtainedMarks)
-                ));
+                        Collectors.averagingDouble(AssignmentSubmission::getObtainedMarks)));
 
         // Calculate average exam marks
         Map<String, Double> avgExamMarksMap = allExamSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         ExamSubmission::getStudentRollNumber,
-                        Collectors.averagingInt(ExamSubmission::getGainedMarks)
-                ));
+                        Collectors.averagingInt(ExamSubmission::getGainedMarks)));
 
         // Aggregate the data
         List<Map<String, Object>> studentDetailsList = students.stream().map(student -> {
@@ -606,5 +611,77 @@ public class StudentService {
 
         return response;
     }
-}
 
+    public StudentListResponse getStudentBySearch(String rollNumber) {
+        Utility.printDebugLogs("student roll number " + rollNumber);
+        StudentListResponse studentListResponse;
+        try {
+            List<Student> students = studentRepository.SearchByRollNumber(rollNumber);
+            if (students.isEmpty()) {
+                List<Student> emptyList = new ArrayList<>();
+                studentListResponse = StudentListResponse.builder()
+                        .studentList(emptyList)
+                        .messageStatus("Success")
+                        .build();
+                return studentListResponse;
+
+            }
+            studentListResponse = StudentListResponse.builder().studentList(students).messageStatus("Success").build();
+            Utility.printDebugLogs("studentListResponse is " + studentListResponse);
+            return studentListResponse;
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return StudentListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return StudentListResponse.builder()
+                    .messageStatus("Failure")
+                    .build();
+        }
+    }
+
+    @Transactional
+    public StudentListResponse deleteMultipleStudents(List<Long> studentIds) {
+        Utility.printDebugLogs("Student deletion request for student IDs: " + studentIds);
+
+        try {
+            for (Long studentId : studentIds) {
+                Utility.printDebugLogs("Processing deletion for Student ID: " + studentId);
+                Optional<Student> existingStudent = studentRepository.findById(studentId);
+
+                if (existingStudent.isPresent()) {
+                    // Delete associated courses
+                    List<StudentCourse> studentCourses = studentCourseRepository
+                            .findAllByStudentId(existingStudent.get().getStudentId());
+                    if (!studentCourses.isEmpty()) {
+                        studentCourseRepository.deleteAll(studentCourses);
+                    }
+
+                    // Delete student
+                    studentRepository.deleteById(studentId);
+                    Utility.printDebugLogs("Student deleted successfully: " + existingStudent.get());
+                } else {
+                    Utility.printErrorLogs("No student found with ID: " + studentId);
+                }
+            }
+
+            return StudentListResponse.builder()
+                    .messageStatus("Students deleted successfully")
+                    .build();
+        } catch (IllegalArgumentException e) {
+            Utility.printErrorLogs(e.toString());
+            return StudentListResponse.builder()
+                    .messageStatus(e.toString())
+                    .build();
+
+        } catch (Exception e) {
+            Utility.printErrorLogs(e.toString());
+            return StudentListResponse.builder()
+                    .messageStatus("Failure: " + e.getMessage())
+                    .build();
+        }
+    }
+
+}
