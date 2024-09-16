@@ -159,7 +159,8 @@ public class OgaService {
                         updatedQuestions.add(questionToUpdate);
                     } else {
                         // Handle case where the question ID is not found in the database
-                        Utility.printDebugLogs("Question with ID " + newQuestion.getId() + " not found in the database.");
+                        Utility.printDebugLogs(
+                                "Question with ID " + newQuestion.getId() + " not found in the database.");
                     }
                 } else {
                     // Add new question
@@ -200,9 +201,11 @@ public class OgaService {
                     .dueDate(updatedOga.getDueDate())
                     .time(updatedOga.getTime())
                     .term(updatedOga.getTerm())
-                    .ogaQuestions(new ArrayList<>(updatedQuestions) {{
-                        addAll(savedNewQuestions);
-                    }})
+                    .ogaQuestions(new ArrayList<>(updatedQuestions) {
+                        {
+                            addAll(savedNewQuestions);
+                        }
+                    })
                     .messageStatus("Success")
                     .build();
 
@@ -220,7 +223,6 @@ public class OgaService {
                     .build();
         }
     }
-
 
     private Oga mapToOga(OgaRequest ogaRequest) {
         return ogaRepository.save(Oga.builder()
@@ -318,7 +320,7 @@ public class OgaService {
 
         if (ogaList.isEmpty()) {
             Utility.printDebugLogs("No OGAs found for course ID: " + courseId);
-            throw new NotFoundException("No OGAs found for course ID: " + courseId);
+            ogaListResponse = OgaListResponse.builder().ogaList(ogaList).messageStatus("Success").build();
         }
 
         List<Oga> finalList = new ArrayList<>();
@@ -363,26 +365,22 @@ public class OgaService {
         ogaSubmission = mapToOgaSubmission(ogaSubmissionRequest);
         ogaSubmissionRepository.save(ogaSubmission);
 
-
         int totalMarks = ogaSubmission.getTotalMarks();
         int perQuestionMark = totalMarks / ogaQuestions.size();
         int gainedMarks = 0;
 
-        //Save answers to the DB
+        // Save answers to the DB
         for (int i = 0; i < ogaSubmissionRequest.getOgaQuestionList().size(); i++) {
             boolean isCorrect = false;
 
-            if (ogaSubmissionRequest.getOgaQuestionList().
-                    get(i).getAnswer().equals(ogaQuestions.get(i).getAnswer())) {
+            if (ogaSubmissionRequest.getOgaQuestionList().get(i).getAnswer().equals(ogaQuestions.get(i).getAnswer())) {
                 gainedMarks += perQuestionMark;
                 isCorrect = true;
             }
 
-            ogaStudentAnswerRepository.save(OgaStudentAnswer.builder().
-                    ogaSubmissionId(ogaSubmission.getOgaId())
+            ogaStudentAnswerRepository.save(OgaStudentAnswer.builder().ogaSubmissionId(ogaSubmission.getOgaId())
                     .questionId(ogaSubmission.getId())
-                    .answer(ogaSubmissionRequest.getOgaQuestionList().
-                            get(i).getAnswer())
+                    .answer(ogaSubmissionRequest.getOgaQuestionList().get(i).getAnswer())
                     .isCorrect(isCorrect)
                     .build());
         }
@@ -391,7 +389,6 @@ public class OgaService {
         ogaSubmission.setGainedMarks(gainedMarks);
         ogaSubmission.setPercentage(percentage);
         ogaSubmission.setTerm(oga.get().getTerm());
-
 
         ogaSubmissionRepository.save(ogaSubmission);
 

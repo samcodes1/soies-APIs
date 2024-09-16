@@ -1,4 +1,5 @@
 package com.rtechnologies.soies.service;
+
 import com.rtechnologies.soies.model.Course;
 import com.rtechnologies.soies.model.Teacher;
 import com.rtechnologies.soies.model.association.TeacherCourse;
@@ -28,25 +29,25 @@ public class CourseService {
     private TeacherRepository teacherRepository;
 
     public CourseResponse createCourse(Course course) {
-        Utility.printDebugLogs("Course creation request: "+course.toString());
+        Utility.printDebugLogs("Course creation request: " + course.toString());
         CourseResponse courseResponse = null;
         try {
-            if(course == null) {
-                Utility.printDebugLogs("Course creation request is null: "+course.toString());
+            if (course == null) {
+                Utility.printDebugLogs("Course creation request is null: " + course.toString());
                 throw new IllegalArgumentException("Corrupt data receive");
             }
 
             Course createdCourse = courseRepository.save(course);
-            Utility.printDebugLogs("Course created successfully: "+createdCourse);
+            Utility.printDebugLogs("Course created successfully: " + createdCourse);
             courseResponse = CourseResponse.builder()
-                                .courseId(createdCourse.getCourseId())
+                    .courseId(createdCourse.getCourseId())
                     .courseName(createdCourse.getCourseName())
                     .description(createdCourse.getDescription())
                     .grade(createdCourse.getGrade())
                     .credits(createdCourse.getCredits())
                     .messageStatus("Success").build();
 
-            Utility.printDebugLogs("Course response: "+courseResponse);
+            Utility.printDebugLogs("Course response: " + courseResponse);
             return courseResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
@@ -72,7 +73,7 @@ public class CourseService {
             }
 
             Optional<Course> optionalCourse = courseRepository.findById(course.getCourseId());
-            if(!optionalCourse.isPresent()){
+            if (!optionalCourse.isPresent()) {
                 Utility.printErrorLogs("No record found for Course ID: " + course.getCourseId());
                 throw new NotFoundException("No record found for Course ID: " + course.getCourseId());
             }
@@ -92,7 +93,7 @@ public class CourseService {
             Utility.printDebugLogs("Course updated successfully. Response: " + courseResponse);
             return courseResponse;
 
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             Utility.printErrorLogs("Error updating course: " + e.getMessage());
             courseResponse.setMessageStatus(e.getMessage());
             return courseResponse;
@@ -108,7 +109,6 @@ public class CourseService {
         }
     }
 
-
     public CourseResponse deleteCourse(Long courseId) {
         Utility.printDebugLogs("Course deletion request for ID: " + courseId);
         CourseResponse courseResponse = new CourseResponse();
@@ -121,7 +121,7 @@ public class CourseService {
             }
 
             Optional<Course> optionalCourse = courseRepository.findById(courseId);
-            if(!optionalCourse.isPresent()){
+            if (!optionalCourse.isPresent()) {
                 Utility.printErrorLogs("No record found for Course ID: " + courseId);
                 throw new NotFoundException("No record found for Course ID: " + courseId);
             }
@@ -132,7 +132,7 @@ public class CourseService {
             courseResponse.setMessageStatus("Success");
             return courseResponse;
 
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             Utility.printErrorLogs("Error deleting course: " + e.getMessage());
             courseResponse.setMessageStatus(e.getMessage());
             return courseResponse;
@@ -147,7 +147,6 @@ public class CourseService {
         }
     }
 
-
     public CourseListResponse getAllCourses() {
         Utility.printDebugLogs("Get all courses request");
         CourseListResponse courseListResponse = new CourseListResponse();
@@ -155,7 +154,7 @@ public class CourseService {
             // Fetch all courses
             List<Course> courses = courseRepository.findAll();
 
-            if(courses.size() <=0){
+            if (courses.size() <= 0) {
                 Utility.printDebugLogs("No record found for courses");
                 courseListResponse.setMessageStatus("Success");
                 return courseListResponse;
@@ -191,7 +190,7 @@ public class CourseService {
             // Fetch courses by grade
             List<Course> courses = courseRepository.findByGrade(grade);
 
-            if(courses.size() <=0){
+            if (courses.size() <= 0) {
                 Utility.printDebugLogs("No record found for courses");
                 courseListResponse.setMessageStatus("Success");
                 return courseListResponse;
@@ -278,7 +277,7 @@ public class CourseService {
             List<Course> courseList = new ArrayList<>();
             for (TeacherCourse teacherCourse : teacherCourses) {
                 Optional<Course> course = courseRepository.findById(teacherCourse.getCourseId());
-                course.ifPresent(courseList::add);  // Add course if it exists
+                course.ifPresent(courseList::add); // Add course if it exists
             }
 
             if (!courseList.isEmpty()) {
@@ -301,6 +300,5 @@ public class CourseService {
             return courseListResponse;
         }
     }
-
 
 }
