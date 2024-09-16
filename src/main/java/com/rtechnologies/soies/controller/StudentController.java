@@ -1,6 +1,7 @@
 package com.rtechnologies.soies.controller;
 
 import com.rtechnologies.soies.model.Student;
+import com.rtechnologies.soies.model.dto.StudentIdsRequest;
 import com.rtechnologies.soies.model.dto.StudentListResponse;
 import com.rtechnologies.soies.model.dto.StudentListResponseDTO;
 import com.rtechnologies.soies.model.dto.StudentResponse;
@@ -19,8 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/students")
@@ -177,10 +176,13 @@ public class StudentController {
                         @ApiResponse(code = 400, message = "Invalid request data"),
                         @ApiResponse(code = 500, message = "Internal server error")
         })
-        @DeleteMapping("/delete-multiple-students")
-        public ResponseEntity<StudentListResponse> deleteStudent(@RequestBody List<Long> studentIDs) {
-                StudentListResponse studentListResponse = studentService.deleteMultipleStudents(studentIDs);
-                return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
+        @PostMapping("/delete-multiple-students")
+        public ResponseEntity<StudentListResponse> deleteStudent(@RequestBody StudentIdsRequest studentIdsRequest) {
+                StudentListResponse studentListResponse = studentService.deleteMultipleStudents(studentIdsRequest);
+                return ResponseEntity
+                                .status(studentListResponse.getMessageStatus().equals("Success") ? 200
+                                                : (studentListResponse.getMessageStatus().equals("Not Found") ? 404
+                                                                : 500))
                                 .body(studentListResponse);
         }
 

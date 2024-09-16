@@ -643,41 +643,51 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentListResponse deleteMultipleStudents(List<Long> studentIds) {
+    public StudentListResponse deleteMultipleStudents(StudentIdsRequest studentIds) {
         Utility.printDebugLogs("Student deletion request for student IDs: " + studentIds);
+        List<Long> ids = studentIds.getStudentIds();
+
+        boolean anyNotFound = false;
 
         try {
-            for (Long studentId : studentIds) {
+            for (Long studentId : ids) {
                 Utility.printDebugLogs("Processing deletion for Student ID: " + studentId);
                 Optional<Student> existingStudent = studentRepository.findById(studentId);
 
                 if (existingStudent.isPresent()) {
                     // Delete associated courses
                     List<StudentCourse> studentCourses = studentCourseRepository
-                            .findAllByStudentId(existingStudent.get().getStudentId());
+                            .findAllByStudentId(studentId);
                     if (!studentCourses.isEmpty()) {
                         studentCourseRepository.deleteAll(studentCourses);
                     }
 
-                    // Delete student
                     studentRepository.deleteById(studentId);
                     Utility.printDebugLogs("Student deleted successfully: " + existingStudent.get());
                 } else {
                     Utility.printErrorLogs("No student found with ID: " + studentId);
+                    anyNotFound = true;
                 }
             }
 
-            return StudentListResponse.builder()
-                    .messageStatus("Students deleted successfully")
-                    .build();
+            if (!anyNotFound) {
+                return StudentListResponse.builder()
+                        .messageStatus("Success")
+                        .build();
+            } else {
+                String message = "Not Found";
+                Utility.printErrorLogs(message);
+                return StudentListResponse.builder()
+                        .messageStatus(message)
+                        .build();
+            }
         } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
+            Utility.printErrorLogs("IllegalArgumentException: " + e.toString());
             return StudentListResponse.builder()
-                    .messageStatus(e.toString())
+                    .messageStatus("Failure: IllegalArgumentException - " + e.getMessage())
                     .build();
-
         } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
+            Utility.printErrorLogs("Exception: " + e.toString());
             return StudentListResponse.builder()
                     .messageStatus("Failure: " + e.getMessage())
                     .build();
