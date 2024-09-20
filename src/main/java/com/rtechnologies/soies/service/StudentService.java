@@ -6,6 +6,7 @@ import com.rtechnologies.soies.model.association.*;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
+import com.sun.xml.bind.v2.runtime.output.SAXOutput;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -123,6 +124,7 @@ public class StudentService {
         }
     }
 
+    @Transactional
     public StudentResponse updateStudent(Student student) {
         Utility.printDebugLogs("Student update request: " + student.toString());
         StudentResponse studentResponse;
@@ -138,8 +140,33 @@ public class StudentService {
                 throw new IllegalArgumentException("No Student found with Roll Number: " + student.getRollNumber());
             }
 
+            // Update student details
             Student updatedStudent = studentRepository.save(student);
             Utility.printDebugLogs("Student updated successfully: " + updatedStudent);
+
+            // Fetch courses for the student's updated grade
+            String studentGrade = updatedStudent.getGrade();
+
+            System.out.println("new grade " + studentGrade);
+            List<Course> courses = getCoursesForGrade(studentGrade);
+
+            System.out.println("new  course "  + courses);
+
+            // Create or update StudentCourse relationships
+            List<StudentCourse> studentCourses = new ArrayList<>();
+            for (Course course : courses) {
+                StudentCourse studentCourse = StudentCourse.builder()
+                        .studentId(updatedStudent.getStudentId())
+                        .courseId(course.getCourseId())
+                        .build();
+                studentCourses.add(studentCourse);
+            }
+
+            System.out.println("new student courses "  + studentCourses);
+
+            // Save or update student-course relationships
+            studentCourseRepository.deleteByStudentId(updatedStudent.getStudentId()); // Optionally delete existing relationships
+            studentCourseRepository.saveAll(studentCourses);
 
             studentResponse = StudentResponse.builder()
                     .studentId(updatedStudent.getStudentId())
@@ -168,10 +195,11 @@ public class StudentService {
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
             return StudentResponse.builder()
-                    .messageStatus(e.toString())
+                    .messageStatus("Failure")
                     .build();
         }
     }
+
 
     @Transactional
     public StudentResponse deleteStudent(String rollNumber) {
@@ -478,6 +506,8 @@ public class StudentService {
             } else {
                 throw new IllegalArgumentException("Wrong file received!");
             }
+
+            System.out.println("student" + students);
 
             List<Student> newStudents = new ArrayList<>();
             List<Student> duplicates = new ArrayList<>();
