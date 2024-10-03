@@ -388,11 +388,11 @@ public class AssignmentService {
         }
     }
 
-    public AssignmentListResponse getAssignmentsByCourseId(Long courseId, String section) {
+    public AssignmentListResponse getAssignmentsByCourseId(Long courseId) {
         Utility.printDebugLogs("Get assignments by course ID: " + courseId);
         AssignmentListResponse assignmentListResponse;
         try {
-            List<Assignment> assignmentList = assignmentRepository.findByCourseIdAndSection(courseId, section);
+            List<Assignment> assignmentList = assignmentRepository.findByCourseId(courseId);
             if (assignmentList.isEmpty()) {
                 Utility.printDebugLogs("No assignments found for course ID: " + courseId);
                 return AssignmentListResponse.builder()
