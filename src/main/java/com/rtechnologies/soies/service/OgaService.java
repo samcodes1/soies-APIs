@@ -428,13 +428,14 @@ public class OgaService {
         return response;
     }
 
-    public OgaResponse getAllOgaByCourseid(Long courseid, int page, int size) {
+    public OgaListResponse getAllOgaByCourseid(Long courseid, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Oga> ogaPage = ogaRepository.findByCourseId(courseid, pageable);
-        OgaResponse ogaSubmissionListResponse = new OgaResponse();
-        ogaSubmissionListResponse.setOgaPagination(ogaPage);
-        ogaSubmissionListResponse.setMessageStatus("Success");
 
-        return ogaSubmissionListResponse;
+        OgaListResponse ogaListResponse = new OgaListResponse();
+        ogaListResponse.setOgaList(ogaPage.getContent());
+        ogaListResponse.setMessageStatus("Success");
+
+        return ogaListResponse;
     }
 }
