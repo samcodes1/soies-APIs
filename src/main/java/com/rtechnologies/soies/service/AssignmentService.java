@@ -520,12 +520,23 @@ public class AssignmentService {
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
             if (assignmentOptional.isEmpty()) {
                 Utility.printDebugLogs("No assignment found with ID: " + assignmentId);
-                throw new NotFoundException("No assignment found with ID: " + assignmentId);
+                return AssignmentSubmissionListResponse.builder()
+                        .assignmentSubmissionResponsePage(Page.empty()) // Return an empty page
+                        .messageStatus("No submissions found for the given assignment")
+                        .build();
             }
 
             // Retrieve submissions
             Page<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository
                     .findByAssignmentId(assignmentId, PageRequest.of(page, size));
+
+            if (assignmentSubmissionsPage.isEmpty()) {
+                Utility.printDebugLogs("No submissions found for assignment ID: " + assignmentId);
+                return AssignmentSubmissionListResponse.builder()
+                        .assignmentSubmissionResponsePage(Page.empty()) // Return an empty page
+                        .messageStatus("No submissions found")
+                        .build();
+            }
 
             // Update each AssignmentSubmission with totalMarks, courseId, and dueDate
             assignmentSubmissionsPage.forEach(submission -> {
@@ -543,18 +554,22 @@ public class AssignmentService {
 
             Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
             return assignmentSubmissionListResponse;
+
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentSubmissionListResponse.builder()
                     .messageStatus(e.toString())
+                    .assignmentSubmissionResponsePage(Page.empty()) // Return an empty page on error
                     .build();
         } catch (Exception e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentSubmissionListResponse.builder()
                     .messageStatus("Failure")
+                    .assignmentSubmissionResponsePage(Page.empty()) // Return an empty page on error
                     .build();
         }
     }
+
 
     public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
         AssignmentSubmissionResponse assignmentSubmissionListResponse;

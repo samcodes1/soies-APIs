@@ -119,8 +119,8 @@ public class AssignmentController {
                         @RequestParam(defaultValue = "10") int size) {
                 AssignmentSubmissionListResponse studentListResponse = assignmentService
                                 .getAssignmentSubmissions(assignmentId, page, size);
-                return ResponseEntity.status(studentListResponse.getMessageStatus().equals("Success") ? 200 : 500)
-                                .body(studentListResponse);
+                return ResponseEntity.ok(studentListResponse);
+
         }
 
         @ApiOperation(value = "Get student assignment submission with student Id", response = AssignmentSubmissionListResponse.class)
