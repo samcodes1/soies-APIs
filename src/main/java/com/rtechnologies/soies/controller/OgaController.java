@@ -137,4 +137,21 @@ public class OgaController {
         OgaListResponse response = ogaService.getAllOgaByCourseid(courseid, page, size);
         return ResponseEntity.ok(response);
     }
+
+
+    @ApiOperation(value = "Get submitted OGAs by course ID with pagination", response = OgaSubmissionListResponse.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OGAs retrieved successfully"),
+            @ApiResponse(code = 404, message = "No OGAs found for the given course ID"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    @GetMapping("/get-oga-submissions/{courseId}")
+    public ResponseEntity<OgaSubmissionListResponse> getOgaSubmissionsByCourseId(
+            @PathVariable Long courseId,
+            @RequestParam(defaultValue = "0") int page, // Default page number
+            @RequestParam(defaultValue = "10") int size // Default page size
+    ) {
+        OgaSubmissionListResponse response = ogaService.getOgaSubmissionsByCourseId(courseId, page, size);
+        return ResponseEntity.ok(response);
+    }
 }

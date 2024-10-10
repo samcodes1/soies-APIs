@@ -438,4 +438,21 @@ public class OgaService {
 
         return ogaListResponse;
     }
+
+    public OgaSubmissionListResponse getOgaSubmissionsByCourseId(Long courseId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size); // Create Pageable instance
+        Page<OgaSubmission> submissionsPage = ogaSubmissionRepository.findByCourseId(courseId, pageable);
+
+        OgaSubmissionListResponse response = new OgaSubmissionListResponse();
+
+        if (submissionsPage.isEmpty()) {
+            response.setMessageStatus("No OGAs found for the given course ID");
+            response.setOgaSubmissionList(null); // No OGAs found
+        } else {
+            response.setMessageStatus("OGAs retrieved successfully");
+            response.setOgaSubmissionList(submissionsPage.getContent()); // Set the found submissions
+        }
+
+        return response;
+    }
 }
