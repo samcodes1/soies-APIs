@@ -1,14 +1,12 @@
 package com.rtechnologies.soies.service;
 
 import com.rtechnologies.soies.model.*;
+import com.rtechnologies.soies.model.association.AssignmentSubmission;
+import com.rtechnologies.soies.model.association.QuizSubmission;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.association.OgaStudentAnswer;
-import com.rtechnologies.soies.repository.CourseRepository;
-import com.rtechnologies.soies.repository.OgaQuestionRepository;
-import com.rtechnologies.soies.repository.OgaRepository;
-import com.rtechnologies.soies.repository.OgaStudentAnswerRepository;
-import com.rtechnologies.soies.repository.OgaSubmissionRepository;
+import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -41,6 +39,12 @@ public class OgaService {
 
     @Autowired
     private OgaStudentAnswerRepository ogaStudentAnswerRepository;
+
+    @Autowired
+    private QuizSubmissionRepository quizSubmissionRepository;
+
+    @Autowired
+    private AssignmentSubmissionRepository assignmentSubmissionRepository;
 
     public OgaResponse createOga(CreateOgaRequest ogaRequest) {
         Utility.printDebugLogs("OGA creation request: " + ogaRequest.toString());
@@ -453,11 +457,20 @@ public class OgaService {
             response.setOgaSubmissionList(submissionsPage.getContent()); // Set the found submissions
         }
 
+        // Fetch assignment submissions and quiz submissions
+        List<AssignmentSubmission> assignmentSubmissions = assignmentSubmissionRepository.findByCourseId(courseId);
+        List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByCourseId(courseId);
+
+        // Set the assignments and quizzes in the response
+        response.setAssignmentSubmissionList(assignmentSubmissions);
+        response.setQuizSubmissionList(quizSubmissions);
+
         // Set pagination information
         response.setCurrentPage(submissionsPage.getNumber());  // Current page number
         response.setTotalPages(submissionsPage.getTotalPages()); // Total pages available
 
         return response;
     }
+
 
 }
