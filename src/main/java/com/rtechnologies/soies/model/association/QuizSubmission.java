@@ -31,4 +31,5 @@ public class QuizSubmission {
     private double percentage;
     private String date;
     private String term;
+    private boolean hasAttempted = false;
 }

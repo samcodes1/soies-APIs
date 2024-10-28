@@ -345,18 +345,18 @@ public class QuizService {
         // Fetch quiz submissions by the student
         List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNum);
 
-        // Convert Quiz to QuizDTO
-        List<QuizDTO> quizResponseList = quizList.stream()
-                .map(this::convertToQuizDTO)  // Method to map Quiz to QuizDTO
-                .collect(Collectors.toList());
+        // Collect submitted quiz IDs
+        Set<Long> submittedQuizIds = quizSubmissions.stream()
+                .map(QuizSubmission::getQuizId)
+                .collect(Collectors.toSet());
 
-        // Remove quizzes that have been submitted
-        if (!quizSubmissions.isEmpty()) {
-            Set<Long> submittedQuizIds = quizSubmissions.stream()
-                    .map(QuizSubmission::getQuizId)
-                    .collect(Collectors.toSet());
-            quizResponseList.removeIf(quizDTO -> submittedQuizIds.contains(quizDTO.getQuizId()));
-        }
+        List<QuizDTO> quizResponseList = quizList.stream()
+                .map(quiz -> {
+                    QuizDTO quizDTO = convertToQuizDTO(quiz);
+                    quizDTO.setHasAttempted(submittedQuizIds.contains(quiz.getQuizId()));
+                    return quizDTO;
+                })
+                .collect(Collectors.toList());
 
         // Build and return the response
         return QuizResponseDTO.builder()
@@ -364,6 +364,7 @@ public class QuizService {
                 .messageStatus("Success")
                 .build();
     }
+
 
     private QuizDTO convertToQuizDTO(Quiz quiz) {
         // Implement the conversion from Quiz to QuizDTO
@@ -424,35 +425,40 @@ public class QuizService {
 
     //Quiz submission APIs
     public String submitQuiz(QuizSubmissionRequest quizSubmissionRequest) {
-        QuizSubmission quizSubmission = new QuizSubmission();
+        Optional<QuizSubmission> existingSubmission = quizSubmissionRepository.findByQuizIdAndStudentRollNumber(
+                quizSubmissionRequest.getQuizId(), quizSubmissionRequest.getStudentRollNumber());
+
+        if (existingSubmission.isPresent() && existingSubmission.get().isHasAttempted()) {
+            throw new IllegalArgumentException("You have already attempted this quiz.");
+        }
+
         List<QuizQuestion> quizQuestions = quizQuestionRepository.findByQuizId(quizSubmissionRequest.getQuizId());
 
         if (quizQuestions.isEmpty()) {
-            throw new NotFoundException("No quiz found with ID: " + quizSubmissionRequest.getCourseId());
+            throw new NotFoundException("No quiz found with ID: " + quizSubmissionRequest.getQuizId());
         }
-        quizSubmission = mapToQuizSubmission(quizSubmissionRequest);
-        quizSubmissionRepository.save(quizSubmission);
 
+        QuizSubmission quizSubmission = mapToQuizSubmission(quizSubmissionRequest);
+        quizSubmission.setHasAttempted(true);
+        quizSubmissionRepository.save(quizSubmission);
 
         int totalMarks = quizSubmission.getTotalMarks();
         int perQuestionMark = totalMarks / quizQuestions.size();
         int gainedMarks = 0;
 
-        //Save answers to the DB
+        // Save answers to the DB
         for (int i = 0; i < quizSubmissionRequest.getQuizQuestionList().size(); i++) {
             boolean isCorrect = false;
 
-            if (quizSubmissionRequest.getQuizQuestionList().
-                    get(i).getAnswer().equals(quizQuestions.get(i).getAnswer())) {
+            if (quizSubmissionRequest.getQuizQuestionList().get(i).getAnswer().equals(quizQuestions.get(i).getAnswer())) {
                 gainedMarks += perQuestionMark;
                 isCorrect = true;
             }
 
-            quizStudentAnswerRepository.save(QuizStudentAnswer.builder().
-                    quizSubmissionId(quizSubmission.getQuizId())
+            quizStudentAnswerRepository.save(QuizStudentAnswer.builder()
+                    .quizSubmissionId(quizSubmission.getQuizId())
                     .questionId(quizQuestions.get(i).getId())
-                    .answer(quizSubmissionRequest.getQuizQuestionList().
-                            get(i).getAnswer())
+                    .answer(quizSubmissionRequest.getQuizQuestionList().get(i).getAnswer())
                     .isCorrect(isCorrect)
                     .build());
         }
@@ -466,6 +472,7 @@ public class QuizService {
 
         return "Quiz submitted successfully";
     }
+
 
     public QuizSubmissionListResponse getAllQuizSubmission(Long quizId) {
         // Prepare the response object

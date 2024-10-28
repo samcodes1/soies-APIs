@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, Long> {
@@ -22,4 +23,6 @@ public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, 
     List<QuizSubmission> findByCourseIdAndStudentRollNumber(Long courseId, String studentRollNumber);
 
     Page<QuizSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
+    Optional<QuizSubmission> findByQuizIdAndStudentRollNumber(Long quizId, String studentRollNumber);
+
 }

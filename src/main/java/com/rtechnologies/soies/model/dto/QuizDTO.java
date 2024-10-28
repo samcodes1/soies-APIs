@@ -28,4 +28,7 @@ public class QuizDTO {
     private String time;
     private boolean visibility;
     private String term;
+    private boolean hasAttempted;
+
+
 }
