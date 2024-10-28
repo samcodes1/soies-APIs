@@ -24,5 +24,5 @@ public class ExamRequest {
     private int totalMarks;
     private String term;
     private List<ExamQuestion> examQuestions;
-    private boolean visibility;
+    private Boolean visibility;
 }

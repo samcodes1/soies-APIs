@@ -92,9 +92,9 @@ public class OgaController {
             @ApiResponse(code = 500, message = "Internal server error")
     })
     @GetMapping("/get-by-course/{courseId}/{studentRollNumber}")
-    public ResponseEntity<OgaListResponse> getOgasByCourseId(@PathVariable Long courseId,
+    public ResponseEntity<OgaDtoResposne> getOgasByCourseId(@PathVariable Long courseId,
                                                              @PathVariable String studentRollNumber) {
-        OgaListResponse response = ogaService.getOgasByCourseId(courseId, studentRollNumber);
+        OgaDtoResposne response = ogaService.getOgasByCourseId(courseId, studentRollNumber);
         return ResponseEntity.ok(response);
     }
 

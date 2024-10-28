@@ -23,5 +23,5 @@ public class AssignmentRequest {
     private String section;
     private String term;
     private String dueDate;
-    private boolean visibility;
+    private Boolean visibility;
 }

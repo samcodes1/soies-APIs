@@ -103,19 +103,19 @@ public class QuizService {
                 .build());
     }
 
-    public Quiz mapToQuiz(QuizRequest createQuizRequest) {
-        return quizRepository.save(Quiz.builder()
-                .quizId(createQuizRequest.getQuizId())
-                .courseId(createQuizRequest.getCourseId())
-                .quizTitle(createQuizRequest.getQuizTitle())
-                .description(createQuizRequest.getDescription())
-                .dueDate(createQuizRequest.getDueDate())
-                .time(createQuizRequest.getTime())
-                .totalMarks(createQuizRequest.getTotalMarks())
-                .term(createQuizRequest.getTerm())
-                .visibility(createQuizRequest.isVisibility())
-                .build());
-    }
+//    public Quiz mapToQuiz(QuizRequest createQuizRequest) {
+//        return quizRepository.save(Quiz.builder()
+//                .quizId(createQuizRequest.getQuizId())
+//                .courseId(createQuizRequest.getCourseId())
+//                .quizTitle(createQuizRequest.getQuizTitle())
+//                .description(createQuizRequest.getDescription())
+//                .dueDate(createQuizRequest.getDueDate())
+//                .time(createQuizRequest.getTime())
+//                .totalMarks(createQuizRequest.getTotalMarks())
+//                .term(createQuizRequest.getTerm())
+//                .visibility(createQuizRequest.isVisibility())
+//                .build());
+//    }
 
     public QuizResponse updateQuiz(QuizRequest quizRequest) {
         Utility.printDebugLogs("Quiz update request: " + quizRequest.toString());
@@ -127,7 +127,6 @@ public class QuizService {
         }
 
         try {
-            // Check for existing quiz
             Optional<Quiz> existingQuizOptional = quizRepository.findById(quizRequest.getQuizId());
             if (existingQuizOptional.isEmpty()) {
                 return QuizResponse.builder()
@@ -135,7 +134,6 @@ public class QuizService {
                         .build();
             }
 
-            // Check for existing course
             Optional<Course> courseOptional = courseRepository.findById(quizRequest.getCourseId());
             if (courseOptional.isEmpty()) {
                 Utility.printDebugLogs("No course found with ID: " + quizRequest.getCourseId());
@@ -144,19 +142,25 @@ public class QuizService {
                         .build();
             }
 
-            // Update the quiz
-            Quiz updatedQuiz = mapToQuiz(quizRequest);
-            updatedQuiz.setQuizId(existingQuizOptional.get().getQuizId()); // Retain the original quiz ID
-            quizRepository.save(updatedQuiz);
+            Quiz updatedQuiz = existingQuizOptional.get();
 
-            // Get existing questions for the quiz
+            updatedQuiz.setQuizTitle(quizRequest.getQuizTitle() != null ? quizRequest.getQuizTitle() : updatedQuiz.getQuizTitle());
+            updatedQuiz.setDescription(quizRequest.getDescription() != null ? quizRequest.getDescription() : updatedQuiz.getDescription());
+            updatedQuiz.setTotalMarks(quizRequest.getTotalMarks() > 0 ? quizRequest.getTotalMarks() : updatedQuiz.getTotalMarks());
+            updatedQuiz.setDueDate(quizRequest.getDueDate() != null ? quizRequest.getDueDate() : updatedQuiz.getDueDate());
+            updatedQuiz.setTerm(quizRequest.getTerm() != null ? quizRequest.getTerm() : updatedQuiz.getTerm());
+            updatedQuiz.setTime(quizRequest.getTime() != null ? quizRequest.getTime() : updatedQuiz.getTime());
+
+            if (quizRequest.getVisibility() != null) {
+                updatedQuiz.setVisibility(quizRequest.getVisibility());
+            }
+
+            quizRepository.save(updatedQuiz);
             List<QuizQuestion> existingQuestions = quizQuestionRepository.findByQuizId(updatedQuiz.getQuizId());
 
-            // Create a map of new and existing question IDs
             Map<Long, QuizQuestion> existingQuestionsMap = existingQuestions.stream()
                     .collect(Collectors.toMap(QuizQuestion::getId, Function.identity()));
 
-            // Process quiz questions
             List<QuizQuestion> questionsToSave = new ArrayList<>();
             for (QuizQuestion newQuestion : quizRequest.getQuizQuestions()) {
                 if (newQuestion.getId() != null && existingQuestionsMap.containsKey(newQuestion.getId())) {
@@ -176,19 +180,16 @@ public class QuizService {
                 }
             }
 
-            // Save updated and new questions
             quizQuestionRepository.saveAll(questionsToSave);
 
-            // Delete questions that were not included in the update request
             existingQuestions.removeAll(questionsToSave);
             quizQuestionRepository.deleteAll(existingQuestions);
-
             QuizResponse quizResponse = QuizResponse.builder()
                     .quizId(updatedQuiz.getQuizId())
                     .quizTitle(updatedQuiz.getQuizTitle())
                     .description(updatedQuiz.getDescription())
                     .totalMarks(updatedQuiz.getTotalMarks())
-                    .visibility(updatedQuiz.isVisibility())
+                    .visibility(updatedQuiz.isVisibility())  // Include visibility in the response
                     .quizQuestions(questionsToSave)
                     .dueDate(updatedQuiz.getDueDate())
                     .term(updatedQuiz.getTerm())

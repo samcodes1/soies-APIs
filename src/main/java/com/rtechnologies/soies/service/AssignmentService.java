@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.webjars.NotFoundException;
 
 import java.io.IOException;
@@ -187,7 +188,9 @@ public class AssignmentService {
             if (assignment.getSection() != null) {
                 existingAssignment.setSection(assignment.getSection());
             }
-            existingAssignment.setVisibility(assignment.isVisibility());
+            if (assignment.getVisibility() != null) {
+                existingAssignment.setVisibility(assignment.getVisibility());
+            }
             existingAssignment.setFile(fileUrl);
             existingAssignment.setCourseId(assignment.getCourseId());
             if (assignment.getTeacherId() != null) {
@@ -447,8 +450,7 @@ public class AssignmentService {
 
             // Check if the student has already submitted this assignment
             List<AssignmentSubmission> existingSubmissions = assignmentSubmissionRepository
-                    .findByAssignmentIdAndStudentRollNumber(
-                            assignment.getAssignmentId(), studentOptional.get().getRollNumber());
+                    .findByAssignmentIdAndStudentRollNumber(assignment.getAssignmentId(), studentOptional.get().getRollNumber());
 
             // Flag to check if the assignment has already been attempted
             boolean hasAttempted = !existingSubmissions.isEmpty();
@@ -458,15 +460,35 @@ public class AssignmentService {
                 submissionId = existingSubmissions.get(existingSubmissions.size() - 1).getSubmissionId();
             }
 
+            // Handle file upload with validation for PDF, Word, and image files (MultipartFile handling)
             String fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
             AssignmentSubmission finalAssignment = new AssignmentSubmission();
+            MultipartFile submittedFile = assignment.getSubmittedFile();  // Handling MultipartFile
+
             try {
+                // Get the file extension to validate PDF, Word, or image file
+                String originalFileName = submittedFile.getOriginalFilename();
+                if (originalFileName == null) {
+                    throw new IllegalArgumentException("Invalid file. No file name provided.");
+                }
+
+                // Extract file extension
+                String fileExtension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
+
+                // Validate file type (PDF, Word documents, or image files)
+                if (!fileExtension.equals("pdf") && !fileExtension.equals("doc") && !fileExtension.equals("docx") &&
+                        !fileExtension.equals("jpg") && !fileExtension.equals("jpeg") && !fileExtension.equals("png")) {
+                    throw new IllegalArgumentException("Only PDF, Word, and image files (JPG, PNG) are allowed.");
+                }
+
+                // Upload the file to Cloudinary
                 String folder = "submitted-assignments";
-                String publicId = folder + "/" + fileName;
-                Map data = cloudinary.uploader().upload(assignment.getSubmittedFile().getBytes(),
-                        ObjectUtils.asMap("public_id", publicId));
+                String publicId = folder + "/" + fileName + "." + fileExtension;  // Append file extension to the public ID
+                Map data = cloudinary.uploader().upload(submittedFile.getBytes(),
+                        ObjectUtils.asMap("public_id", publicId, "resource_type", "auto"));
                 String url = data.get("url").toString();
 
+                // Populate the assignment submission entity
                 if (submissionId != 0) {
                     finalAssignment.setSubmissionId(submissionId);
                 }
@@ -481,13 +503,17 @@ public class AssignmentService {
                 finalAssignment.setObtainedGrade("pending");
                 finalAssignment.setTerm(assignmentOptional.get().getTerm());
                 finalAssignment.setHasAttempted(hasAttempted);  // Set the hasAttempted flag
+
+                // Save the final assignment submission
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
+
             } catch (IOException ioException) {
-                throw new RuntimeException("File uploading failed");
+                throw new RuntimeException("File uploading failed", ioException);
             }
 
             Utility.printDebugLogs("Assignment created successfully: " + finalAssignment);
 
+            // Create the response object
             assignmentResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(finalAssignment.getSubmissionId())
                     .assignmentId(finalAssignment.getAssignmentId())

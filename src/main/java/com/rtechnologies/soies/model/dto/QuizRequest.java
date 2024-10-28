@@ -23,5 +23,5 @@ public class QuizRequest {
     private int totalMarks;
     private String term;
     private List<QuizQuestion> quizQuestions;
-    private boolean visibility;
+    private Boolean visibility;
 }

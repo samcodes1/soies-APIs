@@ -108,18 +108,18 @@ public class ExamService {
                 .build());
     }
 
-    public Exam mapToQuiz(ExamRequest createExamRequest) {
-        return examRepository.save(Exam.builder()
-                .courseId(createExamRequest.getCourseId())
-                .examTitle(createExamRequest.getExamTitle())
-                .description(createExamRequest.getDescription())
-                .dueDate(createExamRequest.getDueDate())
-                .time(createExamRequest.getTime())
-                .totalMarks(createExamRequest.getTotalMarks())
-                .term(createExamRequest.getTerm())
-                .visibility(createExamRequest.isVisibility())
-                .build());
-    }
+//    public Exam mapToQuiz(ExamRequest createExamRequest) {
+//        return examRepository.save(Exam.builder()
+//                .courseId(createExamRequest.getCourseId())
+//                .examTitle(createExamRequest.getExamTitle())
+//                .description(createExamRequest.getDescription())
+//                .dueDate(createExamRequest.getDueDate())
+//                .time(createExamRequest.getTime())
+//                .totalMarks(createExamRequest.getTotalMarks())
+//                .term(createExamRequest.getTerm())
+//                .visibility(createExamRequest.isVisibility())
+//                .build());
+//    }
 
     public ExamResponse updateExam(ExamRequest examRequest) {
         Utility.printDebugLogs("Exam update request: " + examRequest.toString());
@@ -143,8 +143,8 @@ public class ExamService {
                 throw new NotFoundException("No course found with ID: " + examRequest.getCourseId());
             }
 
-            // Update the exam entity
-            Exam updatedExam = mapToExam(examRequest);
+            // Update the exam entity by passing the existing exam to retain values not provided in the request
+            Exam updatedExam = mapToExam(examRequest, existingExamOptional.get());
             updatedExam.setExamId(existingExamOptional.get().getExamId()); // Retain the original exam ID
             examRepository.save(updatedExam);
 
@@ -236,17 +236,17 @@ public class ExamService {
         }
     }
 
-    private Exam mapToExam(ExamRequest examRequest) {
+    private Exam mapToExam(ExamRequest examRequest, Exam existingExam) {
         return Exam.builder()
                 .examId(examRequest.getExamId()) // Retain the existing exam ID
                 .courseId(examRequest.getCourseId())
-                .examTitle(examRequest.getExamTitle())
-                .description(examRequest.getDescription())
-                .dueDate(examRequest.getDueDate())
-                .time(examRequest.getTime())
-                .totalMarks(examRequest.getTotalMarks())
-                .term(examRequest.getTerm())
-                .visibility(examRequest.isVisibility())
+                .examTitle(examRequest.getExamTitle() != null ? examRequest.getExamTitle() : existingExam.getExamTitle())
+                .description(examRequest.getDescription() != null ? examRequest.getDescription() : existingExam.getDescription())
+                .dueDate(examRequest.getDueDate() != null ? examRequest.getDueDate() : existingExam.getDueDate())
+                .time(examRequest.getTime() != null ? examRequest.getTime() : existingExam.getTime())
+                .totalMarks(examRequest.getTotalMarks() > 0 ? examRequest.getTotalMarks() : existingExam.getTotalMarks())
+                .term(examRequest.getTerm() != null ? examRequest.getTerm() : existingExam.getTerm())
+                .visibility(examRequest.getVisibility() != null ? examRequest.getVisibility() : existingExam.isVisibility()) // Handle visibility update
                 .build();
     }
 

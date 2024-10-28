@@ -24,5 +24,5 @@ public class OgaRequest {
     private int totalMarks;
     private String term;
     private List<OgaQuestion> ogaQuestions;
-    private boolean visibility;
+    private Boolean visibility;
 }
