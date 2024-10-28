@@ -604,40 +604,48 @@ public class AssignmentService {
 
 
     public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
-        AssignmentSubmissionResponse assignmentSubmissionListResponse;
+        AssignmentSubmissionResponse assignmentSubmissionResponse;
 
         try {
-            List<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository
-                    .findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
-            int size = assignmentSubmissionsPage.size();
-            if (assignmentSubmissionsPage.isEmpty()) {
-                throw new NotFoundException("No submission found");
-            }
-
-            // Fetch the related assignment entity
             Optional<Assignment> optionalAssignment = assignmentRepository.findById(assignmentId);
             if (optionalAssignment.isEmpty()) {
                 throw new NotFoundException("Assignment not found");
             }
             Assignment assignment = optionalAssignment.get();
-            assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
-                    .submissionId(assignmentSubmissionsPage.get(size - 1).getSubmissionId())
-                    .assignmentId(assignmentSubmissionsPage.get(size - 1).getAssignmentId())
+
+            List<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository
+                    .findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
+
+            if (assignmentSubmissionsPage.isEmpty()) {
+                return AssignmentSubmissionResponse.builder()
+                        .assignmentId(assignment.getAssignmentId())
+                        .assignmentTitle(assignment.getAssignmentTitle())
+                        .assignmentFile(assignment.getFile())
+                        .messageStatus("No submission found") // Custom message for no submission
+                        .hasAttempted(false)
+                        .build();
+            }
+
+            AssignmentSubmission latestSubmission = assignmentSubmissionsPage.get(assignmentSubmissionsPage.size() - 1);
+
+            assignmentSubmissionResponse = AssignmentSubmissionResponse.builder()
+                    .submissionId(latestSubmission.getSubmissionId())
+                    .assignmentId(assignment.getAssignmentId())
                     .assignmentTitle(assignment.getAssignmentTitle())
                     .assignmentFile(assignment.getFile())
-                    .studentId(assignmentSubmissionsPage.get(size - 1).getStudentRollNumber())
-                    .submittedFileURL(assignmentSubmissionsPage.get(size - 1).getSubmittedFileURL())
-                    .comments(assignmentSubmissionsPage.get(size - 1).getComments())
-                    .obtainedMarks(assignmentSubmissionsPage.get(size - 1).getObtainedMarks())
-                    .grade(assignmentSubmissionsPage.get(size - 1).getObtainedGrade())
-                    .submissionDate(assignmentSubmissionsPage.get(size - 1).getSubmissionDate())
-                    .studentName(assignmentSubmissionsPage.get(size - 1).getStudentName())
-                    .hasAttempted(assignmentSubmissionsPage.get(size - 1).isHasAttempted())
+                    .studentId(latestSubmission.getStudentRollNumber())
+                    .submittedFileURL(latestSubmission.getSubmittedFileURL())
+                    .comments(latestSubmission.getComments())
+                    .obtainedMarks(latestSubmission.getObtainedMarks())
+                    .grade(latestSubmission.getObtainedGrade())
+                    .submissionDate(latestSubmission.getSubmissionDate())
+                    .studentName(latestSubmission.getStudentName())
+                    .hasAttempted(latestSubmission.isHasAttempted())
                     .messageStatus("Success")
                     .build();
 
-            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
-            return assignmentSubmissionListResponse;
+            Utility.printDebugLogs("Assignment submission response: " + assignmentSubmissionResponse);
+            return assignmentSubmissionResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentSubmissionResponse.builder()
