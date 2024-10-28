@@ -13,6 +13,8 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AssignmentSubmissionResponse {
+    private String assignmentTitle;
+    private String assignmentFile;
     private Long submissionId;
     private Long assignmentId; // ID of the Assignment associated with the submission
     private String studentId; // ID of the Student submitting the assignment

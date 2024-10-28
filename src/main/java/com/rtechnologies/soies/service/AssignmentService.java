@@ -604,18 +604,30 @@ public class AssignmentService {
 
 
     public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
-        AssignmentSubmissionResponse assignmentSubmissionListResponse;
+        AssignmentSubmissionResponse assignmentSubmissionResponse;
 
         try {
+            // Fetch assignment submission
             List<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository
                     .findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
             int size = assignmentSubmissionsPage.size();
             if (assignmentSubmissionsPage.isEmpty()) {
                 throw new NotFoundException("No submission found");
             }
-            assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
+
+            // Fetch assignment details
+            Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
+            if (assignmentOptional.isEmpty()) {
+                throw new NotFoundException("No assignment found with ID: " + assignmentId);
+            }
+            Assignment assignment = assignmentOptional.get();
+
+            // Build the response
+            assignmentSubmissionResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(assignmentSubmissionsPage.get(size - 1).getSubmissionId())
                     .assignmentId(assignmentSubmissionsPage.get(size - 1).getAssignmentId())
+                    .assignmentTitle(assignment.getAssignmentTitle())
+                    .assignmentFile(assignment.getFile())          
                     .studentId(assignmentSubmissionsPage.get(size - 1).getStudentRollNumber())
                     .submittedFileURL(assignmentSubmissionsPage.get(size - 1).getSubmittedFileURL())
                     .comments(assignmentSubmissionsPage.get(size - 1).getComments())
@@ -627,8 +639,9 @@ public class AssignmentService {
                     .messageStatus("Success")
                     .build();
 
-            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
-            return assignmentSubmissionListResponse;
+            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionResponse);
+            return assignmentSubmissionResponse;
+
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentSubmissionResponse.builder()
