@@ -7,6 +7,7 @@ import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.association.QuizSubmission;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
+import com.rtechnologies.soies.utilities.Utility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,6 +50,7 @@ public class AcademicRecordService {
     @Autowired
     private ExamRepository examRepository;
 
+
     public AcademicRecordResponse getAcademicRecord(String studentRollNumber, String term, String academicCategory, int page, int size) {
         AcademicRecordResponse academicRecordResponse = new AcademicRecordResponse();
         Optional<Student> student = studentRepository.findByRollNumber(studentRollNumber);
@@ -63,8 +65,12 @@ public class AcademicRecordService {
             switch (academicCategory.toLowerCase()) {
                 case "all":
                     // Fetch assignment submissions
-                    Page<AssignmentSubmission> assignmentSubmissions = assignmentSubmissionRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<AssignmentSubmission> assignmentSubmissions;
+                    if ("all".equalsIgnoreCase(term)) {
+                        assignmentSubmissions = assignmentSubmissionRepository.findByStudentRollNumber(studentRollNumber, pageable);
+                    } else {
+                        assignmentSubmissions = assignmentSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    }
                     academicRecordResponse.setAssignmentSubmissions(
                             assignmentSubmissions.getContent().stream()
                                     .map(submission -> {
@@ -89,8 +95,12 @@ public class AcademicRecordService {
                                     .collect(Collectors.toList()));
 
                     // Fetch exam submissions
-                    Page<ExamSubmission> examResults = examResultRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<ExamSubmission> examResults;
+                    if ("all".equalsIgnoreCase(term)) {
+                        examResults = examResultRepository.findByStudentRollNumber(studentRollNumber, pageable);
+                    } else {
+                        examResults = examResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    }
                     academicRecordResponse.setExamSubmissions(
                             examResults.getContent().stream()
                                     .map(submission -> {
@@ -111,8 +121,12 @@ public class AcademicRecordService {
                                     .collect(Collectors.toList()));
 
                     // Fetch quiz submissions
-                    Page<QuizSubmission> quizSubmissions = quizSubmissionRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<QuizSubmission> quizSubmissions;
+                    if ("all".equalsIgnoreCase(term)) {
+                        quizSubmissions = quizSubmissionRepository.findByStudentRollNumber(studentRollNumber, pageable);
+                    } else {
+                        quizSubmissions = quizSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    }
                     academicRecordResponse.setQuizSubmissions(
                             quizSubmissions.getContent().stream()
                                     .map(submission -> {
@@ -133,8 +147,12 @@ public class AcademicRecordService {
                                     .collect(Collectors.toList()));
 
                     // Fetch OGA submissions
-                    Page<OgaSubmission> ogaResults = ogaResultRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<OgaSubmission> ogaResults;
+                    if ("all".equalsIgnoreCase(term)) {
+                        ogaResults = ogaResultRepository.findByStudentRollNumber(studentRollNumber, pageable);
+                    } else {
+                        ogaResults = ogaResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    }
                     academicRecordResponse.setOgaSubmissions(
                             ogaResults.getContent().stream()
                                     .map(submission -> {
@@ -156,9 +174,10 @@ public class AcademicRecordService {
                     break;
 
                 case "assignment":
-                    // Fetch assignment submissions
-                    Page<AssignmentSubmission> assignments = assignmentSubmissionRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<AssignmentSubmission> assignments = term.equalsIgnoreCase("all")
+                            ? assignmentSubmissionRepository.findByStudentRollNumber(studentRollNumber, pageable)
+                            : assignmentSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+
                     academicRecordResponse.setAssignmentSubmissions(
                             assignments.getContent().stream()
                                     .map(submission -> {
@@ -182,11 +201,11 @@ public class AcademicRecordService {
                                     })
                                     .collect(Collectors.toList()));
                     break;
-
                 case "exam":
-                    // Fetch exam submissions
-                    Page<ExamSubmission> exams = examResultRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<ExamSubmission> exams = term.equalsIgnoreCase("all")
+                            ? examResultRepository.findByStudentRollNumber(studentRollNumber, pageable)
+                            : examResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+
                     academicRecordResponse.setExamSubmissions(
                             exams.getContent().stream()
                                     .map(submission -> {
@@ -208,9 +227,10 @@ public class AcademicRecordService {
                     break;
 
                 case "quiz":
-                    // Fetch quiz submissions
-                    Page<QuizSubmission> quizzes = quizSubmissionRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<QuizSubmission> quizzes = term.equalsIgnoreCase("all")
+                            ? quizSubmissionRepository.findByStudentRollNumber(studentRollNumber, pageable)
+                            : quizSubmissionRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+
                     academicRecordResponse.setQuizSubmissions(
                             quizzes.getContent().stream()
                                     .map(submission -> {
@@ -230,11 +250,11 @@ public class AcademicRecordService {
                                     })
                                     .collect(Collectors.toList()));
                     break;
-
                 case "oga":
-                    // Fetch OGA submissions
-                    Page<OgaSubmission> ogas = ogaResultRepository
-                            .findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+                    Page<OgaSubmission> ogas = term.equalsIgnoreCase("all")
+                            ? ogaResultRepository.findByStudentRollNumber(studentRollNumber, pageable)
+                            : ogaResultRepository.findByStudentRollNumberAndTerm(studentRollNumber, term, pageable);
+
                     academicRecordResponse.setOgaSubmissions(
                             ogas.getContent().stream()
                                     .map(submission -> {

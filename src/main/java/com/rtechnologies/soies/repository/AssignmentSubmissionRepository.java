@@ -23,4 +23,7 @@ public interface AssignmentSubmissionRepository extends JpaRepository<Assignment
     @Query("SELECT a FROM AssignmentSubmission a WHERE a.studentRollNumber = :studentRollNumber AND a.term = :term")
     Page<AssignmentSubmission> findByStudentRollNumberAndTerm(@Param("studentRollNumber") String studentRollNumber, @Param("term") String term, Pageable pageable);
     Page<AssignmentSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
+    Page<AssignmentSubmission> findByStudentRollNumber(String studentRollNumber, Pageable pageable);
+
+
 }

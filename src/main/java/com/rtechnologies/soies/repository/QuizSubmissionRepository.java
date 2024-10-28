@@ -18,6 +18,8 @@ public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, 
     List<QuizSubmission> findByQuizId(@Param("quizId") Long quizId);
     List<QuizSubmission> findByStudentRollNumber(String studentRollNumber);
     List<QuizSubmission> findByCourseId(Long courseId);
+    Page<QuizSubmission> findByStudentRollNumber(String studentRollNumber, Pageable pageable);
+
 
     Page<QuizSubmission> findByStudentRollNumberAndTerm(String studentRollNumber, String term, Pageable pageable);
     List<QuizSubmission> findByCourseIdAndStudentRollNumber(Long courseId, String studentRollNumber);
