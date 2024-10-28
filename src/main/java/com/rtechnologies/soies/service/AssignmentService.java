@@ -604,10 +604,9 @@ public class AssignmentService {
 
 
     public AssignmentSubmissionResponse getAssignmentSubmissionById(Long assignmentId, String studentRollNumber) {
-        AssignmentSubmissionResponse assignmentSubmissionResponse;
+        AssignmentSubmissionResponse assignmentSubmissionListResponse;
 
         try {
-            // Fetch assignment submission
             List<AssignmentSubmission> assignmentSubmissionsPage = assignmentSubmissionRepository
                     .findByAssignmentIdAndStudentRollNumber(assignmentId, studentRollNumber);
             int size = assignmentSubmissionsPage.size();
@@ -615,19 +614,17 @@ public class AssignmentService {
                 throw new NotFoundException("No submission found");
             }
 
-            // Fetch assignment details
-            Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
-            if (assignmentOptional.isEmpty()) {
-                throw new NotFoundException("No assignment found with ID: " + assignmentId);
+            // Fetch the related assignment entity
+            Optional<Assignment> optionalAssignment = assignmentRepository.findById(assignmentId);
+            if (optionalAssignment.isEmpty()) {
+                throw new NotFoundException("Assignment not found");
             }
-            Assignment assignment = assignmentOptional.get();
-
-            // Build the response
-            assignmentSubmissionResponse = AssignmentSubmissionResponse.builder()
+            Assignment assignment = optionalAssignment.get();
+            assignmentSubmissionListResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(assignmentSubmissionsPage.get(size - 1).getSubmissionId())
                     .assignmentId(assignmentSubmissionsPage.get(size - 1).getAssignmentId())
                     .assignmentTitle(assignment.getAssignmentTitle())
-                    .assignmentFile(assignment.getFile())          
+                    .assignmentFile(assignment.getFile())
                     .studentId(assignmentSubmissionsPage.get(size - 1).getStudentRollNumber())
                     .submittedFileURL(assignmentSubmissionsPage.get(size - 1).getSubmittedFileURL())
                     .comments(assignmentSubmissionsPage.get(size - 1).getComments())
@@ -639,9 +636,8 @@ public class AssignmentService {
                     .messageStatus("Success")
                     .build();
 
-            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionResponse);
-            return assignmentSubmissionResponse;
-
+            Utility.printDebugLogs("Assignment list response: " + assignmentSubmissionListResponse);
+            return assignmentSubmissionListResponse;
         } catch (IllegalArgumentException e) {
             Utility.printErrorLogs(e.toString());
             return AssignmentSubmissionResponse.builder()
