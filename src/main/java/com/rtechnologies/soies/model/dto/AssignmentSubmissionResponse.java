@@ -23,4 +23,7 @@ public class AssignmentSubmissionResponse {
     private double obtainedMarks;
     private String grade;
     private String messageStatus;
+    private boolean hasAttempted;  // Field to track if the assignment has been attempted
+
+
 }

@@ -445,17 +445,20 @@ public class AssignmentService {
                 throw new NotFoundException("No student found with ID: " + assignment.getStudentId());
             }
 
-            List<AssignmentSubmission> assignmentSubmission = assignmentSubmissionRepository
+            // Check if the student has already submitted this assignment
+            List<AssignmentSubmission> existingSubmissions = assignmentSubmissionRepository
                     .findByAssignmentIdAndStudentRollNumber(
                             assignment.getAssignmentId(), studentOptional.get().getRollNumber());
 
+            // Flag to check if the assignment has already been attempted
+            boolean hasAttempted = !existingSubmissions.isEmpty();
+
             long submissionId = 0;
-            if (!assignmentSubmission.isEmpty()) {
-                submissionId = assignmentSubmission.get(assignmentSubmission.size() - 1).getSubmissionId();
+            if (hasAttempted) {
+                submissionId = existingSubmissions.get(existingSubmissions.size() - 1).getSubmissionId();
             }
 
-            String fileName = "";
-            fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
+            String fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
             AssignmentSubmission finalAssignment = new AssignmentSubmission();
             try {
                 String folder = "submitted-assignments";
@@ -469,7 +472,7 @@ public class AssignmentService {
                 }
 
                 finalAssignment.setAssignmentId(assignment.getAssignmentId());
-                finalAssignment.setStudentRollNumber(Long.toString(assignment.getStudentId()));
+                finalAssignment.setStudentRollNumber(studentOptional.get().getRollNumber());
                 finalAssignment.setSubmissionDate(assignment.getSubmissionDate());
                 finalAssignment.setSubmittedFileURL(url);
                 finalAssignment.setStudentName(studentOptional.get().getStudentName());
@@ -477,6 +480,7 @@ public class AssignmentService {
                 finalAssignment.setObtainedMarks(-1);
                 finalAssignment.setObtainedGrade("pending");
                 finalAssignment.setTerm(assignmentOptional.get().getTerm());
+                finalAssignment.setHasAttempted(hasAttempted);  // Set the hasAttempted flag
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
             } catch (IOException ioException) {
                 throw new RuntimeException("File uploading failed");
@@ -493,6 +497,7 @@ public class AssignmentService {
                     .comments("pending")
                     .obtainedMarks(-1)
                     .grade("pending")
+                    .hasAttempted(hasAttempted)  // Include hasAttempted in the response
                     .messageStatus("Success")
                     .build();
 
@@ -510,6 +515,7 @@ public class AssignmentService {
                     .build();
         }
     }
+
 
     public AssignmentSubmissionListResponse getAssignmentSubmissions(Long assignmentId, int page, int size) {
         Utility.printDebugLogs("Get assignment submissions by assignment ID: " + assignmentId);
@@ -591,6 +597,7 @@ public class AssignmentService {
                     .grade(assignmentSubmissionsPage.get(size - 1).getObtainedGrade())
                     .submissionDate(assignmentSubmissionsPage.get(size - 1).getSubmissionDate())
                     .studentName(assignmentSubmissionsPage.get(size - 1).getStudentName())
+                    .hasAttempted(assignmentSubmissionsPage.get(size - 1).isHasAttempted())
                     .messageStatus("Success")
                     .build();
 

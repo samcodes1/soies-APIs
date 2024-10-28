@@ -389,47 +389,61 @@ public class ExamService {
     }
 
     public String submitExam(ExamSubmissionRequest examSubmissionRequest) {
+        // Create a new ExamSubmission object
         ExamSubmission examSubmission = new ExamSubmission();
+
+        // Fetch the exam questions based on the exam ID
         List<ExamQuestion> examQuestions = examQuestionRepository.findByExamId(examSubmissionRequest.getExamId());
 
         if (examQuestions.isEmpty()) {
             throw new NotFoundException("No Exam found with ID: " + examSubmissionRequest.getExamId());
         }
 
+        // Map the examSubmissionRequest to the examSubmission entity
         examSubmission = mapToExamSubmission(examSubmissionRequest);
+
+        // Set the hasAttempted flag to true because the exam is being submitted now
+        examSubmission.setHasAttempted(true);
+
+        // Save the exam submission in the repository
         examSubmissionRepository.save(examSubmission);
 
         int totalMarks = examSubmission.getTotalMarks();
         int perQuestionMark = totalMarks / examQuestions.size();
         int gainedMarks = 0;
 
-        // Save answers to the DB
+        // Save the student's answers to the database
         for (int i = 0; i < examSubmissionRequest.getExamQuestionList().size(); i++) {
             boolean isCorrect = false;
 
+            // Check if the student's answer is correct
             if (examSubmissionRequest.getExamQuestionList()
                     .get(i).getAnswer().equals(examQuestions.get(i).getAnswer())) {
                 gainedMarks += perQuestionMark;
                 isCorrect = true;
             }
 
+            // Save the student's answer
             examStudentAnswerRepository.save(ExamStudentAnswer.builder()
-                    .examSubmissionId(examSubmission.getExamId())
-                    .questionId(examSubmission.getId())
+                    .examSubmissionId(examSubmission.getId())  // Use the correct ID
+                    .questionId(examQuestions.get(i).getId())  // Reference the correct question ID
                     .answer(examSubmissionRequest.getExamQuestionList()
                             .get(i).getAnswer())
                     .isCorrect(isCorrect)
                     .build());
         }
 
+        // Calculate the percentage based on gained marks
         double percentage = (double) gainedMarks / totalMarks * 100;
         examSubmission.setGainedMarks(gainedMarks);
         examSubmission.setPercentage(percentage);
 
+        // Save the updated exam submission with gained marks and percentage
         examSubmissionRepository.save(examSubmission);
 
         return "Exam submitted successfully";
     }
+
 
     public ExamSubmissionListResponse getAllExamSubmission(Long examId) {
         List<ExamSubmission> submittedExams = examSubmissionRepository.findByExamId(examId);

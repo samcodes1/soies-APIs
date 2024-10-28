@@ -27,4 +27,6 @@ public class OgaSubmission {
     private double percentage;
     private String date;
     private String term;
+    private boolean hasAttempted = false;
+
 }

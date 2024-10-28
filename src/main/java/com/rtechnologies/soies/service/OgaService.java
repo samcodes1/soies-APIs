@@ -355,25 +355,45 @@ public class OgaService {
         Utility.printDebugLogs("OGA list response: " + ogaListResponse);
         return ogaListResponse;
     }
+    private OgaDTO convertToOgaDTO(Oga oga) {
+        OgaDTO ogaDTO = new OgaDTO();
+        ogaDTO.setOgaId(oga.getOgaId());
+        ogaDTO.setOgaTitle(oga.getOgaTitle());
+        ogaDTO.setDescription(oga.getDescription());
+        ogaDTO.setDueDate(oga.getDueDate());
+        ogaDTO.setTotalMarks(oga.getTotalMarks());
+        ogaDTO.setVisibility(oga.isVisibility());
+        ogaDTO.setTerm(oga.getTerm());
+        ogaDTO.setTime(oga.getTime());
+        return ogaDTO;
+    }
+
 
     public String submitOga(OgaSubmissionRequest ogaSubmissionRequest) {
         OgaSubmission ogaSubmission = new OgaSubmission();
 
+        // Fetch OGA by ID
         Optional<Oga> oga = ogaRepository.findById(ogaSubmissionRequest.getOgaId());
-        System.out.println("oga term " + oga.get().getTerm());
-        List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaSubmissionRequest.getOgaId());
-
-        if (ogaQuestions.isEmpty()) {
+        if (oga.isEmpty()) {
             throw new NotFoundException("No OGA found with ID: " + ogaSubmissionRequest.getOgaId());
         }
+
+        // Fetch OGA questions
+        List<OgaQuestion> ogaQuestions = ogaQuestionRepository.findByOgaId(ogaSubmissionRequest.getOgaId());
+        if (ogaQuestions.isEmpty()) {
+            throw new NotFoundException("No questions found for OGA ID: " + ogaSubmissionRequest.getOgaId());
+        }
+
+        // Create and save the OGA submission
         ogaSubmission = mapToOgaSubmission(ogaSubmissionRequest);
+        ogaSubmission.setHasAttempted(true);  // Mark the submission as attempted
         ogaSubmissionRepository.save(ogaSubmission);
 
         int totalMarks = ogaSubmission.getTotalMarks();
         int perQuestionMark = totalMarks / ogaQuestions.size();
         int gainedMarks = 0;
 
-        // Save answers to the DB
+        // Save student answers to the DB
         for (int i = 0; i < ogaSubmissionRequest.getOgaQuestionList().size(); i++) {
             boolean isCorrect = false;
 
@@ -382,22 +402,26 @@ public class OgaService {
                 isCorrect = true;
             }
 
-            ogaStudentAnswerRepository.save(OgaStudentAnswer.builder().ogaSubmissionId(ogaSubmission.getOgaId())
+            ogaStudentAnswerRepository.save(OgaStudentAnswer.builder()
+                    .ogaSubmissionId(ogaSubmission.getOgaId())
                     .questionId(ogaSubmission.getId())
                     .answer(ogaSubmissionRequest.getOgaQuestionList().get(i).getAnswer())
                     .isCorrect(isCorrect)
                     .build());
         }
 
+        // Calculate percentage and update submission
         double percentage = (double) gainedMarks / totalMarks * 100;
         ogaSubmission.setGainedMarks(gainedMarks);
         ogaSubmission.setPercentage(percentage);
         ogaSubmission.setTerm(oga.get().getTerm());
 
+        // Save the updated submission with marks and percentage
         ogaSubmissionRepository.save(ogaSubmission);
 
         return "OGA submitted successfully";
     }
+
 
     public OgaSubmissionListResponse getAllOgaSubmission(Long ogaId) {
         List<OgaSubmission> submittedOgas = ogaSubmissionRepository.findByOgaId(ogaId);

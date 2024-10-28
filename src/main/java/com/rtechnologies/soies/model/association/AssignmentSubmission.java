@@ -31,7 +31,9 @@ public class AssignmentSubmission {
     private String obtainedGrade;
     private String dueDate;
     private String term;
-    private int totalMarks; // Total marks for the assignment
+    private int totalMarks;
+    private boolean hasAttempted = false;
+
 
 }
 
