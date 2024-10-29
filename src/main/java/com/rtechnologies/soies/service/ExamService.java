@@ -7,6 +7,8 @@ import com.rtechnologies.soies.model.association.OgaSubmission;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
 import com.rtechnologies.soies.utilities.Utility;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +40,9 @@ public class ExamService {
 
     @Autowired
     private ExamStudentAnswerRepository examStudentAnswerRepository;
+
+
+    private static final Logger logger = LoggerFactory.getLogger(ExamService.class);
 
     public ExamResponse createExam(CreateExamRequest exam) {
         Utility.printDebugLogs("Exam creation request: " + exam.toString());
@@ -286,54 +291,46 @@ public class ExamService {
     }
 
     public ExamListResponse getExamsByCourseId(Long courseId, String studentRollNum) {
-        Utility.printDebugLogs("Get exams by course ID: " + courseId);
+        logger.debug("Get exams by course ID: {}", courseId);
         ExamListResponse examListResponse;
 
         try {
             List<Exam> examList = examRepository.findAllByCourseId(courseId);
 
             if (examList.isEmpty()) {
-                Utility.printDebugLogs("No exams found for course ID: " + courseId);
+                logger.warn("No exams found for course ID: {}", courseId);
                 throw new NotFoundException("No exams found for course ID: " + courseId);
             }
 
-            List<Exam> finalList = new ArrayList<>();
+            List<Exam> finalList = new ArrayList<>(examList);
             List<ExamSubmission> quizSubmissions = examSubmissionRepository.findByStudentRollNumber(studentRollNum);
-            finalList = examList;
+
             if (!quizSubmissions.isEmpty()) {
-                for (int i = 0; i < quizSubmissions.size(); i++) {
-                    for (Exam exam : examList) {
-                        if (Objects.equals(exam.getExamId(), quizSubmissions.get(i).getExamId())) {
-                            finalList.remove(exam);
-                            break;
-                        }
-                    }
+                for (ExamSubmission submission : quizSubmissions) {
+                    finalList.removeIf(exam -> Objects.equals(exam.getExamId(), submission.getExamId()));
                 }
-                examListResponse = ExamListResponse.builder()
-                        .examList(finalList)
-                        .messageStatus("Success")
-                        .build();
-            } else {
-                examListResponse = ExamListResponse.builder()
-                        .examList(examList)
-                        .messageStatus("Success")
-                        .build();
             }
 
-            Utility.printDebugLogs("Exam list response: " + examListResponse);
+            examListResponse = ExamListResponse.builder()
+                    .examList(finalList)
+                    .messageStatus("Success")
+                    .build();
+
+            logger.debug("Exam list response: {}", examListResponse);
             return examListResponse;
         } catch (IllegalArgumentException e) {
-            Utility.printErrorLogs(e.toString());
+            logger.error("Error: {}", e.toString());
             return ExamListResponse.builder()
                     .messageStatus(e.toString())
                     .build();
         } catch (Exception e) {
-            Utility.printErrorLogs(e.toString());
+            logger.error("Unexpected error: {}", e.toString());
             return ExamListResponse.builder()
                     .messageStatus("Failure")
                     .build();
         }
     }
+
 
     public ExamResponse getExamById(Long examId) {
         Utility.printDebugLogs("Get exam by ID: " + examId);

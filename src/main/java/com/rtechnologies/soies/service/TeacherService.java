@@ -1,10 +1,7 @@
 package com.rtechnologies.soies.service;
 
 import com.opencsv.exceptions.CsvException;
-import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.Section;
-import com.rtechnologies.soies.model.Student;
-import com.rtechnologies.soies.model.Teacher;
+import com.rtechnologies.soies.model.*;
 import com.rtechnologies.soies.model.association.TeacherCampusSectionGradeBranch;
 import com.rtechnologies.soies.model.association.TeacherCourse;
 import com.rtechnologies.soies.model.association.TeacherSection;
@@ -54,6 +51,9 @@ public class TeacherService {
     @Autowired
     private SectionRepository sectionRepository;
 
+    @Autowired
+    private CampusRepository campusRepository;
+
 
     public TeacherResponse createTeacher(CreateTeacherDTO teacherDTO) {
         Utility.printDebugLogs("Teacher creation request: " + teacherDTO.toString());
@@ -72,35 +72,34 @@ public class TeacherService {
                 throw new IllegalArgumentException("Account already exists");
             }
 
-            // Hash the password using BCryptPasswordEncoder
             String hashedPassword = new BCryptPasswordEncoder().encode(teacherDTO.getPassword());
             teacherDTO.setPassword(hashedPassword);
 
-            // Format grade field based on teacherSectionList
             String formattedGrade = formatGradeSection(teacherDTO.getTeacherSectionList());
 
-            // Map DTO to Teacher entity
             Teacher savingTeacher = mapToTeacher(teacherDTO, formattedGrade);
             Teacher savedTeacher = teacherRepository.save(savingTeacher);
             Utility.printDebugLogs("Saved teacher: " + savedTeacher.toString());
+            Long campusId = getOrCreateCampus(savedTeacher.getCampusName());
 
-            // Save TeacherSection details
-            for (TeacherSection teacherSection : teacherDTO.getTeacherSectionList()) {
-                teacherSection.setTeacherId(savedTeacher.getTeacherId());
-            }
-            teacherSectionRepository.saveAll(teacherDTO.getTeacherSectionList());
-
-            // Check and assign courses based on the grade
             for (TeacherSection teacherSection : teacherDTO.getTeacherSectionList()) {
                 String grade = teacherSection.getGrade();
-                List<Course> courses = getCoursesForGrade(grade);
+                String[] sections = teacherSection.getSection().split(",");
 
-                for (Course course : courses) {
-                    Long courseId = course.getCourseId();
-                    saveTeacherCourseAssociation(savedTeacher.getTeacherId(), courseId);
+                for (String section : sections) {
+                    Long sectionId = getOrCreateSection(campusId, section.trim(), grade);
+                    saveTeacherCampusSectionGradeAssociation(savedTeacher.getTeacherId(), sectionId);
+
+                    // Process courses for each section
+                    List<Course> courses = getCoursesForGrade(grade);
+                    for (Course course : courses) {
+                        Long courseId = getOrCreateCourse(course.getCourseName(), grade);
+                        saveTeacherCourseAssociation(savedTeacher.getTeacherId(), courseId);
+                    }
                 }
             }
 
+            // Prepare response
             teacherResponse = TeacherResponse.builder()
                     .teacherId(savedTeacher.getTeacherId())
                     .campusName(savedTeacher.getCampusName())
@@ -127,13 +126,46 @@ public class TeacherService {
         }
     }
 
-    private void saveTeacherCourseAssociation(Long teacherId, Long courseId) {
-        Optional<TeacherCourse> existingAssociation = teacherCourseRepository.findByTeacherIdAndCourseId(teacherId, courseId);
-        if (!existingAssociation.isPresent()) {
-            teacherCourseRepository.save(TeacherCourse.builder().teacherId(teacherId).courseId(courseId).build());
-            System.err.println("Added new course to teacher with ID: " + teacherId);
+    private Long getOrCreateCampus(String campusName) {
+        Optional<Campus> campusData = campusRepository.findByCampusName(campusName);
+        Long campusId;
+        if (!campusData.isPresent()) {
+            Campus campus = Campus.builder().campusName(campusName).build();
+            campus = campusRepository.save(campus);
+            campusId = campus.getId();
+            System.err.println("Campus does not exist, created new campus with ID: " + campusId);
         } else {
-            System.err.println("Teacher already has this course assigned.");
+            campusId = campusData.get().getId();
+            System.err.println("Campus exists with ID: " + campusId);
+        }
+        return campusId;
+    }
+
+    private Long getOrCreateSection(Long campusId, String sectionName, String grade) {
+        Optional<Section> sectionData = sectionRepository.findByCampusIdAndSectionNameIgnoreCaseAndGrade(campusId, sectionName, grade);
+        Long sectionId;
+        if (!sectionData.isPresent()) {
+            Section newSection = Section.builder().campusId(campusId).grade(grade).sectionName(sectionName).build();
+            newSection = sectionRepository.save(newSection);
+            sectionId = newSection.getId();
+            System.err.println("Section does not exist, created new section with ID: " + sectionId);
+        } else {
+            sectionId = sectionData.get().getId();
+            System.err.println("Section exists with ID: " + sectionId);
+        }
+        return sectionId;
+    }
+
+    private void saveTeacherCampusSectionGradeAssociation(Long teacherId, Long sectionId) {
+        Optional<TeacherCampusSectionGradeBranch> existingAssociation = teacherCampusSectionGradeBranchRepo.findByTeacheIdFkAndSectionIdFk(teacherId, sectionId);
+        if (!existingAssociation.isPresent()) {
+            teacherCampusSectionGradeBranchRepo.save(TeacherCampusSectionGradeBranch.builder()
+                    .teacheIdFk(teacherId)
+                    .sectionIdFk(sectionId)
+                    .build());
+            System.err.println("Added new section to teacher with ID: " + teacherId);
+        } else {
+            System.err.println("Teacher already has this section assigned.");
         }
     }
 
@@ -152,13 +184,21 @@ public class TeacherService {
         return courseId;
     }
 
+    private void saveTeacherCourseAssociation(Long teacherId, Long courseId) {
+        Optional<TeacherCourse> existingAssociation = teacherCourseRepository.findByTeacherIdAndCourseId(teacherId, courseId);
+        if (!existingAssociation.isPresent()) {
+            teacherCourseRepository.save(TeacherCourse.builder().teacherId(teacherId).courseId(courseId).build());
+            System.err.println("Added new course to teacher with ID: " + teacherId);
+        } else {
+            System.err.println("Teacher already has this course assigned.");
+        }
+    }
+
     private List<Course> getCoursesForGrade(String grade) {
-        // Fetch courses by grade from the repository
         return courseRepository.findCoursesByGrade(grade);
     }
 
     private String formatGradeSection(List<TeacherSection> sections) {
-        // Map to collect sections by grade
         Map<String, List<String>> gradeToSectionsMap = new LinkedHashMap<>();
 
         for (TeacherSection section : sections) {
@@ -170,20 +210,16 @@ public class TeacherService {
                     .add(sectionName);
         }
 
-        // Build the formatted string
         StringBuilder formattedGrade = new StringBuilder();
         for (Map.Entry<String, List<String>> entry : gradeToSectionsMap.entrySet()) {
             String grade = entry.getKey();
             List<String> sectionNames = entry.getValue();
             formattedGrade.append(grade).append("(")
                     .append(String.join(",", sectionNames))
-                    .append(") , ");
+                    .append("), ");
         }
-
-        // Remove the trailing comma and space
         return formattedGrade.toString().replaceAll(", $", "");
     }
-
 
     public static Teacher mapToTeacher(CreateTeacherDTO createTeacherDTO, String formattedGrade) {
         return Teacher.builder()
@@ -206,20 +242,17 @@ public class TeacherService {
         TeacherResponse teacherResponse;
 
         try {
-            // Validate teacherId
             if (teacherId == null || teacherId <= 0) {
                 Utility.printErrorLogs("Invalid teacherId for deletion: " + teacherId);
                 throw new IllegalArgumentException("Invalid Teacher ID for deletion");
             }
 
-            // Check if the teacher exists
             Optional<Teacher> existingTeacher = teacherRepository.findById(teacherId);
             if (existingTeacher.isEmpty()) {
                 Utility.printDebugLogs("Teacher not found with ID: " + teacherId);
                 throw new NotFoundException("Teacher not found with ID: " + teacherId);
             }
 
-            // Delete the teacher
             teacherRepository.deleteById(teacherId);
 
             Utility.printDebugLogs("Teacher deleted successfully. ID: " + teacherId);
@@ -254,13 +287,11 @@ public class TeacherService {
         TeacherResponse teacherResponse;
 
         try {
-            // Validate teacher and teacherId
             if (teacher == null || teacher.getTeacherId() == null || teacher.getTeacherId() <= 0) {
                 Utility.printErrorLogs("Invalid teacher or teacher ID: " + teacher.getTeacherId());
                 throw new IllegalArgumentException("Invalid teacher or teacher ID: " + teacher.getTeacherId());
             }
 
-            // Check if the teacher with the specified ID exists
             Optional<Teacher> existingTeacherOptional = teacherRepository.findById(teacher.getTeacherId());
             if (existingTeacherOptional.isEmpty()) {
                 Utility.printDebugLogs("Teacher not found with ID: " + teacher.getTeacherId());
@@ -269,7 +300,6 @@ public class TeacherService {
 
             Teacher existingTeacher = existingTeacherOptional.get();
 
-            // Update the teacher's details
             existingTeacher.setCampusName(teacher.getCampusName());
             existingTeacher.setEmployeeName(teacher.getEmployeeName());
             existingTeacher.setEmail(teacher.getEmail());
@@ -279,37 +309,26 @@ public class TeacherService {
             existingTeacher.setPhoneNumber(teacher.getPhoneNumber());
             existingTeacher.setAddress(teacher.getAddress());
 
-            // Format grade field as required
             String formattedGrade = formatGradeSection(teacher.getTeacherSectionList());
             existingTeacher.setGrade(formattedGrade);
-
-            // Save the updated teacher
             Teacher updatedTeacher = teacherRepository.save(existingTeacher);
-
-            // Retrieve existing TeacherSections
             List<TeacherSection> existingSections = teacherSectionRepository.findByTeacherId(updatedTeacher.getTeacherId());
 
-            // Create a map of existing sections by their IDs for quick lookup
             Map<Long, TeacherSection> existingSectionsMap = existingSections.stream()
                     .collect(Collectors.toMap(TeacherSection::getId, section -> section));
 
-            // Update existing sections or add new sections
             for (TeacherSection newSection : teacher.getTeacherSectionList()) {
                 if (newSection.getId() != null && existingSectionsMap.containsKey(newSection.getId())) {
-                    // Update existing section
                     TeacherSection existingSection = existingSectionsMap.get(newSection.getId());
                     existingSection.setSection(newSection.getSection());
                     existingSection.setGrade(newSection.getGrade());
                     existingSection.setTeacherId(updatedTeacher.getTeacherId());
                     teacherSectionRepository.save(existingSection);
                 } else {
-                    // Add new section
                     newSection.setTeacherId(updatedTeacher.getTeacherId());
                     teacherSectionRepository.save(newSection);
                 }
             }
-
-            // Build the response object
             teacherResponse = TeacherResponse.builder()
                     .teacherId(updatedTeacher.getTeacherId())
                     .campusName(updatedTeacher.getCampusName())

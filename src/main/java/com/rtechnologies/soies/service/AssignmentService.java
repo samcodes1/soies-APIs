@@ -434,25 +434,21 @@ public class AssignmentService {
                 throw new IllegalArgumentException("Corrupt data received");
             }
 
-            // Check for assignment ID
             Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignment.getAssignmentId());
             if (assignmentOptional.isEmpty()) {
                 Utility.printDebugLogs("No assignment found with ID: " + assignment.getAssignmentId());
                 throw new NotFoundException("No assignment found with ID: " + assignment.getAssignmentId());
             }
 
-            // Check for student
             Optional<Student> studentOptional = studentRepository.findById(assignment.getStudentId());
             if (studentOptional.isEmpty()) {
                 Utility.printDebugLogs("No student found with ID: " + assignment.getStudentId());
                 throw new NotFoundException("No student found with ID: " + assignment.getStudentId());
             }
 
-            // Check if the student has already submitted this assignment
             List<AssignmentSubmission> existingSubmissions = assignmentSubmissionRepository
                     .findByAssignmentIdAndStudentRollNumber(assignment.getAssignmentId(), studentOptional.get().getRollNumber());
 
-            // Flag to check if the assignment has already been attempted
             boolean hasAttempted = !existingSubmissions.isEmpty();
 
             long submissionId = 0;
@@ -460,35 +456,28 @@ public class AssignmentService {
                 submissionId = existingSubmissions.get(existingSubmissions.size() - 1).getSubmissionId();
             }
 
-            // Handle file upload with validation for PDF, Word, and image files (MultipartFile handling)
             String fileName = assignment.getAssignmentId() + "-" + assignment.getStudentId();
             AssignmentSubmission finalAssignment = new AssignmentSubmission();
             MultipartFile submittedFile = assignment.getSubmittedFile();  // Handling MultipartFile
 
             try {
-                // Get the file extension to validate PDF, Word, or image file
                 String originalFileName = submittedFile.getOriginalFilename();
                 if (originalFileName == null) {
                     throw new IllegalArgumentException("Invalid file. No file name provided.");
                 }
 
-                // Extract file extension
                 String fileExtension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
-
-                // Validate file type (PDF, Word documents, or image files)
                 if (!fileExtension.equals("pdf") && !fileExtension.equals("doc") && !fileExtension.equals("docx") &&
                         !fileExtension.equals("jpg") && !fileExtension.equals("jpeg") && !fileExtension.equals("png")) {
                     throw new IllegalArgumentException("Only PDF, Word, and image files (JPG, PNG) are allowed.");
                 }
 
-                // Upload the file to Cloudinary
                 String folder = "submitted-assignments";
                 String publicId = folder + "/" + fileName + "." + fileExtension;  // Append file extension to the public ID
                 Map data = cloudinary.uploader().upload(submittedFile.getBytes(),
                         ObjectUtils.asMap("public_id", publicId, "resource_type", "auto"));
                 String url = data.get("url").toString();
 
-                // Populate the assignment submission entity
                 if (submissionId != 0) {
                     finalAssignment.setSubmissionId(submissionId);
                 }
@@ -504,7 +493,6 @@ public class AssignmentService {
                 finalAssignment.setTerm(assignmentOptional.get().getTerm());
                 finalAssignment.setHasAttempted(hasAttempted);  // Set the hasAttempted flag
 
-                // Save the final assignment submission
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
 
             } catch (IOException ioException) {
@@ -513,7 +501,6 @@ public class AssignmentService {
 
             Utility.printDebugLogs("Assignment created successfully: " + finalAssignment);
 
-            // Create the response object
             assignmentResponse = AssignmentSubmissionResponse.builder()
                     .submissionId(finalAssignment.getSubmissionId())
                     .assignmentId(finalAssignment.getAssignmentId())
@@ -523,7 +510,7 @@ public class AssignmentService {
                     .comments("pending")
                     .obtainedMarks(-1)
                     .grade("pending")
-                    .hasAttempted(hasAttempted)  // Include hasAttempted in the response
+                    .hasAttempted(hasAttempted)
                     .messageStatus("Success")
                     .build();
 
