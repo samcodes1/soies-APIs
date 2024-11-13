@@ -492,6 +492,7 @@ public class AssignmentService {
                 finalAssignment.setObtainedGrade("pending");
                 finalAssignment.setTerm(assignmentOptional.get().getTerm());
                 finalAssignment.setCourseId(assignmentOptional.get().getCourseId());
+                finalAssignment.setTotalMarks(assignmentOptional.get().getTotalMarks());
                 finalAssignment.setHasAttempted(hasAttempted);  // Set the hasAttempted flag
 
                 finalAssignment = assignmentSubmissionRepository.save(finalAssignment);
