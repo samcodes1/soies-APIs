@@ -1,7 +1,6 @@
 package com.rtechnologies.soies.service;
 
-import com.rtechnologies.soies.model.Course;
-import com.rtechnologies.soies.model.Student;
+import com.rtechnologies.soies.model.*;
 import com.rtechnologies.soies.model.association.*;
 import com.rtechnologies.soies.model.dto.*;
 import com.rtechnologies.soies.repository.*;
@@ -51,6 +50,18 @@ public class StudentService {
 
     @Autowired
     AssignmentSubmissionRepository assignmentSubmissionRepository;
+
+    @Autowired
+    SectionRepository sectionRepository;
+
+    @Autowired
+    TeacherCampusSectionGradeBranchRepo teacherCampusSectionGradeBranchRepo;
+
+    @Autowired
+    TeacherRepository teacherRepository;
+
+    @Autowired
+    CampusRepository campusRepository;
 
     public StudentResponse createStudent(Student student) {
         Utility.printDebugLogs("Student creation request: " + student.toString());
@@ -522,72 +533,85 @@ public class StudentService {
         return courseRepository.findCoursesByGrade(grade);
     }
 
-    public Map<String, Object> getStudentDetails(String term, String grade, String section, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+    public Map<String, Object> getStudentDetailsForTeacher(Long teacherId, String term, String grade, String section, int page, int size) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
 
-        Page<Student> studentPage;
-        if (grade == null && section == null) {
-            studentPage = studentRepository.findAll(pageable);
-        } else {
-            studentPage = studentRepository.findByGradeAndSectionName(grade, section, pageable);
+        Campus campus = campusRepository.findByCampusName(teacher.getCampusName())
+                .orElseThrow(() -> new IllegalArgumentException("Campus not found with name: " + teacher.getCampusName()));
+        Long campusId = campus.getId();
+
+        List<Section> sections = sectionRepository.findAllBySectionNameAndGradeAndCampusId(section, grade, campusId);
+        if (sections.isEmpty()) {
+            throw new IllegalArgumentException("Section not found with grade: " + grade + " and section name: " + section + " at the teacher's campus.");
         }
 
-        List<Student> students = studentPage.getContent();
+        Section sectionEntity = null;
+        for (Section sec : sections) {
+            List<TeacherCampusSectionGradeBranch> teacherSections = teacherCampusSectionGradeBranchRepo
+                    .findAllByTeacheIdFkAndSectionIdFk(teacherId, sec.getId());
+            if (!teacherSections.isEmpty()) {
+                sectionEntity = sec;
+                break;
+            }
+        }
 
+        if (sectionEntity == null) {
+            System.out.println("Teacher not specifically assigned to this grade and section. Fetching data based on campus, grade, and section.");
+            sectionEntity = sections.get(0); // Use the first section that matches the criteria
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Student> studentPage = studentRepository.findByCampusNameAndGradeAndSectionName(teacher.getCampusName(), grade, section, pageable);
+
+        List<Student> students = studentPage.getContent();
         if (students == null) {
             students = Collections.emptyList();
         }
 
-        // Fetch all quiz submissions for the students
         List<QuizSubmission> allQuizSubmissions = students.stream()
                 .flatMap(student -> quizSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
                 .collect(Collectors.toList());
 
-        // Fetch all OGA submissions for the students
         List<OgaSubmission> allOgaSubmissions = students.stream()
                 .flatMap(student -> ogaSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
                 .collect(Collectors.toList());
 
-        // Fetch all assignment submissions for the students
         List<AssignmentSubmission> allAssignmentSubmissions = students.stream()
-                .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumber(student.getRollNumber())
-                        .stream())
+                .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
                 .collect(Collectors.toList());
 
-        // Fetch all exam submissions for the students
         List<ExamSubmission> allExamSubmissions = students.stream()
                 .flatMap(student -> examSubmissionRepository.findByStudentRollNumber(student.getRollNumber()).stream())
                 .collect(Collectors.toList());
 
-        // Calculate average quiz marks
         Map<String, Double> avgQuizMarksMap = allQuizSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         QuizSubmission::getStudentRollNumber,
                         Collectors.averagingInt(QuizSubmission::getGainedMarks)));
 
-        // Calculate average OGA marks
         Map<String, Double> avgOgaMarksMap = allOgaSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         OgaSubmission::getStudentRollNumber,
                         Collectors.averagingInt(OgaSubmission::getGainedMarks)));
 
-        // Calculate average assignment marks
         Map<String, Double> avgAssignmentMarksMap = allAssignmentSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         AssignmentSubmission::getStudentRollNumber,
                         Collectors.averagingDouble(AssignmentSubmission::getObtainedMarks)));
 
-        // Calculate average exam marks
         Map<String, Double> avgExamMarksMap = allExamSubmissions.stream()
                 .collect(Collectors.groupingBy(
                         ExamSubmission::getStudentRollNumber,
                         Collectors.averagingInt(ExamSubmission::getGainedMarks)));
 
-        // Aggregate the data
         List<Map<String, Object>> studentDetailsList = students.stream().map(student -> {
             Map<String, Object> studentDetails = new HashMap<>();
             studentDetails.put("studentName", student.getStudentName());
             studentDetails.put("rollNumber", student.getRollNumber());
+            studentDetails.put("campusName", student.getCampusName());
+            studentDetails.put("grade", student.getGrade());
+            studentDetails.put("sectionName", student.getSectionName());
 
             double avgQuizMarks = avgQuizMarksMap.getOrDefault(student.getRollNumber(), 0.0);
             double avgOgaMarks = avgOgaMarksMap.getOrDefault(student.getRollNumber(), 0.0);
@@ -611,6 +635,8 @@ public class StudentService {
 
         return response;
     }
+
+
 
     public StudentListResponse getStudentBySearch(String rollNumber) {
         Utility.printDebugLogs("student roll number " + rollNumber);

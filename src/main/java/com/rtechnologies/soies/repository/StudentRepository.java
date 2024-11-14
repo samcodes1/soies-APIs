@@ -17,6 +17,7 @@ import java.util.Optional;
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {
         Optional<Student> findByRollNumber(String rollNum);
+        Page<Student> findByCampusNameAndGradeAndSectionName(String campusName, String grade, String sectionName, Pageable pageable);
 
         Long countByCampusName(String campusName);
 

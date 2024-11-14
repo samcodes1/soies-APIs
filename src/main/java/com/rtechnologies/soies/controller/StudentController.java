@@ -145,9 +145,10 @@ public class StudentController {
                         @RequestParam String term,
                         @RequestParam String grade,
                         @RequestParam String section,
+                        @RequestParam Long teacherId,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
-                Map<String, Object> response = studentService.getStudentDetails(term, grade, section, page, size);
+                Map<String, Object> response = studentService.getStudentDetailsForTeacher(teacherId,term, grade, section, page, size);
 
                 if (response.get("studentDetails") instanceof List
                                 && ((List<?>) response.get("studentDetails")).isEmpty()) {

@@ -12,6 +12,8 @@ public interface TeacherSectionRepository extends JpaRepository<TeacherSection,L
     List<TeacherSection> findByTeacherId(Long teacherId);
 //    Optional<TeacherSection> findByTeacherIdAndSectionId(Long teacherId, Long id);
 Optional<TeacherSection> findByTeacherIdAndSectionAndGrade(Long teacherId, String section, String grade);
+    Optional<TeacherSection> findByTeacherIdAndGradeAndSection(Long teacherId, String grade, String section);
+
 
 
 
