@@ -656,6 +656,118 @@ public class StudentService {
 
         return response;
     }
+    public Map<String, Object> downloadStudentDetailsForTeacher(Long teacherId, String term, String grade, String section) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            Teacher teacher = teacherRepository.findById(teacherId)
+                    .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
+
+            // Retrieve the campus ID based on the campus name from the teacher
+            Campus campus = campusRepository.findByCampusName(teacher.getCampusName())
+                    .orElseThrow(() -> new IllegalArgumentException("Campus not found with name: " + teacher.getCampusName()));
+            Long campusId = campus.getId();
+
+            // Retrieve all sections that match the given grade and section name within the teacher's campus
+            List<Section> sections = sectionRepository.findAllBySectionNameAndGradeAndCampusId(section, grade, campusId);
+            if (sections.isEmpty()) {
+                throw new IllegalArgumentException("Section not found with grade: " + grade + " and section name: " + section + " at the teacher's campus.");
+            }
+
+            // Try to find the section specifically assigned to the teacher
+            Section sectionEntity = null;
+            for (Section sec : sections) {
+                List<TeacherCampusSectionGradeBranch> teacherSections = teacherCampusSectionGradeBranchRepo
+                        .findAllByTeacheIdFkAndSectionIdFk(teacherId, sec.getId());
+                if (!teacherSections.isEmpty()) {
+                    sectionEntity = sec;
+                    break;
+                }
+            }
+
+            if (sectionEntity == null) {
+                System.out.println("Teacher not specifically assigned to this grade and section. Fetching data based on campus, grade, and section.");
+                sectionEntity = sections.get(0); // Use the first section that matches the criteria
+            }
+
+            List<Student> students = studentRepository.findByCampusNameAndGradeAndSectionName(teacher.getCampusName(), grade, section);
+
+            if (students == null || students.isEmpty()) {
+                response.put("studentDetails", Collections.emptyList());
+                return response;
+            }
+
+            // Fetch all submissions for each student filtered by term
+            List<QuizSubmission> allQuizSubmissions = students.stream()
+                    .flatMap(student -> quizSubmissionRepository.findByStudentRollNumberAndTerm(student.getRollNumber(), term).stream())
+                    .collect(Collectors.toList());
+
+            List<OgaSubmission> allOgaSubmissions = students.stream()
+                    .flatMap(student -> ogaSubmissionRepository.findByStudentRollNumberAndTerm(student.getRollNumber(), term).stream())
+                    .collect(Collectors.toList());
+
+            List<AssignmentSubmission> allAssignmentSubmissions = students.stream()
+                    .flatMap(student -> assignmentSubmissionRepository.findByStudentRollNumberAndTerm(student.getRollNumber(), term).stream())
+                    .collect(Collectors.toList());
+
+            List<ExamSubmission> allExamSubmissions = students.stream()
+                    .flatMap(student -> examSubmissionRepository.findByStudentRollNumberAndTerm(student.getRollNumber(), term).stream())
+                    .collect(Collectors.toList());
+
+            Map<String, Double> avgQuizMarksMap = allQuizSubmissions.stream()
+                    .collect(Collectors.groupingBy(
+                            QuizSubmission::getStudentRollNumber,
+                            Collectors.averagingInt(QuizSubmission::getGainedMarks)));
+
+            Map<String, Double> avgOgaMarksMap = allOgaSubmissions.stream()
+                    .collect(Collectors.groupingBy(
+                            OgaSubmission::getStudentRollNumber,
+                            Collectors.averagingInt(OgaSubmission::getGainedMarks)));
+
+            Map<String, Double> avgAssignmentMarksMap = allAssignmentSubmissions.stream()
+                    .collect(Collectors.groupingBy(
+                            AssignmentSubmission::getStudentRollNumber,
+                            Collectors.averagingDouble(AssignmentSubmission::getObtainedMarks)));
+
+            Map<String, Double> avgExamMarksMap = allExamSubmissions.stream()
+                    .collect(Collectors.groupingBy(
+                            ExamSubmission::getStudentRollNumber,
+                            Collectors.averagingInt(ExamSubmission::getGainedMarks)));
+
+            // Aggregate student details
+            List<Map<String, Object>> studentDetailsList = students.stream().map(student -> {
+                Map<String, Object> studentDetails = new HashMap<>();
+                studentDetails.put("studentName", student.getStudentName());
+                studentDetails.put("rollNumber", student.getRollNumber());
+                studentDetails.put("campusName", student.getCampusName());
+                studentDetails.put("grade", student.getGrade());
+                studentDetails.put("sectionName", student.getSectionName());
+
+                double avgQuizMarks = avgQuizMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+                double avgOgaMarks = avgOgaMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+                double avgAssignmentMarks = avgAssignmentMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+                double avgExamMarks = avgExamMarksMap.getOrDefault(student.getRollNumber(), 0.0);
+
+                studentDetails.put("avgQuizGainedMarks", avgQuizMarks);
+                studentDetails.put("avgOgaGainedMarks", avgOgaMarks);
+                studentDetails.put("avgAssignmentGainedMarks", avgAssignmentMarks);
+                studentDetails.put("avgExamGainedMarks", avgExamMarks);
+
+                return studentDetails;
+            }).collect(Collectors.toList());
+
+            // Populate response with student details
+            response.put("studentDetails", studentDetailsList);
+
+        } catch (Exception e) {
+            // Handle any exceptions and return an empty list
+            System.out.println("Exception occurred: " + e.getMessage());
+            response.put("studentDetails", Collections.emptyList());
+        }
+
+        return response;
+    }
+
 
     public StudentListResponse getStudentBySearch(String rollNumber) {
         Utility.printDebugLogs("student roll number " + rollNumber);

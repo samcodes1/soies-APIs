@@ -20,6 +20,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
         Page<Student> findByCampusNameAndGradeAndSectionName(String campusName, String grade, String sectionName, Pageable pageable);
 
         Long countByCampusName(String campusName);
+        List<Student> findByCampusNameAndGradeAndSectionName(String campusName, String grade, String sectionName);
+
 
         Page<Student> findByGradeAndSectionName(String grade, String section, Pageable pageable);
 

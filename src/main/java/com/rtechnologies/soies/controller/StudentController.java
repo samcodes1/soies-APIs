@@ -187,4 +187,15 @@ public class StudentController {
                                 .body(studentListResponse);
         }
 
+        @GetMapping("/download-student-details")
+        public ResponseEntity<Map<String, Object>> downloadStudentDetailsForTeacher(
+                @RequestParam Long teacherId,
+                @RequestParam String term,
+                @RequestParam String grade,
+                @RequestParam String section) {
+
+                Map<String, Object> response = studentService.downloadStudentDetailsForTeacher(teacherId, term, grade, section);
+                return ResponseEntity.ok(response);
+        }
+
 }
