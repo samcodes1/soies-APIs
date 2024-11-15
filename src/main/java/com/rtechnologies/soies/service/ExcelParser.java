@@ -64,11 +64,29 @@ public class ExcelParser {
             if (row.getRowNum() == 0) {
                 continue; // Skip header row
             }
+
+
             Student student = new Student();
             //Roll Number	First Name	Middle Name	Last Name	Campus Name	Class Name	Section Name	Email Ids	password	
             // System.out.println("row data>>>>>>>>>>>>>> "+row.getCell(0).getStringCellValue());
-            student.setRollNumber(row.getCell(0).getStringCellValue());
 
+            String grade = row.getCell(5).getStringCellValue().trim().toLowerCase();
+            if (!grade.matches("grade (i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv)")) {
+                System.out.println("Invalid grade format: " + grade);
+                throw new IllegalArgumentException("Invalid grade format in row " + row.getRowNum() + ": " + grade);
+            }
+
+            String email = row.getCell(7).getStringCellValue().trim().toLowerCase();
+            if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
+                System.out.println("Invalid email format: " + email);
+                throw new IllegalArgumentException("Invalid email format in row " + row.getRowNum() + ": " + email);
+            }
+            String rollNumber = row.getCell(0).getStringCellValue().trim();
+            if (!rollNumber.matches("\\d+")) {
+                System.out.println("Invalid roll number format: " + rollNumber);
+                throw new IllegalArgumentException("Invalid roll number format in row " + row.getRowNum() + ": " + rollNumber);
+            }
+            student.setRollNumber(rollNumber);
             String fullName = new StringBuilder().append(row.getCell(1).getStringCellValue())
                     .append(" ")
                     .append(row.getCell(2).getStringCellValue())
@@ -77,9 +95,9 @@ public class ExcelParser {
 
             student.setStudentName(fullName);
             student.setCampusName(row.getCell(4).getStringCellValue());
-            student.setGrade(row.getCell(5).getStringCellValue());
+            student.setGrade(grade);
             student.setSectionName(row.getCell(6).getStringCellValue());
-            student.setGuardianEmail(row.getCell(7).getStringCellValue());
+            student.setGuardianEmail(email);
             student.setPassword(new BCryptPasswordEncoder().encode(row.getCell(6).getStringCellValue()));
             students.add(student);
         }
@@ -349,23 +367,39 @@ public class ExcelParser {
         }
 
         try (Reader reader = new InputStreamReader(file.getInputStream())) {
-            // Create a CSVReader using OpenCSV
             CSVReader csvReader = new CSVReader(reader);
-            // Skip the header row
             csvReader.skip(1);
-            // Read the CSV data line by line
             String[] nextRecord;
             while ((nextRecord = csvReader.readNext()) != null) {
                 if (nextRecord.length == 0) {
                     continue;
                 }
-                // Check if the first field is empty (This may indicate the end of the file)
                 if (nextRecord[0].isEmpty()) {
                     break;
                 }
+
+                String rollNumber = nextRecord[0].trim();
+                if (!rollNumber.matches("\\d+")) { // Check if roll number is numeric
+                    System.out.println("Invalid roll number format: " + rollNumber);
+                    throw new IllegalArgumentException("Invalid roll number format: " + rollNumber);
+                }
+
+                String grade = nextRecord[5].trim().toLowerCase();
+                if (!grade.matches("grade (i|ii|iii|iv|v|vi|vii|viii|ix|x|xi|xii|xiii|xiv|xv)")) {
+                    System.out.println("Invalid grade format: " + grade);
+                    throw new IllegalArgumentException("Invalid grade format: " + grade);
+                }
+
+                String email = nextRecord[7].trim().toLowerCase();
+                if (!email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
+                    System.out.println("Invalid email format: " + email);
+                    throw new IllegalArgumentException("Invalid email format: " + email);
+                }
+
                 Student student = new Student();
                 System.out.println("Record: " + Arrays.toString(nextRecord));
-                student.setRollNumber(nextRecord[0].trim());
+                student.setRollNumber(rollNumber);
+
                 String fullName = new StringBuilder().append(nextRecord[1])
                         .append(" ")
                         .append(nextRecord[2])
@@ -374,17 +408,18 @@ public class ExcelParser {
 
                 student.setStudentName(fullName.trim().toLowerCase());
                 student.setCampusName(nextRecord[4].trim().toLowerCase());
-                student.setGrade(nextRecord[5].trim().toLowerCase());
+                student.setGrade(grade);
                 student.setSectionName(nextRecord[6].trim().toLowerCase());
-                student.setGuardianEmail(nextRecord[7].trim().toLowerCase());
+                student.setGuardianEmail(email);
                 student.setPassword(new BCryptPasswordEncoder().encode(nextRecord[8].trim()));
+
                 students.add(student);
             }
             System.out.println("FILE READ COMPLETE RETURNING");
             return students;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("parsing error");
+            throw new IllegalArgumentException("Parsing error: " + e.getMessage());
         }
     }
 
