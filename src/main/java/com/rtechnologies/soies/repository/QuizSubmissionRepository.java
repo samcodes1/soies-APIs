@@ -22,6 +22,8 @@ public interface QuizSubmissionRepository extends JpaRepository<QuizSubmission, 
 
 
     Page<QuizSubmission> findByStudentRollNumberAndTerm(String studentRollNumber, String term, Pageable pageable);
+    List<QuizSubmission> findByStudentRollNumberAndTerm(String rollNumber, String term);
+
     List<QuizSubmission> findByCourseIdAndStudentRollNumber(Long courseId, String studentRollNumber);
 
     Page<QuizSubmission> findByCourseIdAndTerm(Long courseId, String term, PageRequest pageable);
