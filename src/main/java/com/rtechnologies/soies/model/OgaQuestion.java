@@ -24,5 +24,4 @@ public class OgaQuestion {
     private String optionFour;
     private String answer;
 
-
 }

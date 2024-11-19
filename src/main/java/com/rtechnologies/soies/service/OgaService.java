@@ -472,26 +472,54 @@ public class OgaService {
 
         if (submissionsPage.isEmpty()) {
             response.setMessageStatus("No OGAs found for the given course ID");
-            response.setOgaSubmissionList(null); // No OGAs found
+            response.setOgaSubmissionList(Collections.emptyList()); // No OGAs found
         } else {
             response.setMessageStatus("OGAs retrieved successfully");
-            response.setOgaSubmissionList(submissionsPage.getContent()); // Set the found submissions
-        }
 
-        // Fetch assignment submissions and quiz submissions
+            List<OgaSubmission> consolidatedSubmissions = submissionsPage.getContent().stream()
+                    .collect(Collectors.groupingBy(
+                            submission -> Arrays.asList(submission.getStudentRollNumber(), submission.getOgaId()), // Group by studentRollNumber and ogaId
+                            Collectors.collectingAndThen(
+                                    Collectors.toList(),
+                                    submissions -> {
+                                        OgaSubmission consolidated = new OgaSubmission();
+                                        consolidated.setStudentRollNumber(submissions.get(0).getStudentRollNumber());
+                                        consolidated.setCourseId(submissions.get(0).getCourseId());
+                                        consolidated.setOgaId(submissions.get(0).getOgaId());
+                                        consolidated.setTerm(submissions.get(0).getTerm());
+
+                                        int totalMarks = submissions.get(0).getTotalMarks();
+
+                                        double avgMarks = submissions.stream()
+                                                .mapToInt(OgaSubmission::getGainedMarks)
+                                                .average()
+                                                .orElse(0);
+                                        double percentage = totalMarks > 0 ? (avgMarks / totalMarks) * 100 : 0;
+
+                                        consolidated.setTotalMarks(totalMarks);
+                                        consolidated.setGainedMarks((int) avgMarks);
+                                        consolidated.setPercentage(percentage);
+                                        consolidated.setHasAttempted(true);
+                                        return consolidated;
+                                    }
+                            )
+                    ))
+                    .values()
+                    .stream()
+                    .collect(Collectors.toList());
+
+            response.setOgaSubmissionList(consolidatedSubmissions);
+        }
         List<AssignmentSubmission> assignmentSubmissions = assignmentSubmissionRepository.findByCourseId(courseId);
         List<QuizSubmission> quizSubmissions = quizSubmissionRepository.findByCourseId(courseId);
 
-        // Set the assignments and quizzes in the response
         response.setAssignmentSubmissionList(assignmentSubmissions);
         response.setQuizSubmissionList(quizSubmissions);
 
-        // Set pagination information
-        response.setCurrentPage(submissionsPage.getNumber());  // Current page number
-        response.setTotalPages(submissionsPage.getTotalPages()); // Total pages available
+        response.setCurrentPage(page);
+        response.setTotalPages(1); 
 
         return response;
     }
-
 
 }
